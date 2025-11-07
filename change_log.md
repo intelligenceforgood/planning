@@ -1,6 +1,6 @@
 # DT-IFG Migration Change Log
 
-_Last updated: 6 Nov 2025_
+_Last updated: 7 Nov 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
 
@@ -13,3 +13,8 @@ This log captures significant planning decisions and architecture changes as we 
 ## 2025-11-07
 - Clarified future-state architecture vector-store placement and added managed vs local deployment profiles.
 - Standardised configuration approach on Pydantic BaseSettings with environment-specific overrides.
+- Refactored runtime settings into nested sections (`settings.api`, `settings.storage`, `settings.vector`, etc.) to enable per-component swaps between local resources and GCP services.
+- Codified engineering defaults: prefer comprehensive type hints, Google-style docstrings, and focused inline comments to aid long-term maintainability.
+- Added `planning/persistent_prompt.md` as the canonical session-rehydration checklist (scan planning docs, refresh change log, honor coding conventions).
+- Added `src/i4g/services/factories.py` with helper builders for structured, review, and vector stores so services can instantiate backends directly from configuration.
+- Migrated ingestion, retrieval, report generation, worker tasks, and CLI admin utilities to the new factory helpers so configuration-driven backend swaps propagate consistently.
