@@ -19,15 +19,15 @@ This document sketches the proposed end-state architecture that replaces DT-IFG�
 │                        User Channels                         │
 │  Victims (Web/Mobile) | Analysts (Dashboard) | LEO (Reports) │
 └────────────┬───────────────────────┬─────────────────────────┘
-             │ HTTPS                 │ HTTPS                    │
+             │ HTTPS                 │ HTTPS
 ┌────────────▼───────────────────────▼─────────────────────────┐
 │                    Cloud Run (us-central1)                   │
 │  ┌────────────────────────┐   ┌───────────────────────────┐  │
 │  │ FastAPI API (RAG & API │   │ Streamlit Analyst Portal  │  │
 │  │ Gateway)               │   │ (OAuth/OIDC)              │  │
 │  └────────────────────────┘   └───────────────────────────┘  │
-│             │ REST / gRPC        │ REST / WebSocket           │
-└─────┬───────▼────────────────────▼────────────────────────────┘
+│             │ REST / gRPC        │ REST / WebSocket          │
+└─────┬───────▼────────────────────▼───────────────────────────┘
       │
       │  Async jobs / PubSub (optional)
 ┌─────▼───────────────────────────────────────────────────────┐
@@ -37,17 +37,17 @@ This document sketches the proposed end-state architecture that replaces DT-IFG�
 │  │ (Cases, PII) │ │ (Evidence)   │ │ AlloyDB + pgvector   │ │
 │  └─────┬────────┘ └──────┬───────┘ └─────────┬────────────┘ │
 │        │                 │                   │              │
-│  ┌─────▼────────┐  ┌─────▼────────┐  ┌───────▼───────────┐ │
-│  │ PII Vault    │  │ Ingestion     │  │ RAG Orchestration │ │
-│  │ Tokenization │  │ Pipelines     │  │ (LangChain)       │ │
-│  └──────────────┘  └──────────────┘  └───────────────────┘ │
+│  ┌─────▼────────┐  ┌─────▼────────┐  ┌───────▼───────────┐  │
+│  │ PII Vault    │  │ Ingestion    │  │ RAG Orchestration │  │
+│  │ Tokenization │  │ Pipelines    │  │ (LangChain)       │  │
+│  └──────────────┘  └──────────────┘  └───────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
       │                        │                      │
       │ Scheduler triggers     │ Secrets, IAM         │ Telemetry
 ┌─────▼─────────────┐  ┌───────▼────────────┐  ┌──────▼──────────┐
 │ Cloud Scheduler   │  │ Secret Manager     │  │ Logging &       │
-│ + Run Jobs        │  │ + Workload ID      │  │ Monitoring       │
-└───────────────────┘  └────────────────────┘  └────────────────┘
+│ + Run Jobs        │  │ + Workload ID      │  │ Monitoring      │
+└───────────────────┘  └────────────────────┘  └─────────────────┘
 ```
 
 ## 3. Key Components
@@ -83,6 +83,7 @@ This document sketches the proposed end-state architecture that replaces DT-IFG�
   - `i4g-reports-{env}` for generated PDFs (access controlled).
 - **AlloyDB / Cloud SQL** optional for structured ingestion data migrated from Azure SQL.
 - **BigQuery** optional for downstream analytics/monitoring dashboards once data volume grows.
+- **Vector storage** is delivered by the chosen retrieval backend (Vertex AI Search’s managed indices or AlloyDB + pgvector) and is not duplicated in a separate store.
 
 ### 3.5 Ingestion Pipelines
 - Replace Azure Functions with Cloud Run Jobs or Functions triggered by Cloud Scheduler and Eventarc:
@@ -102,6 +103,28 @@ This document sketches the proposed end-state architecture that replaces DT-IFG�
 - PII vault operations confined to a service account with `roles/datastore.user` + custom encryption permissions.
 - Workload Identity Federation for any residual Azure integration during transition.
 - Secret Manager used for all credentials, rotated quarterly (automated via Cloud Scheduler function).
+
+### 3.8 Deployment Profiles (Managed vs Local)
+
+| Capability / Service | Managed (Cloud Run / GCP) | Local / Laptop Profile |
+|---|---|---|
+| Identity | Google Cloud Identity Platform (OIDC) | Local mock OIDC provider or stub JWT signer for development |
+| API Gateway / FastAPI | Cloud Run service with Workload Identity | Docker container running FastAPI with `.env` config |
+| Analyst UI | Streamlit on Cloud Run (authenticated) | Streamlit app run locally with dev auth toggles |
+| Retrieval & Vector Store | Vertex AI Search **or** AlloyDB + pgvector (managed) | Dockerized Postgres + pgvector or local Chroma for rapid iteration |
+| LLM Inference | Vertex AI (Gemini) primary; optional Cloud Run GPU with Ollama | Ollama running locally or mock responses for unit tests |
+| Storage | Firestore + Cloud Storage buckets | Local JSON/SQLite stores and filesystem folders mounted via `.env` paths |
+| Ingestion Jobs | Cloud Run Jobs + Scheduler (per-service SA) | Local scripts invoked via `make`/Invoke with stub schedules |
+| Observability | Cloud Logging/Monitoring with OpenTelemetry exporters | Console logs + local OTLP collector (optional) |
+| Secrets | Secret Manager, GCP-managed IAM | `.env.local` (gitignored) + Pydantic settings overrides |
+
+> Developers can use Docker Compose to bundle the local profile. The contract remains aligned with the managed services (same API surface, env vars, and storage schemas) to keep parity.
+
+### 3.9 Configuration Strategy
+- Adopt a central `settings` package built on **Pydantic BaseSettings** to load defaults from versioned config files and environment variables.
+- Environment selection driven by `I4G_ENV` (`local`, `staging`, `prod`, etc.), with a stack order: baked-in defaults → environment-specific config (`settings/staging.py` or `.env`) → per-developer overrides in `.env.local` (gitignored).
+- Sensitive values resolve from Secret Manager in managed environments; local profile falls back to `.env.local` to avoid accidental writes to production resources.
+- Services share the same settings package so API, UI, jobs, and notebooks read configuration from a single, documented source.
 
 ## 4. Environment Strategy
 - **Projects**: `i4g-prod`, `i4g-staging`, `i4g-dev` (optional). Each with mirrored resources except production restrictions on IAM and logging retention.

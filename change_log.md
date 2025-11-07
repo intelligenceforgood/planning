@@ -9,3 +9,7 @@ This log captures significant planning decisions and architecture changes as we 
 - Published technology evaluation matrix covering identity, retrieval/search, and LLM hosting options.
 - Drafted future-state architecture describing GCP-only, open-aligned topology.
 - Created implementation roadmap sketching workstreams and sequencing.
+
+## 2025-11-07
+- Clarified future-state architecture vector-store placement and added managed vs local deployment profiles.
+- Standardised configuration approach on Pydantic BaseSettings with environment-specific overrides.
