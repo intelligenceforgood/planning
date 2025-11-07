@@ -1,6 +1,6 @@
 # Public-Facing Infrastructure TODO (docs.i4g.io / app.i4g.cloud / GitHub org)
 
-Last updated: 2025-11-05
+Last updated: 2025-11-06
 
 This is a short, shareable todo for setting up public-facing infrastructure for i4g. Save this as a reference and pick up items when you have time.
 
@@ -14,26 +14,30 @@ This is a short, shareable todo for setting up public-facing infrastructure for 
 ## Tasks
 
 - [ ] Decide domain names and GitHub org
-  - Options for GitHub org: `i4g`, `intelligence-for-good`, `intel-for-good`.
-  - Choose whether to use `i4g.org` subdomains (e.g., `docs.i4g.org`) or `i4g.io`/`i4g.cloud`.
+  - ✅ GitHub org created: `intelligenceforgood`
+  - Domain strategy still pending (`i4g.org` vs `i4g.io`/`i4g.cloud`).
   - Note: choose a short, recognizable org name if available (keeps repo links short).
 
 - [ ] Scaffold docs site
-  - Repo: `i4g/docs`
+  - Repo: `intelligenceforgood/docs` (baseline README/CONTRIBUTING/PR template in place; generator TBD)
   - Tech: Docusaurus (React) or MkDocs (Python) — Docusaurus recommended for extensibility.
   - CI/CD: GitHub Actions building and deploying to GitHub Pages or Cloud Run + Cloud CDN.
   - Content skeleton: Quickstart, Architecture, API, Contributing, FAQ.
+  - Template starter in repo: see `planning/repo_scaffolding/docs/` for README, LICENSE, CONTRIBUTING, PR template.
 
-- [ ] Scaffold hosted app repo
-  - Repo: `i4g/app`
+- [x] Scaffold hosted app repo (baseline docs committed 2025-11-06)
+  - Repo: `intelligenceforgood/i4g`
   - Deploy: Cloud Run (managed)
-  - Auth: Firebase Auth or Cloud Identity for maintainers and users
+  - Auth: Google Cloud Identity or Firebase Auth (decision pending Milestone 2)
   - Environments: `i4g-prod`, `i4g-staging` GCP projects (separate billing/credentials)
-  - CI/CD: GitHub Actions + Terraform in `infra/` repo for infra-as-code
+  - CI/CD: GitHub Actions + Terraform in the `infra` repo for infra-as-code
+  - Template starter in repo: see `planning/repo_scaffolding/i4g/` for README, LICENSE, CONTRIBUTING, issue/PR templates.
 
 - [ ] Create `infra` repo and Terraform templates
+  - Repo: `intelligenceforgood/infra` (baseline README/CONTRIBUTING/PR template in place; modules pending)
   - Modules for: Cloud Run service, Cloud Storage buckets, Cloud DNS records, Cloud CDN, Certificate Manager, IAM roles
   - Include a minimal `bootstrap` script for initial project & DNS setup
+  - Template starter in repo: see `planning/repo_scaffolding/infra/` for README, LICENSE, CONTRIBUTING, PR template.
 
 - [ ] GitHub org & repo standards
   - Create repo templates (service, library, docs)
@@ -62,9 +66,9 @@ This is a short, shareable todo for setting up public-facing infrastructure for 
 ---
 
 ## Where to start (quick picks)
-1. Pick GitHub org name and register it.
-2. Reserve DNS for `i4g.org` or `i4g.io` and add `docs` and `app` subdomains.
-3. Create `i4g/docs` repo with a Docusaurus starter and a GitHub Action to publish to `docs.i4g.*`.
+1. Configure domain + DNS (`i4g.org` vs `i4g.io`) and stand up `docs` / `app` subdomains.
+2. Populate the new repos using the templates in `planning/repo_scaffolding/`.
+3. Stand up CI pipelines (lint/tests for app, terraform plan for infra, docs build/deploy).
 
 
 *Saved in `dtp/system_review/public_infra_todo.md`*
