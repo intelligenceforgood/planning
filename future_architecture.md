@@ -14,40 +14,68 @@ This document sketches the proposed end-state architecture that replaces DT-IFG�
 
 ## 2. High-Level Topology
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                        User Channels                         │
-│  Victims (Web/Mobile) | Analysts (Dashboard) | LEO (Reports) │
-└────────────┬───────────────────────┬─────────────────────────┘
-             │ HTTPS                 │ HTTPS
-┌────────────▼───────────────────────▼─────────────────────────┐
-│                    Cloud Run (us-central1)                   │
-│  ┌────────────────────────┐   ┌───────────────────────────┐  │
-│  │ FastAPI API (RAG & API │   │ Streamlit Analyst Portal  │  │
-│  │ Gateway)               │   │ (OAuth/OIDC)              │  │
-│  └────────────────────────┘   └───────────────────────────┘  │
-│             │ REST / gRPC        │ REST / WebSocket          │
-└─────┬───────▼────────────────────▼───────────────────────────┘
-      │
-      │  Async jobs / PubSub (optional)
-┌─────▼───────────────────────────────────────────────────────┐
-│                  Data & Intelligence Layer                  │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────────────┐ │
-│  │ Firestore    │ │ Cloud Storage│ │ Vertex AI Search or  │ │
-│  │ (Cases, PII) │ │ (Evidence)   │ │ AlloyDB + pgvector   │ │
-│  └─────┬────────┘ └──────┬───────┘ └─────────┬────────────┘ │
-│        │                 │                   │              │
-│  ┌─────▼────────┐  ┌─────▼────────┐  ┌───────▼───────────┐  │
-│  │ PII Vault    │  │ Ingestion    │  │ RAG Orchestration │  │
-│  │ Tokenization │  │ Pipelines    │  │ (LangChain)       │  │
-│  └──────────────┘  └──────────────┘  └───────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-      │                        │                      │
-      │ Scheduler triggers     │ Secrets, IAM         │ Telemetry
-┌─────▼─────────────┐  ┌───────▼────────────┐  ┌──────▼──────────┐
-│ Cloud Scheduler   │  │ Secret Manager     │  │ Logging &       │
-│ + Run Jobs        │  │ + Workload ID      │  │ Monitoring      │
-└───────────────────┘  └────────────────────┘  └─────────────────┘
+```mermaid
+%%{ init: {
+      'flowchart': { 'htmlLabels': true, 'nodeSpacing': 60, 'rankSpacing': 70 },
+      'themeVariables': {
+        'fontSize': '18px',
+        'fontFamily': 'Inter, Helvetica, Arial, sans-serif',
+        'primaryBorderColor': '#0b5394',
+        'primaryColor': '#dae8fc'
+      }
+    }
+}%%
+flowchart TB
+  subgraph Users["User Channels"]
+    Victim[Victim Web/Mobile]
+    Analyst[Analyst Dashboard]
+    LEO[LEO Report Access]
+  end
+
+  subgraph CloudRun["Cloud Run Services (us-central1)"]
+    FastAPI["FastAPI API Gateway\n(RAG, Intake, Reports)"]
+    Streamlit["Streamlit Analyst Portal\n(OAuth/OIDC)"]
+  end
+
+  subgraph DataLayer["Data & Intelligence Layer"]
+    Firestore["Firestore\n(Cases, Config, PII Tokens)"]
+    Storage["Cloud Storage\n(Evidence, Reports)"]
+    Vector[Vertex AI Search\n/ AlloyDB + pgvector]
+    TokenVault[PII Vault / Tokenization]
+    IngestionPipelines[Ingestion Pipelines]
+    RAG[LangChain RAG Orchestration]
+  end
+
+  subgraph Ops["Platform Services"]
+    Scheduler[Cloud Scheduler / Run Jobs]
+    Secrets[Secret Manager\n+ Workload Identity]
+    Telemetry[Cloud Logging & Monitoring]
+  end
+
+  Victim -- HTTPS --> FastAPI
+  Analyst -- HTTPS --> Streamlit
+  LEO -- HTTPS --> Streamlit
+
+  FastAPI -- REST/gRPC --> Firestore
+  FastAPI -- REST/gRPC --> Vector
+  FastAPI -- Signed URLs --> Storage
+  FastAPI -- Tokenization Calls --> TokenVault
+  FastAPI -- Invoke Chains --> RAG
+
+  Streamlit -- API Calls --> FastAPI
+  Streamlit -- Signed URLs --> Storage
+
+  IngestionPipelines -- Structured Writes --> Firestore
+  IngestionPipelines -- Artifact Uploads --> Storage
+  IngestionPipelines -- Embed Jobs --> Vector
+
+  Scheduler -- Triggers --> IngestionPipelines
+  Secrets -- Credentials --> FastAPI
+  Secrets -- Credentials --> Streamlit
+  Secrets -- Credentials --> IngestionPipelines
+  Telemetry -- Metrics/Logs --> FastAPI
+  Telemetry -- Metrics/Logs --> Streamlit
+  Telemetry -- Metrics/Logs --> IngestionPipelines
 ```
 
 ## 3. Key Components
@@ -126,19 +154,58 @@ This document sketches the proposed end-state architecture that replaces DT-IFG�
 - Sensitive values resolve from Secret Manager in managed environments; local profile falls back to `.env.local` to avoid accidental writes to production resources.
 - Services share the same settings package so API, UI, jobs, and notebooks read configuration from a single, documented source.
 
-## 4. Environment Strategy
+### 3.10 End-to-End Data Flows
+
+#### 3.10.1 Victim Intake → Structured Storage
+1. Victim submits a report via the FastAPI intake endpoint (`/api/intake`), optionally authenticated through Google Identity or other OIDC provider.
+2. FastAPI orchestrates PII tokenization: identifiable fields are passed to the vault service, swapped for tokens, and the mapping persists in Firestore’s secure collection.
+3. Normalized case metadata writes to Firestore collections (`cases`, `case_events`, `attachments`).
+4. Evidence artifacts upload to Cloud Storage using pre-signed URLs; completion webhooks update Firestore metadata with checksum, MIME type, and retention policy tags.
+5. Cloud Scheduler triggers ingestion jobs (Cloud Run Jobs) that extract entities, embeddings, and enrichment metadata, updating Firestore and the vector index accordingly.
+
+#### 3.10.2 Retrieval-Augmented Chat & Search
+1. Analyst initiates a chat session in Streamlit; the frontend calls FastAPI (`/api/chat`) with question, case filters, and auth context.
+2. FastAPI fetches relevant structured context (case ownership, tags, status) from Firestore based on analyst permissions.
+3. LangChain pipeline embeds the question (Vertex AI Embeddings or environment-specified model) and queries the configured vector backend.
+4. Vector backend (Vertex AI Search or AlloyDB + pgvector) returns top-k documents; pipeline de-duplicates, scores, and enriches with structured fields.
+5. Prompt assembly blends structured metadata, vector hits, and policy disclaimers before invoking the LLM (Vertex AI Gemini or Ollama) with guardrails.
+6. Responses persist to Firestore audit collections; optional JIT feedback flows back into vector store for continual improvement.
+
+#### 3.10.3 Accepted Review → Report Generation
+1. Review status transition to `accepted` emits an event (Firestore trigger or manual CLI invocation) that queues a report task.
+2. Worker resolves the review via ReviewStore (factory-backed), gathering structured entities, transcripts, evidence references, and analyst notes.
+3. `ReportGenerator` fetches related cases via the vector store, aggregates entities, and runs LangChain summarization through the configured LLM.
+4. TemplateEngine renders Markdown → DOCX/PDF; exporter writes artifacts to Cloud Storage (`i4g-reports-*`).
+5. ReviewStore logs action metadata (path, checksum, generated_at). Notifications (email/SMS) can be dispatched by a Cloud Run Job using Secret Manager credentials.
+6. Audit trail in Firestore captures status, actor, and outcome for compliance review.
+
+## 4. Capability Replacement Matrix
+
+| DT-IFG Component | Proposed GCP / Open Alternative | Notes & Rationale |
+|---|---|---|
+| Azure Functions (ingestion, scheduled jobs) | Cloud Run Jobs or Cloud Functions orchestrated by Cloud Scheduler | Container-first path keeps parity with current FastAPI stack; Scheduler covers cron-style triggers. |
+| Azure Blob Storage (evidence, reports) | Cloud Storage buckets (`i4g-evidence-*`, `i4g-reports-*`) | Signed URLs mirror SAS tokens; lifecycle rules manage retention and legal-hold requirements. |
+| Azure Cognitive Search | Vertex AI Search **or** AlloyDB + pgvector | Vertex AI offers turnkey relevance tuning; AlloyDB retains Postgres compatibility for open-source tooling. Selection pending PoC metrics. |
+| Azure SQL Database | Cloud SQL for Postgres **and/or** Firestore | Firestore absorbs document-style data; Cloud SQL hosts relational datasets still required post-migration. |
+| Azure AD B2C | Google Cloud Identity Platform (OIDC) | Nonprofit pricing, managed flows, and smooth OAuth integration with Streamlit/FastAPI; agnostic enough to swap for authentik later. |
+| Azure Key Vault | Secret Manager + IAM Conditions | Native integration with Cloud Run, Workload Identity; supports rotation and audit logging. |
+| Azure Monitor / App Insights | Cloud Logging, Monitoring, Error Reporting with OpenTelemetry | Keeps observability fully managed while preserving portability to other OTel targets. |
+| Azure Service Bus / Queues | Pub/Sub + Workflows (if orchestration needed) | Provides durable messaging and stateful workflow orchestration for multi-step ingestions. |
+| Azure ML / OpenAI endpoints | Vertex AI Model Garden + LangChain connectors | Ensures we can mix managed Gemini models with self-hosted Ollama deployments. |
+
+## 5. Environment Strategy
 - **Projects**: `i4g-prod`, `i4g-staging`, `i4g-dev` (optional). Each with mirrored resources except production restrictions on IAM and logging retention.
 - **Branches**: `main` (prod) and `staging` branch tied to staging environment via GitHub Actions.
 - **CI/CD**: GitHub Actions workflows deploy to Cloud Run (FastAPI, Streamlit), manage Cloud Run Jobs, run tests (pytest, unit + integration).
 
-## 5. Open-Source Alignment Checklist
+## 6. Open-Source Alignment Checklist
 - ✅ OIDC-compatible auth (swap between Google Identity and authentik/Keycloak).
 - ✅ LangChain orchestration for retrieval pipeline (pluggable vector stores, LLMs).
 - ✅ Storage built on open APIs (Firestore has gRPC/REST; Cloud Storage S3-compatible; AlloyDB Postgres-based).
 - ✅ Observability via OpenTelemetry-compatible stack.
 - ✅ IaC via Terraform (or Pulumi) stored in `infra/` repo.
 
-## 6. Outstanding Decisions (to resolve in Milestone 2)
+## 7. Outstanding Decisions (to resolve in Milestone 2)
 
 | Area | Decision Needed | Owners | Due |
 |---|---|---|---|
@@ -148,7 +215,7 @@ This document sketches the proposed end-state architecture that replaces DT-IFG�
 | Data warehouse | Whether to introduce BigQuery for analytics | Jerry | During Milestone 3 planning |
 | Terraform vs other IaC | Confirm tooling for infra repo | Jerry | Start of Milestone 3 |
 
-## 7. Next Steps
+## 8. Next Steps
 1. Build PoC notebooks / scripts to benchmark retrieval quality across Vertex AI Search and AlloyDB pgvector using sample DT-IFG cases.
 2. Stand up minimal FastAPI + Streamlit skeletons on Cloud Run (staging project) with Google Identity auth to validate deployment pipeline.
 3. Define Terraform module structure (projects, service accounts, storage buckets, Cloud Run services).

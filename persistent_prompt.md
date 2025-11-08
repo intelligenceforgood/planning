@@ -13,6 +13,7 @@ Use this file to rehydrate context whenever a coding session restarts (e.g., VS 
 - Maintain the **Pydantic settings** structure introduced on 2025-11-07 (nested sections for `api`, `storage`, `vector`, `llm`, etc.) and prefer env-variable overrides over hard-coded values.
 - Instantiate structured, review, and vector stores through the shared factory helpers in `src/i4g/services/factories.py` so configuration-driven backend swaps keep working across the codebase.
 - When updating configs or workflows, reflect the change in both code and the relevant planning docs (usually the change log).
+- For Milestone 2 planning work, keep `planning/m2_task_outline.md` alongside `planning/future_architecture.md`; update both as architecture decisions evolve. Use Mermaid diagrams for topology when practical. GitHub’s preview or mermaid.live render reliably; locally, the VS Code extension `bierner.markdown-mermaid` currently offers the best support.
 
 ## 3. Workflow Expectations
 - Record significant decisions or work-in-progress summaries in `planning/change_log.md` (or add new dated docs if better suited).
