@@ -30,6 +30,12 @@ Use this outline to track prep and execution tasks for Milestone 2 (designing th
 4. **Security & IAM Plan**
    - Define service accounts, Secret Manager usage, tokenization/PII controls.
    - Outline Workload Identity Federation needs during transition.
+   - ✅ Drafted in `future_architecture.md` §3.7 with scoped roles, secrets strategy, and monitoring.
+
+6. **Local Sandbox Profile**
+   - Lock in configuration defaults for `I4G_ENV=local` (mock auth, SQLite, Chroma, Ollama, scheduler off).
+   - ✅ Implemented via `settings/config.py` environment overrides; documented in `future_architecture.md` §3.9.
+   - Added `scripts/bootstrap_local_sandbox.py` to regenerate sample data end-to-end.
 
 5. **Outstanding Decisions Register**
    - Update the table in `planning/future_architecture.md` with owners and due dates as decisions solidify.

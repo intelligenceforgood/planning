@@ -117,10 +117,40 @@ flowchart TB
 - Terraform modules (Milestone 3) for reproducible infrastructure.
 
 ### 3.7 Security & IAM
-- Dedicated service accounts per service (FastAPI, Streamlit, ingestion jobs, scheduler tasks).
-- PII vault operations confined to a service account with `roles/datastore.user` + custom encryption permissions.
-- Workload Identity Federation for any residual Azure integration during transition.
-- Secret Manager used for all credentials, rotated quarterly (automated via Cloud Scheduler function).
+
+#### 3.7.1 Identity Boundary
+- All user-facing entry points terminate at Cloud Run behind Identity-Aware Proxy (IAP) or Google Identity Platform, enforcing OAuth/OIDC flows with role claims (`victim`, `analyst`, `admin`, `leo`).
+- Service-to-service authentication relies on service account identities; no long-lived API keys.
+- Local development uses short-lived signed JWTs produced by a dev helper script to mimic IdP-issued tokens.
+
+#### 3.7.2 Service Accounts & Permissions
+
+| Component | Service Account | Key Roles |
+|---|---|---|
+| FastAPI Cloud Run service | `sa-fastapi@{project}` | `roles/run.invoker`, `roles/datastore.user`, `roles/storage.objectViewer`, custom `roles/vertex.searchUser` or AlloyDB client role, Secret Manager accessor |
+| Streamlit Cloud Run service | `sa-streamlit@{project}` | `roles/run.invoker`, `roles/datastore.viewer`, `roles/storage.objectViewer`, Secret Manager accessor |
+| Ingestion jobs / schedulers | `sa-ingest@{project}` | `roles/run.invoker`, `roles/storage.objectAdmin`, `roles/datastore.user`, Pub/Sub publisher (if workflows emit events) |
+| Report worker (Cloud Run job or scheduler) | `sa-report@{project}` | `roles/storage.objectAdmin`, `roles/datastore.user`, Secret Manager accessor |
+| PII vault micro-service | `sa-vault@{project}` | `roles/datastore.user`, Cloud KMS-encrypter/decrypter (if KMS used), no storage access |
+
+- Each service account is provisioned via Terraform with minimum privileges and Workload Identity Federation annotations to avoid JSON key distribution.
+- Administrative access (manual scripts, ad-hoc queries) executes via `gcloud auth login` + `impersonate-service-account` patterns; no shared credentials.
+
+#### 3.7.3 Secrets & Tokenization
+- Secret Manager holds database passwords, third-party API keys, and encryption salts. Access is scoped to the relevant service accounts.
+- Vaulted PII records store encrypted values (AES-256-GCM). Encryption keys live in Cloud KMS if credits allow; otherwise stored as Secret Manager versions rotated quarterly via scheduler job.
+- Tokenization micro-service exposes gRPC/REST endpoints behind Cloud Run; only FastAPI (and ingestion jobs when needed) can call it, enforced by IAM allow policies.
+
+#### 3.7.4 Network & Data Safeguards
+- VPC Access connectors back Cloud Run services for outbound calls to private resources (e.g., Cloud SQL, AlloyDB); ingress is restricted to HTTPS with managed certificates.
+- Cloud Storage buckets enforce uniform bucket-level access with IAM conditions to prevent public exposure. Signed URLs have short TTLs (≤15 minutes) and user identity embedded in audit logs.
+- Firestore security rules enforce per-document ownership and role-based read/write policies, mirroring server-side checks.
+
+#### 3.7.5 Monitoring & Compliance
+- Cloud Audit Logs retained for ≥400 days; export to BigQuery or Cloud Storage coldline for compliance if storage costs remain within grants.
+- Security Command Center (Standard tier) enabled to receive vulnerability findings on Cloud Run images and IAM misconfigurations.
+- Daily job reconciles IAM policy drift, comparing Terraform state against actual grants and alerting through Cloud Monitoring.
+- Incident response playbook references these logs and outlines steps for token revocation, Secret Manager rotation, and Firestore PII vault audits.
 
 ### 3.8 Deployment Profiles (Managed vs Local)
 
@@ -143,6 +173,7 @@ flowchart TB
 - Environment selection driven by `I4G_ENV` (`local`, `staging`, `prod`, etc.), with a stack order: baked-in defaults → environment-specific config (`settings/staging.py` or `.env`) → per-developer overrides in `.env.local` (gitignored).
 - Sensitive values resolve from Secret Manager in managed environments; local profile falls back to `.env.local` to avoid accidental writes to production resources.
 - Services share the same settings package so API, UI, jobs, and notebooks read configuration from a single, documented source.
+- The `local` environment automatically toggles sandbox defaults (mock identity, SQLite structured store, Chroma vectors, Ollama LLM, Secret Manager disabled, scheduled jobs off) so a laptop run requires no cloud credentials.
 
 ### 3.10 End-to-End Data Flows
 

@@ -14,6 +14,9 @@ Use this file to rehydrate context whenever a coding session restarts (e.g., VS 
 - Instantiate structured, review, and vector stores through the shared factory helpers in `src/i4g/services/factories.py` so configuration-driven backend swaps keep working across the codebase.
 - When updating configs or workflows, reflect the change in both code and the relevant planning docs (usually the change log).
 - For Milestone 2 planning work, keep `planning/m2_task_outline.md` alongside `planning/future_architecture.md`; update both as architecture decisions evolve. Use Mermaid diagrams for topology when practical. GitHub’s preview or mermaid.live render reliably; locally, the VS Code extension `bierner.markdown-mermaid` currently offers the best support.
+- Assume a two-person team (you + Copilot). Assign owners opportunistically but note that action items will default to you unless explicitly automated.
+- `I4G_ENV=local` now enforces sandbox defaults (mock identity, SQLite/Chroma backends, Ollama, Secret Manager off). Keep that profile intact for laptop runs; stage/staging environments can override as needed.
+- Use `python scripts/bootstrap_local_sandbox.py --reset` whenever you need to rebuild local demo data (bundles, OCR outputs, Chroma store, review cases) in one step.
 
 ## 3. Workflow Expectations
 - Record significant decisions or work-in-progress summaries in `planning/change_log.md` (or add new dated docs if better suited).
