@@ -15,16 +15,6 @@ This document sketches the proposed end-state architecture that replaces DT-IFGâ
 ## 2. High-Level Topology
 
 ```mermaid
-%%{ init: {
-      'flowchart': { 'htmlLabels': true, 'nodeSpacing': 60, 'rankSpacing': 70 },
-      'themeVariables': {
-        'fontSize': '18px',
-        'fontFamily': 'Inter, Helvetica, Arial, sans-serif',
-        'primaryBorderColor': '#0b5394',
-        'primaryColor': '#dae8fc'
-      }
-    }
-}%%
 flowchart TB
   subgraph Users["User Channels"]
     Victim[Victim Web/Mobile]
@@ -33,14 +23,14 @@ flowchart TB
   end
 
   subgraph CloudRun["Cloud Run Services (us-central1)"]
-    FastAPI["FastAPI API Gateway\n(RAG, Intake, Reports)"]
-    Streamlit["Streamlit Analyst Portal\n(OAuth/OIDC)"]
+    FastAPI["FastAPI API Gateway<br>(RAG, Intake, Reports)"]
+    Streamlit["Streamlit Analyst Portal<br>(OAuth/OIDC)"]
   end
 
   subgraph DataLayer["Data & Intelligence Layer"]
-    Firestore["Firestore\n(Cases, Config, PII Tokens)"]
-    Storage["Cloud Storage\n(Evidence, Reports)"]
-    Vector[Vertex AI Search\n/ AlloyDB + pgvector]
+    Firestore["Firestore<br>(Cases, Config, PII Tokens)"]
+    Storage["Cloud Storage<br>(Evidence, Reports)"]
+    Vector[Vertex AI Search<br>/ AlloyDB + pgvector]
     TokenVault[PII Vault / Tokenization]
     IngestionPipelines[Ingestion Pipelines]
     RAG[LangChain RAG Orchestration]
@@ -48,7 +38,7 @@ flowchart TB
 
   subgraph Ops["Platform Services"]
     Scheduler[Cloud Scheduler / Run Jobs]
-    Secrets[Secret Manager\n+ Workload Identity]
+    Secrets[Secret Manager<br> + Workload Identity]
     Telemetry[Cloud Logging & Monitoring]
   end
 
