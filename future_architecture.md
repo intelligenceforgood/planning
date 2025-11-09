@@ -1,6 +1,6 @@
 # Future-State Architecture (DT-IFG → i4g, GCP-Only, Open-Friendly)
 
-_Last updated: 6 Nov 2025_
+_Last updated: 8 Nov 2025_
 
 This document sketches the proposed end-state architecture that replaces DT-IFG’s Azure/GCP hybrid with an all-GCP stack while embracing open standards and minimal vendor lock-in. It reflects the technology evaluations in `technology_evaluation.md` and addresses the gaps identified in `gap_analysis.md`.
 
@@ -122,6 +122,7 @@ flowchart TB
 - All user-facing entry points terminate at Cloud Run behind Identity-Aware Proxy (IAP) or Google Identity Platform, enforcing OAuth/OIDC flows with role claims (`victim`, `analyst`, `admin`, `leo`).
 - Service-to-service authentication relies on service account identities; no long-lived API keys.
 - Local development uses short-lived signed JWTs produced by a dev helper script to mimic IdP-issued tokens.
+- Federated identity (Workload Identity Federation) bridges legacy Azure workloads during cutover, issuing short-lived tokens against dedicated broker service accounts instead of static keys.
 
 #### 3.7.2 Service Accounts & Permissions
 
@@ -129,9 +130,10 @@ flowchart TB
 |---|---|---|
 | FastAPI Cloud Run service | `sa-fastapi@{project}` | `roles/run.invoker`, `roles/datastore.user`, `roles/storage.objectViewer`, custom `roles/vertex.searchUser` or AlloyDB client role, Secret Manager accessor |
 | Streamlit Cloud Run service | `sa-streamlit@{project}` | `roles/run.invoker`, `roles/datastore.viewer`, `roles/storage.objectViewer`, Secret Manager accessor |
-| Ingestion jobs / schedulers | `sa-ingest@{project}` | `roles/run.invoker`, `roles/storage.objectAdmin`, `roles/datastore.user`, Pub/Sub publisher (if workflows emit events) |
+| Ingestion jobs / schedulers | `sa-ingest@{project}` | `roles/run.invoker`, `roles/storage.objectAdmin`, `roles/datastore.user`, Pub/Sub publisher (if workflows emit events), Secret Manager accessor for source credentials |
 | Report worker (Cloud Run job or scheduler) | `sa-report@{project}` | `roles/storage.objectAdmin`, `roles/datastore.user`, Secret Manager accessor |
-| PII vault micro-service | `sa-vault@{project}` | `roles/datastore.user`, Cloud KMS-encrypter/decrypter (if KMS used), no storage access |
+| PII vault micro-service | `sa-vault@{project}` | `roles/datastore.user`, Cloud KMS encrypter/decrypter (if KMS used), no Cloud Storage access |
+| Terraform / automation pipeline | `sa-infra@{project}` | `roles/resourcemanager.projectIamAdmin`, `roles/run.admin`, `roles/storage.admin`, `roles/iam.securityReviewer` (scoped to infra project) |
 
 - Each service account is provisioned via Terraform with minimum privileges and Workload Identity Federation annotations to avoid JSON key distribution.
 - Administrative access (manual scripts, ad-hoc queries) executes via `gcloud auth login` + `impersonate-service-account` patterns; no shared credentials.
@@ -140,17 +142,30 @@ flowchart TB
 - Secret Manager holds database passwords, third-party API keys, and encryption salts. Access is scoped to the relevant service accounts.
 - Vaulted PII records store encrypted values (AES-256-GCM). Encryption keys live in Cloud KMS if credits allow; otherwise stored as Secret Manager versions rotated quarterly via scheduler job.
 - Tokenization micro-service exposes gRPC/REST endpoints behind Cloud Run; only FastAPI (and ingestion jobs when needed) can call it, enforced by IAM allow policies.
+- Secret rotation cadence: quarterly for external credentials, monthly for signing keys, and on-demand triggerable via Terraform variable + GitHub workflow to keep automation auditable.
 
 #### 3.7.4 Network & Data Safeguards
 - VPC Access connectors back Cloud Run services for outbound calls to private resources (e.g., Cloud SQL, AlloyDB); ingress is restricted to HTTPS with managed certificates.
 - Cloud Storage buckets enforce uniform bucket-level access with IAM conditions to prevent public exposure. Signed URLs have short TTLs (≤15 minutes) and user identity embedded in audit logs.
 - Firestore security rules enforce per-document ownership and role-based read/write policies, mirroring server-side checks.
+- Artifact Registry images are signed (Sigstore) and verified by Cloud Deploy before promotion, blocking tampered workloads from running.
 
 #### 3.7.5 Monitoring & Compliance
 - Cloud Audit Logs retained for ≥400 days; export to BigQuery or Cloud Storage coldline for compliance if storage costs remain within grants.
 - Security Command Center (Standard tier) enabled to receive vulnerability findings on Cloud Run images and IAM misconfigurations.
 - Daily job reconciles IAM policy drift, comparing Terraform state against actual grants and alerting through Cloud Monitoring.
 - Incident response playbook references these logs and outlines steps for token revocation, Secret Manager rotation, and Firestore PII vault audits.
+- Access transparency reports (beta) are enabled so Google staff access is logged; feed stored alongside audit exports for review.
+
+#### 3.7.6 Role-to-Capability Matrix
+
+| Role | Entry Path | Primary Data Access | Actions Allowed | Notes |
+|---|---|---|---|---|
+| Victim | FastAPI intake endpoints via Google Identity | Own submissions (Firestore docs scoped to UID), upload bucket objects via signed URL | Create/update intake records, upload evidence, read status of submitted cases | Read-only access enforced through Firestore security rules; no direct Storage listing |
+| Analyst | Streamlit portal (Cloud Run) | Case queues, evidence metadata, vector query results, read-only Firestore PII tokens (detokenized via FastAPI on demand) | Claim/release cases, run chat/RAG searches, trigger report generation, annotate cases | Detokenization requires explicit action and logs actor/justification |
+| Admin | Streamlit admin views + FastAPI admin APIs | All case data, configuration collections, audit logs | Manage users/roles, adjust configuration, approve report publishing, initiate rotations | Access gated by admin-only OAuth claim and Cloud Run IAM |
+| Law Enforcement (LEO) | Streamlit read-only report portal | Published reports, supporting evidence with signed URLs | View/download reports, acknowledge receipt | Accounts provisioned manually; multi-factor auth enforced |
+| Automation (ingest/report jobs) | Cloud Run jobs / Scheduler | Firestore ingestion collections, Storage evidence buckets, vector store | Normalize raw feeds, enqueue cases, seed vector index, emit alerts | Operate under dedicated service accounts with least privilege |
 
 ### 3.8 Deployment Profiles (Managed vs Local)
 

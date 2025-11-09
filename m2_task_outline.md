@@ -1,6 +1,6 @@
 # Milestone 2 – Target GCP Architecture
 
-_Last updated: 7 Nov 2025_
+_Last updated: 8 Nov 2025_
 
 Use this outline to track prep and execution tasks for Milestone 2 (designing the future-state i4g architecture on GCP).
 
@@ -30,7 +30,9 @@ Use this outline to track prep and execution tasks for Milestone 2 (designing th
 4. **Security & IAM Plan**
    - Define service accounts, Secret Manager usage, tokenization/PII controls.
    - Outline Workload Identity Federation needs during transition.
-   - ✅ Drafted in `future_architecture.md` §3.7 with scoped roles, secrets strategy, and monitoring.
+   - ✅ Drafted in `future_architecture.md` §3.7 with scoped roles, secrets strategy, monitoring, and role-to-capability matrix (2025-11-08 update).
+   - ⚙️ Implemented dev Terraform modules for service accounts + GitHub WIF impersonation (2025-11-09); extend to staging/prod once projects exist.
+   - 🔄 CI: `.github/workflows/terraform-dev.yml` runs fmt/plan/apply via WIF; ensure repo variables stay in sync as environments expand.
 
 6. **Local Sandbox Profile**
    - Lock in configuration defaults for `I4G_ENV=local` (mock auth, SQLite, Chroma, Ollama, scheduler off).

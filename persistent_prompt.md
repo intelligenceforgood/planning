@@ -17,12 +17,14 @@ Use this file to rehydrate context whenever a coding session restarts (e.g., VS 
 - Assume a two-person team (you + Copilot). Assign owners opportunistically but note that action items will default to you unless explicitly automated.
 - `I4G_ENV=local` now enforces sandbox defaults (mock identity, SQLite/Chroma backends, Ollama, Secret Manager off). Keep that profile intact for laptop runs; stage/staging environments can override as needed.
 - Use `python scripts/bootstrap_local_sandbox.py --reset` whenever you need to rebuild local demo data (bundles, OCR outputs, Chroma store, review cases) in one step.
+- Terraform automation lives in `infra/` with a GCS backend and Workload Identity Federation to GitHub Actions (`modules/iam/workload_identity_github`). Impersonate `sa-infra` via `gcloud auth application-default login` + token creator role before running plans locally.
 
 ## 3. Workflow Expectations
 - Record significant decisions or work-in-progress summaries in `planning/change_log.md` (or add new dated docs if better suited).
 - Before pushing, run the appropriate smoke tests or pytest suites when code changes warrant it; note in the summary if tests were skipped.
 - Preserve ASCII-only edits unless existing files already contain Unicode that is necessary.
 - Never revert user-authored changes unless explicitly instructed.
+- Terraform changes are mirrored in GitHub Actions (`infra/.github/workflows/terraform-dev.yml`); keep repository variables (`TF_GCP_*`) updated when project IDs or providers change.
 
 ## 4. Rehydration Notes
 - If the session resumes after a gap, rerun a quick diff (`git status -sb`) to understand outstanding work.
