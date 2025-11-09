@@ -1,6 +1,6 @@
 # Milestone 2 – Target GCP Architecture
 
-_Last updated: 8 Nov 2025_
+_Last updated: 9 Nov 2025_
 
 Use this outline to track prep and execution tasks for Milestone 2 (designing the future-state i4g architecture on GCP).
 
@@ -11,40 +11,41 @@ Use this outline to track prep and execution tasks for Milestone 2 (designing th
 - Collect existing diagrams (if any) and decide whether to redraw in Excalidraw, CloudCraft, or Mermaid.
 
 ## 2. Workstreams
-1. **Architecture Diagrams**
+1. **Architecture Diagrams** — ⚠️ In Progress
    - Draft updated logical and deployment diagrams showing Cloud Run, Firestore, Cloud Storage, retrieval layer, IAM.
    - Highlight managed vs. open/self-hosted options per capability.
-   - ✅ High-level Mermaid topology committed 2025-11-07; refine with component swimlanes if needed.
+   - ✅ High-level Mermaid topology committed 2025-11-07; refine with component swimlanes + Cloud Run specifics still pending.
 
-2. **Data Flow Narratives**
+2. **Data Flow Narratives** — ✅ Complete
    - Document ingestion pathways (forms, groups.io, financial feeds) into Firestore/Storage.
    - Describe retrieval/RAG flow including vector store selection and LLM hosting.
    - Cover report generation pipeline and its interactions with stores and LLMs.
    - ✅ Initial workflows captured in `future_architecture.md` §3.10.
 
-3. **Capability Replacement Matrix**
+3. **Capability Replacement Matrix** — ✅ Complete
    - Map each Azure component to a proposed GCP substitute with rationale, trade-offs, and open-source alignment.
    - Call out decisions requiring PoC validation (Vertex AI Search vs AlloyDB + pgvector, IdP choice, etc.).
    - ✅ Draft matrix committed in `future_architecture.md` §4.
 
-4. **Security & IAM Plan**
+4. **Security & IAM Plan** — ⚠️ In Progress
    - Define service accounts, Secret Manager usage, tokenization/PII controls.
    - Outline Workload Identity Federation needs during transition.
    - ✅ Drafted in `future_architecture.md` §3.7 with scoped roles, secrets strategy, monitoring, and role-to-capability matrix (2025-11-08 update).
    - ⚙️ Implemented dev Terraform modules for service accounts + GitHub WIF impersonation (2025-11-09); extend to staging/prod once projects exist.
    - 🔄 CI: `.github/workflows/terraform-dev.yml` runs fmt/plan/apply via WIF; ensure repo variables stay in sync as environments expand.
+   - ✅ Cloud Run smoke tests verified FastAPI + Streamlit revisions deploy cleanly with `/tmp` SQLite storage and documented manual `gcloud run services update ...` workflow for reused image tags (2025-11-09).
 
-6. **Local Sandbox Profile**
+5. **Outstanding Decisions Register** — ⏳ Not Started
+   - Update the table in `planning/future_architecture.md` with owners and due dates as decisions solidify.
+
+6. **Local Sandbox Profile** — ✅ Complete
    - Lock in configuration defaults for `I4G_ENV=local` (mock auth, SQLite, Chroma, Ollama, scheduler off).
    - ✅ Implemented via `settings/config.py` environment overrides; documented in `future_architecture.md` §3.9.
    - Added `scripts/bootstrap_local_sandbox.py` to regenerate sample data end-to-end.
 
-5. **Outstanding Decisions Register**
-   - Update the table in `planning/future_architecture.md` with owners and due dates as decisions solidify.
-
 ## 3. Deliverables Checklist
-- [ ] Updated `planning/future_architecture.md` with revised diagrams (Mermaid draft added 2025-11-07; extend as needed).
-- [ ] Appendix or inline section documenting managed vs local profiles for each capability.
+- [ ] Updated `planning/future_architecture.md` with refined diagrams and deployment swimlanes (Mermaid draft added 2025-11-07; needs Cloud Run + dataflow updates).
+- [ ] Appendix or inline section documenting managed vs local profiles for each capability (drafted in notes, still needs polish/publish).
 - [ ] Summary paragraph for change_log once Milestone 2 design is approved.
 
 ## 4. Open Questions
