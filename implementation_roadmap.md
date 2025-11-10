@@ -1,6 +1,6 @@
 # Implementation Roadmap (Milestone 3 Draft)
 
-_Last updated: 6 Nov 2025_
+_Last updated: 10 Nov 2025_
 
 This roadmap translates the gap analysis and future-state architecture into actionable workstreams. It assumes a single technical contributor (Jerry) with volunteer support for documentation/testing as available.
 
@@ -15,16 +15,16 @@ This roadmap translates the gap analysis and future-state architecture into acti
 | **Security & Observability** | IAM hardening, secrets, logging/monitoring | Terraform modules, alerting policies, PII vault enforcement |
 | **Documentation & Ops** | Author runbooks, migration guides, comms plan | Updated docs, migration checklists, volunteer onboarding |
 
-## 2. Timeline Snapshot (Assuming 16-week plan @ ~10 hrs/week)
+## 2. Timeline Snapshot (12-week plan @ ~10 hrs/week)
 
 ```
-Weeks 1-4: Identity & Access foundation, Retrieval PoCs
-Weeks 5-8: Ingestion pipelines, Retrieval selection & hardening
-Weeks 9-12: Frontend parity, Reporting automation, PII vault rollout
-Weeks 13-16: Observability, IAM cleanup, Migration rehearsal & docs freeze
+Weeks 1-3: Identity & Access foundation, Cloud Run baseline, planning artifacts
+Weeks 4-6: Retrieval PoCs + decision, architecture diagrams, IAM hardening
+Weeks 7-9: Ingestion pipelines, retrieval integration, reporting automation
+Weeks 10-12: Frontend parity, observability, IAM cleanup, migration rehearsal & docs freeze
 ```
 
-> NOTE: This pacing is a baseline reference only; we will use Milestone 2 completion to gauge actual velocity and adjust subsequent phases.
+> NOTE: This pacing assumes the accelerated progress from early Milestone 2 continues; revisit after retrieval decisions if scope shifts.
 
 ## 3. Detailed Tasks by Stream
 
