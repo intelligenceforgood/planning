@@ -1,6 +1,6 @@
 # Milestone 2 – Target GCP Architecture
 
-_Last updated: 9 Nov 2025_
+_Last updated: 10 Nov 2025_
 
 Use this outline to track prep and execution tasks for Milestone 2 (designing the future-state i4g architecture on GCP).
 

@@ -44,3 +44,4 @@ This log captures significant planning decisions and architecture changes as we 
 - Standardised environment naming on two GCP projects (`i4g-dev`, `i4g-prod`), retiring the generic “sandbox” framing except for local/offline security tests.
 - Tightened risk tracking to focus on technology/architecture uncertainties (e.g., retrieval backend choice) rather than stakeholder availability.
 - Updated `implementation_roadmap.md` to a 12-week execution plan reflecting the accelerated Milestone 2 progress to date.
+- Enabled Gemini Cloud Assist (`cloudaicompanion.googleapis.com`) via Terraform so the dev project can use Gemini-assisted workflows without manual console toggles.
