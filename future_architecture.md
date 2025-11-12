@@ -1,6 +1,6 @@
 # Future-State Architecture (DT-IFG → i4g, GCP-Only, Open-Friendly)
 
-_Last updated: 8 Nov 2025_
+_Last updated: 11 Nov 2025_
 
 This document sketches the proposed end-state architecture that replaces DT-IFG’s Azure/GCP hybrid with an all-GCP stack while embracing open standards and minimal vendor lock-in. It reflects the technology evaluations in `technology_evaluation.md` and addresses the gaps identified in `gap_analysis.md`.
 
@@ -67,6 +67,89 @@ flowchart TB
   Telemetry -- Metrics/Logs --> Streamlit
   Telemetry -- Metrics/Logs --> IngestionPipelines
 ```
+
+### 2.1 Cloud Run Deployment Swimlanes
+
+```mermaid
+flowchart LR
+  subgraph Users["User Entrypoints"]
+    VictimUI[Victim Web/Mobile]
+    AnalystUI[Analyst Portal]
+    LEOUI[LEO Portal]
+  end
+
+  subgraph Edge["Identity & Edge"]
+    IAP[Identity Platform / IAP]
+  end
+
+  subgraph RunServices["Cloud Run Services"]
+    FastAPI[FastAPI Gateway]
+    Streamlit[Streamlit UI]
+    JobIngest[Cloud Run Jobs – Ingestion]
+    JobReport[Cloud Run Jobs – Report Generator]
+    VaultService[Tokenization Micro-service]
+  end
+
+  subgraph VPC["Serverless VPC Access"]
+    VPCConn[Serverless VPC Connector]
+  end
+
+  subgraph DataPlane["Data Plane & Private Services"]
+    Firestore[Firestore]
+    Storage[Cloud Storage]
+    Vector[Vector Store (Vertex AI Search / AlloyDB)]
+    KMS[Cloud KMS]
+  end
+
+  subgraph Platform["Platform Operations"]
+    Secrets[Secret Manager]
+    Logging[Cloud Logging / Monitoring]
+  end
+
+  VictimUI --> IAP
+  AnalystUI --> IAP
+  LEOUI --> IAP
+
+  IAP --> FastAPI
+  IAP --> Streamlit
+
+  Streamlit -->|Authenticated API| FastAPI
+  FastAPI -->|REST| Firestore
+  FastAPI -->|Signed URLs| Storage
+  FastAPI -->|Vector Queries| Vector
+  FastAPI --> VaultService
+
+  JobIngest -->|Writes| Firestore
+  JobIngest -->|Artifacts| Storage
+  JobIngest -->|Embeddings| Vector
+
+  JobReport -->|Reads| Firestore
+  JobReport -->|Publishes| Storage
+
+  VaultService -->|Detokenized Reads| Firestore
+
+  Secrets -.-> FastAPI
+  Secrets -.-> Streamlit
+  Secrets -.-> JobIngest
+  Secrets -.-> JobReport
+  Secrets -.-> VaultService
+
+  FastAPI -.->|Workload Identity| VPCConn
+  JobIngest -.->|Private Resources| VPCConn
+  JobReport -.->|Private Resources| VPCConn
+  VaultService -.->|Private Resources| VPCConn
+  VaultService -->|Encrypt/Decrypt| KMS
+
+  VPCConn -->|Private Access| Vector
+  VPCConn -->|Private Access| KMS
+
+  Logging -.-> FastAPI
+  Logging -.-> Streamlit
+  Logging -.-> JobIngest
+  Logging -.-> JobReport
+```
+
+The swimlanes emphasize the Cloud Run deployment boundary: user requests traverse Identity-Aware Proxy (IAP) before reaching the stateless FastAPI and Streamlit services, while background Cloud Run jobs handle ingestion and reporting. Secrets flow from Secret Manager into each workload via Workload Identity Federation, and the shared VPC connector enables private access to the vector store or KMS when those resources require it. Observability remains centralized through Cloud Logging and Monitoring across all containers.
 
 ## 3. Key Components
 
@@ -169,23 +252,23 @@ flowchart TB
 
 ### 3.8 Deployment Profiles (Managed vs Local)
 
-| Capability / Service | Managed (Cloud Run / GCP) | Local / Laptop Profile |
-|---|---|---|
-| Identity | Google Cloud Identity Platform (OIDC) | Local mock OIDC provider or stub JWT signer for development |
-| API Gateway / FastAPI | Cloud Run service with Workload Identity | Docker container running FastAPI with `.env` config |
-| Analyst UI | Streamlit on Cloud Run (authenticated) | Streamlit app run locally with dev auth toggles |
-| Retrieval & Vector Store | Vertex AI Search **or** AlloyDB + pgvector (managed) | Dockerized Postgres + pgvector or local Chroma for rapid iteration |
-| LLM Inference | Vertex AI (Gemini) primary; optional Cloud Run GPU with Ollama | Ollama running locally or mock responses for unit tests |
-| Storage | Firestore + Cloud Storage buckets | Local JSON/SQLite stores and filesystem folders mounted via `.env` paths |
-| Ingestion Jobs | Cloud Run Jobs + Scheduler (per-service SA) | Local scripts invoked via `make`/Invoke with stub schedules |
-| Observability | Cloud Logging/Monitoring with OpenTelemetry exporters | Console logs + local OTLP collector (optional) |
-| Secrets | Secret Manager, GCP-managed IAM | `.env.local` (gitignored) + Pydantic settings overrides |
+| Capability / Service | Managed (Cloud Run / GCP) | Local / Laptop Profile | Swap Mechanism |
+|---|---|---|---|
+| Identity | Google Cloud Identity Platform (OIDC) | Local mock OIDC provider or stub JWT signer for development | `settings.identity.provider` (`google_identity` vs `dev_stub`); toggle via `I4G_ENV` + `.env.local`. |
+| API Gateway / FastAPI | Cloud Run service with Workload Identity | Docker container running FastAPI with `.env` config | `settings.runtime.mode` (`managed` / `local`); `make run-fastapi` uses local profile. |
+| Analyst UI | Streamlit on Cloud Run (authenticated) | Streamlit app run locally with dev auth toggles | `settings.ui.base_url` + `settings.auth.mock_tokens`; `make run-analyst-ui`. |
+| Retrieval & Vector Store | Vertex AI Search (default) | Dockerized Postgres + pgvector or local Chroma | `settings.vector.backend` (`vertex_ai`, `pgvector`, `chroma`); hot-swappable through `VectorClient`. |
+| LLM Inference | Vertex AI Gemini 1.5 Pro | Ollama running locally or mock responses | `settings.llm.provider` (`vertex_ai`, `ollama`, `dummy`); pluggable LangChain `LLMFactory`. |
+| Storage | Firestore + Cloud Storage buckets | Local SQLite/JSON stores + filesystem folders | `settings.storage.mode` (`firestore`, `sqlite_fs`); mounts via `.env.local` paths. |
+| Ingestion Jobs | Cloud Run Jobs + Scheduler | Local scripts invoked via `make ingest-*` with stub schedules | `scripts/ingest/*` honour `settings.jobs.enabled`; local cron disabled by default. |
+| Observability | Cloud Logging/Monitoring with OpenTelemetry exporters | Console logs + optional local OTLP collector (Docker) | `settings.telemetry.otlp_endpoint`; default empty routes to stdout. |
+| Secrets | Secret Manager, Workload Identity | `.env.local` (gitignored) + Pydantic overrides | `settings.secrets.provider` (`secret_manager`, `env`); helper resolves per environment. |
 
-> Developers can use Docker Compose to bundle the local profile. The contract remains aligned with the managed services (same API surface, env vars, and storage schemas) to keep parity.
+> The managed and local profiles share the same configuration contract, so swapping between environments is a matter of setting `I4G_ENV` and the relevant overrides. A sample Docker Compose bundle will accompany Milestone 3 to spin up pgvector, Chroma, or Ollama when testing offline parity.
 
 ### 3.9 Configuration Strategy
 - Adopt a central `settings` package built on **Pydantic BaseSettings** to load defaults from versioned config files and environment variables.
-- Environment selection driven by `I4G_ENV` (`local`, `staging`, `prod`, etc.), with a stack order: baked-in defaults → environment-specific config (`settings/staging.py` or `.env`) → per-developer overrides in `.env.local` (gitignored).
+- Environment selection driven by `I4G_ENV` (`local`, `dev`, `prod`), with a stack order: baked-in defaults → environment-specific config (`settings/dev.py`, `settings/prod.py`, or `.env`) → per-developer overrides in `.env.local` (gitignored).
 - Sensitive values resolve from Secret Manager in managed environments; local profile falls back to `.env.local` to avoid accidental writes to production resources.
 - Services share the same settings package so API, UI, jobs, and notebooks read configuration from a single, documented source.
 - The `local` environment automatically toggles sandbox defaults (mock identity, SQLite structured store, Chroma vectors, Ollama LLM, Secret Manager disabled, scheduled jobs off) so a laptop run requires no cloud credentials.
@@ -230,8 +313,8 @@ flowchart TB
 | Azure ML / OpenAI endpoints | Vertex AI Model Garden + LangChain connectors | Ensures we can mix managed Gemini models with self-hosted Ollama deployments. |
 
 ## 5. Environment Strategy
-- **Projects**: `i4g-prod`, `i4g-staging`, `i4g-dev` (optional). Each with mirrored resources except production restrictions on IAM and logging retention.
-- **Branches**: `main` (prod) and `staging` branch tied to staging environment via GitHub Actions.
+- **Projects**: `i4g-prod` and `i4g-dev`. Production enforces tighter IAM/log retention; no dedicated staging project by design.
+- **Branches**: `main` (prod deployments) and an optional `dev` branch/feature branches that auto-deploy to the dev environment via GitHub Actions.
 - **CI/CD**: GitHub Actions workflows deploy to Cloud Run (FastAPI, Streamlit), manage Cloud Run Jobs, run tests (pytest, unit + integration).
 
 ## 6. Open-Source Alignment Checklist
@@ -243,18 +326,18 @@ flowchart TB
 
 ## 7. Outstanding Decisions (to resolve in Milestone 2)
 
-| Area | Decision Needed | Owners | Due |
-|---|---|---|---|
-| Identity provider | Finalize initial IdP: Google Identity vs authentik | Jerry | End of Milestone 2 |
-| Retrieval backend | Vertex AI Search vs AlloyDB pgvector (PoC metrics) | Jerry | End of Milestone 2 |
-| LLM hosting | Primary inference provider + fallback plan | Jerry | Before Milestone 3 |
-| Data warehouse | Whether to introduce BigQuery for analytics | Jerry | During Milestone 3 planning |
-| Terraform vs other IaC | Confirm tooling for infra repo | Jerry | Start of Milestone 3 |
+| Area | Decision Needed | Owners | Due | Status / Next Action |
+|---|---|---|---|---|
+| Identity provider | Finalize initial IdP: Google Identity vs authentik | Jerry | End of Milestone 2 | ✅ Adopt Google Cloud Identity Platform for initial launch; keep authentik swap documented for future self-host needs. |
+| Retrieval backend | Vertex AI Search vs AlloyDB pgvector (PoC metrics) | Jerry | End of Milestone 2 | ✅ Standardize on Vertex AI Search backed by `VectorClient` abstraction; revisit AlloyDB option if costs or data residency change. |
+| LLM hosting | Primary inference provider + fallback plan | Jerry | Before Milestone 3 | ✅ Use Vertex AI Gemini 1.5 Pro behind LangChain; maintain Ollama fallback profile in `RagConfig` for offline testing. |
+| Data warehouse | Whether to introduce BigQuery for analytics | Jerry | During Milestone 3 planning | ✅ Defer BigQuery until post-M3; rely on Firestore exports + ad-hoc notebooks for analytics meanwhile. |
+| Terraform vs other IaC | Confirm tooling for infra repo | Jerry | Start of Milestone 3 | ✅ Terraform locked in; extend modules to prod during M3 kickoff playbook. |
 
 ## 8. Next Steps
-1. Build PoC notebooks / scripts to benchmark retrieval quality across Vertex AI Search and AlloyDB pgvector using sample DT-IFG cases.
-2. Stand up minimal FastAPI + Streamlit skeletons on Cloud Run (staging project) with Google Identity auth to validate deployment pipeline.
-3. Define Terraform module structure (projects, service accounts, storage buckets, Cloud Run services).
-4. Document migration runbooks (data export from Azure → GCP) to prepare for Milestone 4.
+1. ✅ Reaffirmed two-environment scope (dev + prod), removed staging scaffolding, and updated documentation to match.
+2. ✅ Added `infra/environments/prod` Terraform stack with locked-down defaults (no public invokers, prod env vars, Vertex AI Search `retrieval-prod`).
+3. ✅ Documented dev → prod promotion flow (image tagging, Terraform apply cadence) in `infra/README.md`.
+4. ✅ Drafted migration runbooks (Azure exports → GCP import, data validation) ahead of Milestone 4 implementation; see `planning/migration_runbook.md`.
 
 This architecture will be refined as PoC results come in. Update this document alongside Milestone 2 progress.

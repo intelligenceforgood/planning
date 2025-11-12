@@ -29,7 +29,7 @@ This is a short, shareable todo for setting up public-facing infrastructure for 
   - Repo: `intelligenceforgood/i4g`
   - Deploy: Cloud Run (managed)
   - Auth: Google Cloud Identity or Firebase Auth (decision pending Milestone 2)
-  - Environments: `i4g-prod`, `i4g-staging` GCP projects (separate billing/credentials)
+  - Environments: `i4g-dev`, `i4g-prod` GCP projects (two-environment strategy; no staging tier)
   - CI/CD: GitHub Actions + Terraform in the `infra` repo for infra-as-code
   - Template starter in repo: see `planning/repo_scaffolding/i4g/` for README, LICENSE, CONTRIBUTING, issue/PR templates.
 

@@ -1,6 +1,6 @@
 # DT-IFG Migration Change Log
 
-_Last updated: 10 Nov 2025_
+_Last updated: 11 Nov 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
 
@@ -45,3 +45,16 @@ This log captures significant planning decisions and architecture changes as we 
 - Tightened risk tracking to focus on technology/architecture uncertainties (e.g., retrieval backend choice) rather than stakeholder availability.
 - Updated `implementation_roadmap.md` to a 12-week execution plan reflecting the accelerated Milestone 2 progress to date.
 - Enabled Gemini Cloud Assist (`cloudaicompanion.googleapis.com`) via Terraform so the dev project can use Gemini-assisted workflows without manual console toggles.
+
+## 2025-11-11
+- Locked in Milestone 2 architecture decisions: Google Identity Platform for auth, Vertex AI Search for retrieval, Vertex AI Gemini 1.5 Pro for inference, defer BigQuery until post-M3, and Terraform as IaC baseline.
+- Expanded `future_architecture.md` §3.8 with a managed-vs-local capability matrix including swap mechanisms (`I4G_ENV`, backend selectors) to keep component choices portable.
+- Updated `m2_task_outline.md` to mark the outstanding decisions register and managed/local appendix deliverables as complete, clearing the remaining Milestone 2 documentation backlog.
+- Reaffirmed the two-environment plan (dev + prod), removed the temporary staging Terraform scaffolding, and refreshed docs to match the simplified promotion strategy.
+- Scaffolded `infra/environments/prod` Terraform configuration with locked-down Cloud Run defaults (no public invokers, prod env vars, Vertex AI Search `retrieval-prod`) to prepare for Milestone 3 deployments.
+- Captured the dev → prod promotion workflow (image tagging, Terraform apply cadence, post-deploy checks) in `infra/README.md` so deployments stay consistent.
+- Drafted `planning/migration_runbook.md` with Azure → GCP data, identity, and job cutover procedures plus dry-run timeline, cutover/rollback playbooks, and validation templates (all owned by Jerry) to seed Milestone 4 execution.
+- Implemented Terraform `storage/buckets` module with dev/prod wiring so Cloud Storage evidence/report buckets (with lifecycle rules and retention for prod) are provisioned alongside existing Cloud Run and IAM resources.
+- Added Terraform `run/job` and `scheduler/job` modules, wiring ingestion/report Cloud Run jobs and their Cloud Scheduler triggers (with token impersonation bindings) into both dev and prod environments.
+- Built Cloud Run job images for ingestion/report workflows (`docker/ingest-job.Dockerfile`, `docker/report-job.Dockerfile`) with new Python entrypoints (`i4g.worker.jobs.ingest`, `i4g.worker.jobs.report`) and documented the Artifact Registry build/push steps in the developer guide.
+- Hardened the ingestion pipeline to run when embeddings are unavailable by making the vector store optional, letting the dev job succeed on Cloud Run without an Ollama backend.
