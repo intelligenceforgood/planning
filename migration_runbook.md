@@ -1,6 +1,6 @@
 # Azure → GCP Migration Runbooks (Draft)
 
-_Last updated: 11 Nov 2025_
+_Last updated: 14 Nov 2025_
 
 These runbooks outline the phased process for migrating DT-IFG workloads from Azure to the i4g Google Cloud Platform stack. Each section can be executed independently as data, services, or infrastructure become ready. Update this document as plans firm up during Milestone 3 and 4.
 
@@ -60,21 +60,46 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
 
 ## 3. Unstructured Data Migration (Azure Blob Storage → Cloud Storage)
 
-1. **Inventory Containers**
-   - `evidence` container (original uploads)
-   - `reports` container (generated documents)
-2. **Data Transfer**
-   - Use `AzCopy` or `Azure Storage Explorer` to sync blobs to a local staging area or directly to Cloud Storage via `gsutil` (use service principal credentials for Azure and service account for GCP).
-   - Recommended: `gsutil -m rsync -r gs://azure-export/evidence gs://i4g-evidence-prod`
-3. **Metadata Preservation**
-   - Ensure metadata (content-type, checksum, creation time) is preserved; if not, store sidecar JSON with attributes.
-   - For signed URL parity, confirm `storageClass`, retention policies, and encryption align with GCP buckets.
-4. **Validation**
-   - Spot check file counts per case folder.
-   - Compare checksums between Azure and GCP copies (e.g., MD5 or CRC32C).
-5. **Cleanup & Rollback**
-   - Do not delete Azure blobs until GCP copies are verified and backup snapshots exist.
-   - Document fallback procedure (e.g., re-point signed URLs to Azure if GCP copy fails).
+1. **Inventory Containers (T-35)**
+   - Azure CLI: `az storage container list --account-name <account> --auth-mode login --output table`
+   - Capture size per container: `az storage container show --name <container> --account-name <account>`
+   - Expected containers: `intake-form-attachments` (forms), `evidence` (raw uploads), `reports` (generated PDFs).
+   - Record container → GCS target mapping in this runbook.
+2. **Pre-flight Checks (T-33)**
+   - Ensure Cloud Storage buckets exist (`i4g-evidence-{env}`, `i4g-reports-{env}`) via Terraform.
+   - Confirm service account used for migration has `roles/storage.admin` on target buckets.
+    - Acquire Azure Storage connection string or SAS token with read permissions. Example CLI:
+       ```bash
+       az storage account show-connection-string \
+          --name attachmentsdata \
+          --resource-group intelforgood \
+          --query connectionString -o tsv
+       ```
+3. **Dry Run (T-30)**
+   - Run new helper script in dry-run mode to enumerate objects and confirm access:
+     ```bash
+     python scripts/migration/azure_blob_to_gcs.py \
+       --connection-string "$AZURE_STORAGE_CONNECTION_STRING" \
+       --container evidence=gs://i4g-evidence-dev/handoff \
+       --container reports=gs://i4g-reports-dev \
+       --dry-run \
+       --report data/blob_migration_dryrun.json
+     ```
+   - Review report for object counts, skipped items, and permission errors.
+4. **Data Transfer (T-28)**
+   - Execute full copy (remove `--dry-run`). Add `--overwrite` only if checksums differ and re-sync is needed.
+   - Script preserves `content-type`, `cache-control`, and custom metadata when available.
+   - For very large containers, run per-container to manage runtime; use `--temp-dir` pointing to a disk with sufficient space.
+   - _2025-11-14_: Copied `intake-form-attachments` → `gs://i4g-evidence-dev/forms` and `groupsio-attachments` → `gs://i4g-evidence-dev/groupsio`; follow-up run captured `data/blob_migration_20251114.json` for reporting after the initial copy.
+5. **Validation (T-27)**
+   - Update Storage Validation Log with Azure counts, GCS counts, checksum spot checks.
+   - Spot-check per-case folders and timestamps. Verify signed URL generation against new GCS objects.
+   - Optional: `gsutil ls -L gs://i4g-evidence-dev/...` and compare MD5 with Azure `content_md5` reported in migration script.
+   - _2025-11-14_: Confirmed Azure ↔ GCS blob counts match for both migrated folders; JSON report saved at `data/blob_migration_20251114.json` documents 0 copies and all objects skipped as existing.
+6. **Cleanup & Rollback (T-27)**
+   - Retain Azure blobs until GCS validation complete + snapshot captured.
+   - Rollback plan: re-enable Azure SAS URLs and pause GCS consumers if issues found.
+   - Archive migration reports (`data/blob_migration_*.json`) in docs for audit.
 
 ## 4. Search Index Migration (Azure Cognitive Search → Vertex AI Search)
 
@@ -191,8 +216,8 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
 
 | Container/Prefix | Azure Files | GCP Files | Delta | Sampled Checksum Pass | Notes |
 |---|---|---|---|---|---|
-| evidence/ |  |  |  |  |  |
-| reports/ |  |  |  |  |  |
+| intake-form-attachments → gs://i4g-evidence-dev/forms | 433 | 433 | 0 | ✅ | Report 2025-11-14 (`data/blob_migration_20251114.json`); initial copy earlier same day. |
+| groupsio-attachments → gs://i4g-evidence-dev/groupsio | 1594 | 1594 | 0 | ✅ | Report 2025-11-14 (`data/blob_migration_20251114.json`); initial copy earlier same day. |
 
 ### 9.3 Search Relevance Comparison
 
