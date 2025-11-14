@@ -18,8 +18,8 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
 ## 1. Preparation Checklist (Run Once)
 
 - [ ] Confirm stakeholder buy-in for migration downtime windows and data validation expectations.
-- [ ] Inventory Azure resources in scope:
-  - Azure SQL Database (case data, intake records, etc.)
+- [x] Inventory Azure resources in scope:
+   - Azure SQL Database (legacy intake pipeline tables: `intake_form_data`, `intake_form_data_last_processed`, `groupsio_message_data`)
   - Azure Blob Storage containers (evidence, generated reports)
   - Azure Cognitive Search indexes
   - Azure Functions (ingestion jobs)
@@ -38,11 +38,12 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
 ## 2. Structured Data Migration (Azure SQL → Firestore/Cloud SQL)
 
 1. **Export from Azure SQL**
-   - Use `sqlpackage` or Azure Data Factory to export relevant tables to BACPAC or CSV/Parquet.
-   - Capture schema mapping between Azure SQL tables and Firestore collections / Cloud SQL tables.
+   - Use `sqlpackage` (with Azure AD auth) to export the three legacy tables to BACPAC or CSV/Parquet.
+   - Capture schema mapping between Azure SQL tables and their downstream consumers (forms pipeline, Groups.io cache).
+      - **Post-export:** remove temporary SQL firewall rule with `az sql server firewall-rule delete --name allow-export-YYYYMMDD --server intelforgood --resource-group intelforgood` to close access from your IP.
 2. **Transform Schema**
    - Implement a Python ETL script (preferably in `proto/scripts/migration/azure_sql_to_firestore.py`).
-   - Map relational data to Firestore document structures (`cases`, `case_events`, `attachments`).
+   - Map `intake_form_data` and `intake_form_data_last_processed` into the new intake staging collections; migrate `groupsio_message_data` into the successor messaging cache.
    - Preserve primary keys/foreign keys in document IDs or reference fields.
 3. **Load into GCP**
    - Run ETL script with `I4G_ENV=prod` configuration, impersonating `sa-migration`.
@@ -54,6 +55,8 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
 5. **Rollback Plan**
    - Keep Azure SQL read-only copy until production cutover verified.
    - If issues arise, halt writes to GCP, fix mapping, re-run ETL.
+
+> Legacy "case" datasets live in Firestore (see IFG Chat UI). Document and plan that export separately once the Azure SQL tables are migrated.
 
 ## 3. Unstructured Data Migration (Azure Blob Storage → Cloud Storage)
 
@@ -178,9 +181,11 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
 
 | Table/Collection | Azure Count | GCP Count | Delta | Checksum Match | Notes |
 |---|---|---|---|---|---|
-| cases |  |  |  |  |  |
-| case_events |  |  |  |  |  |
-| attachments |  |  |  |  |  |
+| intake_form_data | 81 | 81 | 0 | ✅ | Loaded via `azure_sql_to_firestore.py` (Report 2025-11-13) |
+| intake_form_data_last_processed | 1 | 1 | 0 | ✅ | Loaded via `azure_sql_to_firestore.py` (Report 2025-11-13) |
+| groupsio_message_data | 26220 | 26220 | 0 | ✅ | Loaded via `azure_sql_to_firestore.py` (Report 2025-11-13) |
+
+> Latest dry-run and load executed 13 Nov 2025 using `python scripts/migration/azure_sql_to_firestore.py --connection-string "Driver={ODBC Driver 18 for SQL Server};Server=tcp:intelforgood.database.windows.net,1433;Database=intelforgood;Encrypt=yes;TrustServerCertificate=no;UID=migration_user;PWD=$SQL_MIGRATION_PASSWORD" --firestore-project i4g-dev --report data/intake_migration_report_20251113.json`. Report artifact stored at `data/intake_migration_report_20251113.json`.
 
 ### 9.2 Storage Validation Log
 
