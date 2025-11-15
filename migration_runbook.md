@@ -104,11 +104,45 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
 ## 4. Search Index Migration (Azure Cognitive Search → Vertex AI Search)
 
 1. **Export Existing Index**
-   - Use Azure Cognitive Search REST API to dump index schema and documents.
-   - For large indexes, export in batches and store interim data in Cloud Storage.
+    - Install the Azure CLI Search extension (once per workstation):
+       ```bash
+       az extension add --name search
+       ```
+    - Authenticate and select the correct subscription:
+       ```bash
+       az login
+       az account list --output table  # note the subscription name or ID
+       az account set --subscription "<subscription-name-or-id>"
+       ```
+    - Discover the Cognitive Search service and resource group:
+       ```bash
+       az search service list --output table
+       az search service show --name <service-name> --resource-group <resource-group>
+       ```
+       Note the `properties.endpoint` value (e.g. `https://ifg-ai-search.search.windows.net`).
+    - List indexes and grab admin/query keys:
+       ```bash
+       az search index list --service-name <service-name> --resource-group <resource-group> --output table
+       az search admin-key show --service-name <service-name> --resource-group <resource-group>
+       az search query-key list --service-name <service-name> --resource-group <resource-group>
+       ```
+   - Run the helper script to snapshot schemas and documents locally:
+     ```bash
+     python scripts/migration/azure_search_export.py \
+       --endpoint "$AZURE_SEARCH_ENDPOINT" \
+          --admin-key "$AZURE_SEARCH_ADMIN_KEY"
+     ```
+    - Store exported artifacts (`data/search_exports/<index>_schema.json`, `data/search_exports/<index>_documents.jsonl`) and upload to GCS for collaboration (current dropzone: `gs://i4g-migration-artifacts-dev/search/20251114/`).
+    - Convert Azure JSONL into Vertex AI Search format:
+       ```bash
+       python scripts/migration/azure_search_to_vertex.py \
+          --input-dir data/search_exports \
+          --output-dir data/search_exports/vertex
+       ```
+    - Prepared Vertex JSONL staged at `gs://i4g-migration-artifacts-dev/search/20251114/vertex/` for Discovery Engine import.
 2. **Transform for Vertex AI Search**
-   - Map fields to Vertex AI Search schema; ensure vector embeddings are included or recomputable.
-   - If embeddings are missing, regenerate using the chosen embedding model in GCP.
+   - Map fields from Azure documents to Vertex AI Search schema; ensure vector embeddings or semantic fields are recomputable via GCP models.
+   - Record per-index field mapping and filter requirements in `planning/search_migration_notes.md`.
 3. **Import to Vertex AI Search**
    - Use `gcloud discovery-engine data-stores documents import` with Cloud Storage manifest.
    - Monitor import progress via Vertex AI Search console or `gcloud` CLI.

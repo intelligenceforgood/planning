@@ -85,9 +85,9 @@ flowchart LR
   subgraph RunServices["Cloud Run Services"]
     FastAPI[FastAPI Gateway]
     Streamlit[Streamlit UI]
-    JobIngest[Cloud Run Jobs – Ingestion]
-    JobReport[Cloud Run Jobs – Report Generator]
-    VaultService[Tokenization Micro-service]
+    JobIngest[Cloud Run Jobs - Ingestion]
+    JobReport[Cloud Run Jobs - Report Generator]
+    VaultService[Tokenization Microservice]
   end
 
   subgraph VPC["Serverless VPC Access"]
@@ -97,7 +97,7 @@ flowchart LR
   subgraph DataPlane["Data Plane & Private Services"]
     Firestore[Firestore]
     Storage[Cloud Storage]
-    Vector[Vector Store (Vertex AI Search / AlloyDB)]
+    Vector["Vector Store (Vertex AI Search / AlloyDB)"]
     KMS[Cloud KMS]
   end
 
@@ -147,6 +147,7 @@ flowchart LR
   Logging -.-> Streamlit
   Logging -.-> JobIngest
   Logging -.-> JobReport
+  Logging -.-> VaultService
 ```
 
 The swimlanes emphasize the Cloud Run deployment boundary: user requests traverse Identity-Aware Proxy (IAP) before reaching the stateless FastAPI and Streamlit services, while background Cloud Run jobs handle ingestion and reporting. Secrets flow from Secret Manager into each workload via Workload Identity Federation, and the shared VPC connector enables private access to the vector store or KMS when those resources require it. Observability remains centralized through Cloud Logging and Monitoring across all containers.
