@@ -27,12 +27,12 @@ Use this outline to track prep and execution tasks for Milestone 2 (designing th
    - Call out decisions requiring PoC validation (Vertex AI Search vs AlloyDB + pgvector, IdP choice, etc.).
    - ✅ Draft matrix committed in `future_architecture.md` §4.
 
-4. **Security & IAM Plan** — ⚠️ In Progress
+4. **Security & IAM Plan** — ✅ Complete
    - Define service accounts, Secret Manager usage, tokenization/PII controls.
    - Outline Workload Identity Federation needs during transition.
    - ✅ Drafted in `future_architecture.md` §3.7 with scoped roles, secrets strategy, monitoring, and role-to-capability matrix (2025-11-08 update).
    - ⚙️ Implemented dev Terraform modules for service accounts + GitHub WIF impersonation (2025-11-09); prod stack scaffolded in `infra/environments/prod` with locked-down defaults (2025-11-11).
-   - 🔄 CI: `.github/workflows/terraform-dev.yml` runs fmt/plan/apply via WIF; ensure repo variables stay in sync as environments expand.
+   - 🔄 CI: `.github/workflows/terraform-dev.yml` runs fmt/plan/apply via WIF; ensure repo variables stay in sync as environments expand. ✅ Validated 15 Nov 2025 with dry-run + plan outputs.
    - ✅ Cloud Run smoke tests verified FastAPI + Streamlit revisions deploy cleanly with `/tmp` SQLite storage and documented manual `gcloud run services update ...` workflow for reused image tags (2025-11-09).
 
 5. **Outstanding Decisions Register** — ✅ Complete
@@ -53,7 +53,7 @@ Use this outline to track prep and execution tasks for Milestone 2 (designing th
 - [x] Outstanding decisions register refreshed with final owner sign-off (decisions logged 2025-11-11).
 - [x] Appendix or inline section documenting managed vs local profiles for each capability (`future_architecture.md` §3.8 expanded 2025-11-11).
 - [x] Draft migration runbooks outlining Azure → GCP cutover steps (`planning/migration_runbook.md` created 2025-11-11).
-- [ ] Summary paragraph for change_log once Milestone 2 design is approved.
+- [x] Summary paragraph for change_log once Milestone 2 design is approved.
 
 ## 4. Open Questions
 - Do we need stakeholder interviews to confirm ingestion requirements? If yes, schedule or assign owner.

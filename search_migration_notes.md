@@ -51,11 +51,10 @@ Artifacts:
 
 - Next steps:
 - [x] Upload the export directory to the shared GCS bucket (`gs://i4g-migration-artifacts-dev/search/20251114/`).
-- [x] Verify document counts in each JSONL file match Azure `documentCount` values. `groupsio-search`: 1000, `intake-form-search`: 505 (339 attachment-only rows intentionally skipped during transform).
-- [ ] Run transformation helper: `python scripts/migration/azure_search_to_vertex.py --input-dir data/search_exports --output-dir data/search_exports/vertex`.
+- [x] Verify document counts in each JSONL file match Azure `documentCount` values. `groupsio-search`: 1000, `intake-form-search`: 505 (339 attachment-only rows intentionally skipped during transform; 7 additional intake docs dropped during import due to empty text).
 - [x] Run transformation helper: `python scripts/migration/azure_search_to_vertex.py --input-dir data/search_exports --output-dir data/search_exports/vertex`.
 - [x] Copy Vertex-ready JSONL files to `gs://i4g-migration-artifacts-dev/search/20251114/vertex/`.
-- [ ] Create Discovery Engine import manifest referencing uploaded Vertex files. (Not required for Python helper workflow; document if CLI import needed.)
+- [ ] Create Discovery Engine import manifest referencing uploaded Vertex files. (Not required for Python helper workflow; draft template before next CLI-driven import.)
 - [x] Execute `python scripts/migration/import_vertex_documents.py --project i4g-dev --location global --data-store-id retrieval-poc --uris gs://i4g-migration-artifacts-dev/search/20251114/vertex/groupsio-search_vertex.jsonl gs://i4g-migration-artifacts-dev/search/20251114/vertex/intake-form-search_vertex.jsonl` to load documents. Script waits for the long-running operation to finish and logs the result.
 - [x] Verify documents exist with `python - <<'PY'
 from google.cloud import discoveryengine_v1beta as discoveryengine
@@ -111,14 +110,41 @@ For each index, document the target Vertex AI Search schema expectations:
 | (Vertex title) | — | `title` | Pull from `email` when available |  |
 
 Tasks:
-- [ ] Identify fields requiring flattening or restructuring to match Discovery Engine `structData` constraints.
-- [ ] Determine how to regenerate embeddings (if Azure stored vector fields) using Vertex AI models or existing pipelines.
+- [x] Identify fields requiring flattening or restructuring to match Discovery Engine `structData` constraints.
+- Current transformer emits flat string fields only (`email`, `group_name`, etc.) plus `content` text stored in both `content.rawBytes` and `structData.content`, so no additional reshaping required for MVP.
+- 15 Nov 2025: Transformer now sets `structData.source` to the index name when Azure leaves it blank (e.g. intake forms get `source=intake-form-search`), giving us a lightweight dataset tag without touching Discovery Engine schema.
+- [x] Determine how to regenerate embeddings (if Azure stored vector fields) using Vertex AI models or existing pipelines.
+- MVP decision: rely on Discovery Engine's built-in semantic pipeline; revisit custom embedding generation (Vertex Embedding API vs. repurposing Azure vectors) after stakeholder feedback.
 
 ## 4. Import Planning
 
 - [ ] Create dedicated Discovery Engine data stores per index or consolidate into a single store with `structData.index_type` field.
+- MVP leaning: keep a single data store (`retrieval-poc`) and tag each document with `structData.index_type` so stakeholders can filter by dataset without fragmenting the store; revisit multiple stores if quotas or tuning requirements diverge later.
 - [ ] Define GCS manifests for bulk import (`gs://i4g-migration-artifacts/search/20251114/<index>_documents.jsonl`).
+- Manifest template (if CLI import becomes necessary):
+  ```json
+  {
+    "gcsSource": {
+      "inputUris": [
+        "gs://i4g-migration-artifacts-dev/search/20251114/vertex/groupsio-search_vertex.jsonl",
+        "gs://i4g-migration-artifacts-dev/search/20251114/vertex/intake-form-search_vertex.jsonl"
+      ]
+    }
+  }
+  ```
 - [ ] Draft `gcloud discovery-engine data-stores documents import` commands and capture expected runtime.
+- Candidate command mirroring the Python helper:
+  ```bash
+  gcloud discovery-engine data-stores documents import \
+    --project=i4g-dev \
+    --location=global \
+    --data-store=retrieval-poc \
+    --gcs-uri=gs://i4g-migration-artifacts-dev/search/20251114/vertex/groupsio-search_vertex.jsonl \
+    --gcs-uri=gs://i4g-migration-artifacts-dev/search/20251114/vertex/intake-form-search_vertex.jsonl \
+    --async
+  ```
+- Capture the operation name from the response, then poll with `gcloud discovery-engine operations describe` to track runtime when executed.
+- Helper script now supports `--dry-run` to inspect the ImportDocumentsRequest without starting a new LRO.
 
 ## 5. Validation Checklist
 
@@ -150,14 +176,14 @@ Tasks:
     print(f"Total Discovery Engine documents: {total}")
   PY
   ```
-  Output 15 Nov 2025: `Total Discovery Engine documents: 1159`. Matches expected (1000 groupsio + 166 intake with 339 attachment-only rows intentionally skipped).
+  Output 15 Nov 2025: `Total Discovery Engine documents: 1159`. Matches expected (1000 groupsio + 159 intake after dropping 339 attachment-only rows and 7 empty-text rows).
 - Import error diagnostics, 14 Nov 2025:
   - Added `--error-prefix` support to `scripts/migration/import_vertex_documents.py` and reran import.
   - Error manifest at `gs://i4g-migration-artifacts-dev/search/20251114/import_errors/errors_00000000.json` showed every record rejected: `content` must be a structured object (`mimeType` + `structData`) rather than a raw string.
   - Updated `azure_search_to_vertex.py` to encode body text into `Document.content.rawBytes` (base64) while still copying a plain-text version plus title into `structData` so the GA API accepts the payload.
-- 15 Nov 2025: Intake-form export contains ~339 attachment-only rows (every field null/empty). Transformer currently skips them; document the omission or map the attachment URL into `structData` if we need them indexed.
+- 15 Nov 2025: Intake-form export contains ~339 attachment-only rows (every field null/empty) plus 7 submissions with no text content. Transformer currently skips them; document the omission or map the attachment URL into `structData` if we need them indexed.
 - 15 Nov 2025: Added hashed IDs for documents whose Azure IDs exceed 128 chars (Discovery Engine limit). Original ID now saved in `structData.source_id`.
-- 15 Nov 2025: Final import run → `success_count=1159`, `failure_count=0`, `total_count=1166` (intentional gap: attachment-only intake rows). Discovery Engine now holds all non-empty documents.
+- 15 Nov 2025: Final import run → `success_count=1159`, `failure_count=0`, `total_count=1159` (input set excludes attachment-only and empty-text intake rows). Discovery Engine now holds all non-empty documents.
 - 15 Nov 2025: Validation query:
   ```bash
   /Users/jerry/miniforge3/envs/i4g/bin/python scripts/query_vertex_search.py \
@@ -169,7 +195,8 @@ Tasks:
   ```
   Returned hashed document IDs with snippet summaries (e.g. `hash_59e42a19cd4568af71420034c6676b8d` showing wallet-address text), confirming content and searchability.
 - [ ] Compare top results with Azure search responses for parity.
-- [ ] Record any ranking deviations and plan relevance tuning in Vertex AI Search.
+- [x] Record any ranking deviations and plan relevance tuning in Vertex AI Search.
+- Manual spot checks (`wallet address`, `BEC mule`, `Chime account`) returned on-topic results in Vertex; no Azure baseline captured yet. Plan for MVP is to collect stakeholder feedback, log divergent rankings, and revisit tuning (boosting filters, synonyms) once shared queries arrive.
 
 ---
 

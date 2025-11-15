@@ -1,8 +1,12 @@
 # DT-IFG Migration Change Log
 
-_Last updated: 11 Nov 2025_
+_Last updated: 15 Nov 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
+
+## 2025-11-15
+- Closed out Milestone 2: Security/IAM blueprint finalized with Terraform WIF pipeline validated in CI, prod scaffolding documented, and a summary committed to the milestone outline so downstream teams adopt the two-project model with confidence.
+- Captured MVP-ready migration notes: Vertex AI Search imports now include per-corpus `source` tags, the import helper gained a `--dry-run` mode for safe verification, and the runbook reflects the new validation flow for Discovery Engine loads.
 
 ## 2025-11-06
 - Added open-first guiding principle to migration plan.
