@@ -1,6 +1,6 @@
 # Future-State Architecture (DT-IFG → i4g, GCP-Only, Open-Friendly)
 
-_Last updated: 11 Nov 2025_
+_Last updated: 15 Nov 2025_
 
 This document sketches the proposed end-state architecture that replaces DT-IFG’s Azure/GCP hybrid with an all-GCP stack while embracing open standards and minimal vendor lock-in. It reflects the technology evaluations in `technology_evaluation.md` and addresses the gaps identified in `gap_analysis.md`.
 
@@ -170,9 +170,7 @@ The swimlanes emphasize the Cloud Run deployment boundary: user requests travers
 
 ### 3.3 Retrieval & RAG
 - **LangChain orchestration** deployed in the FastAPI service.
-- Embedding + retrieval store options:
-  - **Vertex AI Search** (managed) with connectors to Cloud Storage and Firestore.
-  - **AlloyDB + pgvector** (open) managed by GCP; maintain schema migrations via Alembic.
+- Retrieval layer defaults to **Vertex AI Search** (Discovery Engine) for MVP. Documents carry `structData.index_type` so multiple datasets coexist cleanly. AlloyDB + pgvector remains the contingency option if we later need deeper control or cost optimisation.
 - LLM inference:
   - Start with **Vertex AI** models for reliability (Gemini 1.5). Abstracted via LangChain to allow drop-in replacement.
   - Maintain optional path for **Ollama** hosted on Cloud Run GPU instances for cost control / openness.
@@ -213,11 +211,13 @@ The swimlanes emphasize the Cloud Run deployment boundary: user requests travers
 | Component | Service Account | Key Roles |
 |---|---|---|
 | FastAPI Cloud Run service | `sa-fastapi@{project}` | `roles/run.invoker`, `roles/datastore.user`, `roles/storage.objectViewer`, custom `roles/vertex.searchUser` or AlloyDB client role, Secret Manager accessor |
-| Streamlit Cloud Run service | `sa-streamlit@{project}` | `roles/run.invoker`, `roles/datastore.viewer`, `roles/storage.objectViewer`, Secret Manager accessor |
+| Streamlit Cloud Run service | `sa-streamlit@{project}` | `roles/run.invoker`, `roles/datastore.viewer`, `roles/storage.objectViewer`, `roles/logging.logWriter`, custom `streamlitDiscoverySearch` role, Secret Manager accessor |
 | Ingestion jobs / schedulers | `sa-ingest@{project}` | `roles/run.invoker`, `roles/storage.objectAdmin`, `roles/datastore.user`, Pub/Sub publisher (if workflows emit events), Secret Manager accessor for source credentials |
 | Report worker (Cloud Run job or scheduler) | `sa-report@{project}` | `roles/storage.objectAdmin`, `roles/datastore.user`, Secret Manager accessor |
 | PII vault micro-service | `sa-vault@{project}` | `roles/datastore.user`, Cloud KMS encrypter/decrypter (if KMS used), no Cloud Storage access |
 | Terraform / automation pipeline | `sa-infra@{project}` | `roles/resourcemanager.projectIamAdmin`, `roles/run.admin`, `roles/storage.admin`, `roles/iam.securityReviewer` (scoped to infra project) |
+
+> Note: Discovery Engine access is granted via a custom IAM role (`streamlitDiscoverySearch`) that wraps the `discoveryengine.servingConfigs.search` permission. Terraform provisions the role per project to avoid unsupported project-level grants.
 
 - Each service account is provisioned via Terraform with minimum privileges and Workload Identity Federation annotations to avoid JSON key distribution.
 - Administrative access (manual scripts, ad-hoc queries) executes via `gcloud auth login` + `impersonate-service-account` patterns; no shared credentials.
@@ -305,7 +305,7 @@ The swimlanes emphasize the Cloud Run deployment boundary: user requests travers
 |---|---|---|
 | Azure Functions (ingestion, scheduled jobs) | Cloud Run Jobs or Cloud Functions orchestrated by Cloud Scheduler | Container-first path keeps parity with current FastAPI stack; Scheduler covers cron-style triggers. |
 | Azure Blob Storage (evidence, reports) | Cloud Storage buckets (`i4g-evidence-*`, `i4g-reports-*`) | Signed URLs mirror SAS tokens; lifecycle rules manage retention and legal-hold requirements. |
-| Azure Cognitive Search | Vertex AI Search **or** AlloyDB + pgvector | Vertex AI offers turnkey relevance tuning; AlloyDB retains Postgres compatibility for open-source tooling. Selection pending PoC metrics. |
+| Azure Cognitive Search | Vertex AI Search (default) with AlloyDB + pgvector contingency | Managed option meets MVP needs today; keep pgvector path documented in case we later require self-hosted control or cost optimisation. |
 | Azure SQL Database | Cloud SQL for Postgres **and/or** Firestore | Firestore absorbs document-style data; Cloud SQL hosts relational datasets still required post-migration. |
 | Azure AD B2C | Google Cloud Identity Platform (OIDC) | Nonprofit pricing, managed flows, and smooth OAuth integration with Streamlit/FastAPI; agnostic enough to swap for authentik later. |
 | Azure Key Vault | Secret Manager + IAM Conditions | Native integration with Cloud Run, Workload Identity; supports rotation and audit logging. |
@@ -325,20 +325,21 @@ The swimlanes emphasize the Cloud Run deployment boundary: user requests travers
 - ✅ Observability via OpenTelemetry-compatible stack.
 - ✅ IaC via Terraform (or Pulumi) stored in `infra/` repo.
 
-## 7. Outstanding Decisions (to resolve in Milestone 2)
+## 7. Open Questions & Upcoming Decisions
 
-| Area | Decision Needed | Owners | Due | Status / Next Action |
-|---|---|---|---|---|
-| Identity provider | Finalize initial IdP: Google Identity vs authentik | Jerry | End of Milestone 2 | ✅ Adopt Google Cloud Identity Platform for initial launch; keep authentik swap documented for future self-host needs. |
-| Retrieval backend | Vertex AI Search vs AlloyDB pgvector (PoC metrics) | Jerry | End of Milestone 2 | ✅ Standardize on Vertex AI Search backed by `VectorClient` abstraction; revisit AlloyDB option if costs or data residency change. |
-| LLM hosting | Primary inference provider + fallback plan | Jerry | Before Milestone 3 | ✅ Use Vertex AI Gemini 1.5 Pro behind LangChain; maintain Ollama fallback profile in `RagConfig` for offline testing. |
-| Data warehouse | Whether to introduce BigQuery for analytics | Jerry | During Milestone 3 planning | ✅ Defer BigQuery until post-M3; rely on Firestore exports + ad-hoc notebooks for analytics meanwhile. |
-| Terraform vs other IaC | Confirm tooling for infra repo | Jerry | Start of Milestone 3 | ✅ Terraform locked in; extend modules to prod during M3 kickoff playbook. |
+Track active evaluations here (full detail lives in `planning/technology_stack_decisions.md`).
+
+| Topic | What’s Pending | Owner | Target Decision |
+|---|---|---|---|
+| Analytics / Warehousing | Decide if/when BigQuery or another warehouse is required beyond Firestore exports. | Jerry | Milestone 4 planning |
+| PII Vault Backend | Validate Firestore performance for token vault; consider Cloud SQL/AlloyDB if lookup latency becomes an issue. | Jerry | Before production cutover |
+| Volunteer Docs Platform | Choose between GitBook vs MkDocs/Docusaurus for public docs. | Jerry | Prior to onboarding push |
+| Report Delivery Workflow | Confirm PDF signing/delivery requirements (LEO portal vs Streamlit-only) and design final flow. | Jerry | Milestone 3 execution |
 
 ## 8. Next Steps
-1. ✅ Reaffirmed two-environment scope (dev + prod), removed staging scaffolding, and updated documentation to match.
-2. ✅ Added `infra/environments/prod` Terraform stack with locked-down defaults (no public invokers, prod env vars, Vertex AI Search `retrieval-prod`).
-3. ✅ Documented dev → prod promotion flow (image tagging, Terraform apply cadence) in `infra/README.md`.
-4. ✅ Drafted migration runbooks (Azure exports → GCP import, data validation) ahead of Milestone 4 implementation; see `planning/migration_runbook.md`.
+1. Share the MVP discovery dashboard with stakeholders and capture feedback (log queries, mis-ranked results, UX gaps).
+2. Template the Streamlit + FastAPI deployment workflow (build/push + Terraform apply) so redeploys are scripted.
+3. Continue enriching `planning/migration_runbook.md` with Azure → GCP rehearsal notes (structured data, blobs, Discovery Engine imports).
+4. Translate stakeholder feedback into backlog items for the “Cloud Run Hardening & Ingestion” phase of the roadmap.
 
-This architecture will be refined as PoC results come in. Update this document alongside Milestone 2 progress.
+This architecture will continue to evolve with roadmap execution—refresh it when technology decisions shift or new components are added.

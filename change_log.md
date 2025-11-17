@@ -1,12 +1,23 @@
 # DT-IFG Migration Change Log
 
-_Last updated: 15 Nov 2025_
+_Last updated: 16 Nov 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
+
+## 2025-11-16
+- TODO: Confirm whether the `serverless-egress-nat` replacement (now `endpoint_types=["ENDPOINT_TYPE_SERVERLESS"]`) needs to include VM traffic; adjust before prod apply if any instances still rely on the default-network NAT.
+- TODO: Run `terraform apply` for the dev VPC connector/NAT changes and replicate in prod (including the new Discovery Engine editor binding) once the change window opens.
+- Logged the first weekly incremental Azure SQL → Firestore sync (`data/intake_migration_report_20251115.json`) in the runbook, confirming counts and checksums remain stable while stakeholders exercise the MVP.
+- Added detailed weekly procedures for Azure Blob and Cognitive Search refreshes so the unstructured data and Vertex AI Search indexes stay aligned with the MVP feedback loop.
+- Introduced `scripts/migration/run_weekly_refresh.py` to execute the SQL, blob, and search cadences end-to-end (with summary artifacts under `data/weekly_refresh_<date>.json`) and documented how to use it or slice the flow per data type.
+- Containerized the orchestrator (`docker/weekly-refresh-job.Dockerfile`), wired a dev-only Cloud Run job + scheduler via Terraform (with Secret Manager placeholders), and noted that prod remains disabled until we deliberately warm that cadence.
+- Added `scripts/infra/add_azure_secrets.py` so operators can rotate Azure connection strings/admin keys in Secret Manager without relying on ad-hoc `gcloud` commands.
 
 ## 2025-11-15
 - Closed out Milestone 2: Security/IAM blueprint finalized with Terraform WIF pipeline validated in CI, prod scaffolding documented, and a summary committed to the milestone outline so downstream teams adopt the two-project model with confidence.
 - Captured MVP-ready migration notes: Vertex AI Search imports now include per-corpus `source` tags, the import helper gained a `--dry-run` mode for safe verification, and the runbook reflects the new validation flow for Discovery Engine loads.
+- Expanded the MVP roadmap with a weekly incremental migration cadence, GitBook stakeholder guide deliverable, and a refreshed two-week focus list so Phase 2 execution stays on track while documentation spins up.
+- Retired `planning/azure_migration_notes_20251113.md` after folding its content into `planning/migration_runbook.md`, keeping a single canonical source for Azure-to-GCP migration steps across planning docs.
 
 ## 2025-11-06
 - Added open-first guiding principle to migration plan.

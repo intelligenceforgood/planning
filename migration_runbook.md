@@ -1,6 +1,6 @@
 # Azure → GCP Migration Runbooks (Draft)
 
-_Last updated: 14 Nov 2025_
+_Last updated: 16 Nov 2025_
 
 These runbooks outline the phased process for migrating DT-IFG workloads from Azure to the i4g Google Cloud Platform stack. Each section can be executed independently as data, services, or infrastructure become ready. Update this document as plans firm up during Milestone 3 and 4.
 
@@ -12,6 +12,7 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
 - **Freeze (T-5)**: Announce change window, lock Terraform state, prep comms + checklists.
 - **Cutover (T)**: Stop Azure writers, run migration scripts, flip identity/DNS, smoke test, announce complete.
 - **Hypercare (T+0→7)**: Monitor ingest/chat/reporting daily, log findings, close out incidents.
+- **Automation**: Dev Cloud Run job `weekly-azure-refresh` runs Mondays at 11:00 UTC; prod scheduler stays disabled until we warm the prod cadence.
 
 > The remainder of this document keeps the detailed notes in case we need them; default to the bullets above when planning your day.
 
@@ -37,6 +38,16 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
 
 ## 2. Structured Data Migration (Azure SQL → Firestore/Cloud SQL)
 
+> **Weekly cadence:** Run the incremental export/import every Friday while the MVP iterates so data in GCP stays within seven days of Azure. Capture each run’s report under `data/intake_migration_report_*.json` and log highlights here.
+
+_Incremental sync log_
+
+- 2025-11-15: Ran full table refresh into `i4g-dev`; all counts matched prior baseline (81/1/26,220) with unchanged checksums (report `data/intake_migration_report_20251115.json`).
+
+**Automation helper**
+
+- Preferred: `python scripts/migration/run_weekly_refresh.py --firestore-project i4g-dev` runs the SQL export, blob sync, and search re-import in one pass (use `--skip-*` flags for partial runs). Summary file lands at `data/weekly_refresh_<date>.json`.
+
 1. **Export from Azure SQL**
    - Use `sqlpackage` (with Azure AD auth) to export the three legacy tables to BACPAC or CSV/Parquet.
    - Capture schema mapping between Azure SQL tables and their downstream consumers (forms pipeline, Groups.io cache).
@@ -52,6 +63,7 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
    - Compare record counts and key checksums (e.g., `hashlib.sha256` over concatenated fields).
    - Sample random cases to verify nested structures and PII tokenization references.
    - Log validation results in `planning/migration_runbook.md` (append tables or checklists).
+   - _2025-11-13 dry run recap_: Export required an Azure SQL firewall rule for the workstation IP (`az sql server firewall-rule create --name allow-export-YYYYMMDD ...`). `DefaultAzureCredential` paths failed for pyodbc; created scoped SQL login `migration_user` with `db_datareader`. Final command used `python scripts/migration/azure_sql_to_firestore.py --connection-string "Driver={ODBC Driver 18 for SQL Server};Server=tcp:intelforgood.database.windows.net,1433;Database=intelforgood;..." --firestore-project i4g-dev --report data/intake_migration_report_20251113.json`.
 5. **Rollback Plan**
    - Keep Azure SQL read-only copy until production cutover verified.
    - If issues arise, halt writes to GCP, fix mapping, re-run ETL.
@@ -59,6 +71,35 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
 > Legacy "case" datasets live in Firestore (see IFG Chat UI). Document and plan that export separately once the Azure SQL tables are migrated.
 
 ## 3. Unstructured Data Migration (Azure Blob Storage → Cloud Storage)
+
+> **Weekly cadence:** Mirror newly arrived blobs alongside the SQL refresh. Store incremental reports as `data/blob_migration_incremental_*.json` and note anomalies or large deltas in this section.
+
+**Weekly procedure (dev project shown)**
+
+The combined orchestrator now skips the live copy when the dry-run sees no new or python scripts/infra/add_azure_secrets.py --project i4g-devupdated blobs, so Cloud Run executions stay quick after an all-clear diff.
+
+1. Ensure `AZURE_STORAGE_CONNECTION_STRING` is exported for the `attachmentsdata` account and that `gcloud auth application-default login` (or workload identity) is active for GCS writes.
+2. Run a dry-run diff to capture the expected delta (add or remove `--container` flags to match the real Azure containers):
+    ```bash
+    python scripts/migration/azure_blob_to_gcs.py \
+       --connection-string "$AZURE_STORAGE_CONNECTION_STRING" \
+       --container intake-form-attachments=gs://i4g-evidence-dev/forms \
+       --container groupsio-attachments=gs://i4g-evidence-dev/groupsio \
+       --dry-run \
+       --report data/blob_migration_incremental_${RUN_DATE}_dryrun.json
+    ```
+3. If the dry-run looks good, execute the copy (without `--dry-run`) and write the main report:
+    ```bash
+    python scripts/migration/azure_blob_to_gcs.py \
+       --connection-string "$AZURE_STORAGE_CONNECTION_STRING" \
+       --container intake-form-attachments=gs://i4g-evidence-dev/forms \
+       --container groupsio-attachments=gs://i4g-evidence-dev/groupsio \
+       --report data/blob_migration_incremental_${RUN_DATE}.json
+    ```
+4. Append a bullet under “Unstructured sync log” with blob counts, skipped objects, and notable failures. Upload both JSON reports to `gs://i4g-migration-artifacts-dev/blob-incremental/${RUN_DATE}/` for audit.
+5. Orchestrated option: run `python scripts/migration/run_weekly_refresh.py --skip-search --skip-sql` to execute just the blob cadence (still respect the reporting/upload steps above).
+
+_Unstructured sync log_
 
 1. **Inventory Containers (T-35)**
    - Azure CLI: `az storage container list --account-name <account> --auth-mode login --output table`
@@ -103,6 +144,39 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
 
 ## 4. Search Index Migration (Azure Cognitive Search → Vertex AI Search)
 
+> **Weekly cadence:** Export Azure Cognitive Search indexes, transform them for Vertex AI Search, and re-import into `retrieval-poc` so stakeholder feedback stays aligned with fresh data. Store artifacts under `data/search_exports/${RUN_DATE}/` and upload the Vertex-ready JSONL to `gs://i4g-migration-artifacts-dev/search/${RUN_DATE}/` for traceability.
+
+**Weekly procedure (dev project shown)**
+
+1. Set `AZURE_SEARCH_ENDPOINT` and `AZURE_SEARCH_ADMIN_KEY` in the shell (or pass via CLI flags). Choose an output directory tagged with the run date, e.g., `RUN_DATE=$(date +%Y%m%d)`.
+2. Export schemas and documents:
+    ```bash
+    python scripts/migration/azure_search_export.py \
+       --endpoint "$AZURE_SEARCH_ENDPOINT" \
+       --admin-key "$AZURE_SEARCH_ADMIN_KEY" \
+       --output-dir data/search_exports/${RUN_DATE}
+    ```
+3. Transform for Vertex AI Search:
+    ```bash
+    python scripts/migration/azure_search_to_vertex.py \
+       --input-dir data/search_exports/${RUN_DATE} \
+       --output-dir data/search_exports/${RUN_DATE}/vertex
+    ```
+4. Import into Discovery Engine (global data store `retrieval-poc` shown):
+    ```bash
+    python scripts/migration/import_vertex_documents.py \
+       --project i4g-dev \
+   --location global \
+   --data-store-id retrieval-poc \
+   --uris gs://i4g-migration-artifacts-dev/search/${RUN_DATE}/vertex/groupsio-search_vertex.jsonl \
+      gs://i4g-migration-artifacts-dev/search/${RUN_DATE}/vertex/intake-form-search_vertex.jsonl \
+   --error-prefix gs://i4g-migration-artifacts-dev/search/${RUN_DATE}/errors
+    ```
+5. Record the long-running operation ID and success/failure counts below. If failures occur, capture sample documents and adjust the transformer before re-running.
+6. Orchestrated option: run `python scripts/migration/run_weekly_refresh.py --skip-sql --skip-blob` to handle the index export/transform/import + uploads in a single pass (see summary JSON for the operation ID).
+
+_Search sync log_
+
 1. **Export Existing Index**
     - Install the Azure CLI Search extension (once per workstation):
        ```bash
@@ -142,13 +216,16 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
     - Prepared Vertex JSONL staged at `gs://i4g-migration-artifacts-dev/search/20251114/vertex/` for Discovery Engine import.
 2. **Transform for Vertex AI Search**
    - Map fields from Azure documents to Vertex AI Search schema; ensure vector embeddings or semantic fields are recomputable via GCP models.
-   - Record per-index field mapping and filter requirements in `planning/search_migration_notes.md`.
+   - Transformer updates (2025-11-15): populate `structData.index_type`/`source` with the Azure index name, encode long-form text as `Document.content.rawBytes` (base64) to satisfy GA API requirements, and hash Azure IDs exceeding 128 characters while storing the original ID in `structData.source_id`.
+   - Record per-index field mapping and filter requirements directly in this runbook; `planning/search_migration_notes.md` has been merged here.
 3. **Import to Vertex AI Search**
-   - Use `gcloud discovery-engine data-stores documents import` with Cloud Storage manifest.
-   - Monitor import progress via Vertex AI Search console or `gcloud` CLI.
+   - Use `gcloud discovery-engine data-stores documents import` or the Python helper (`scripts/migration/import_vertex_documents.py`) pointing at the Vertex-ready JSONL files.
+   - Helper supports `--dry-run` to print the `ImportDocumentsRequest` without starting an operation and `--error-prefix` to direct rejection logs to GCS.
+   - Monitor import progress via Vertex AI Search console or `gcloud` CLI; record LRO name in change log.
 4. **Validation**
    - Run representative queries in both systems; compare top results for parity.
    - Capture metrics (precision@k, recall) where possible; document differences.
+   - Latest import (2025-11-15): `success_count=1159`, `failure_count=0` after excluding attachment-only intake rows; Discovery Engine document IDs prefixed with `hash_` verify hashed ID logic works.
 5. **Cutover Plan**
    - Update `VectorClient` configuration to point to Vertex AI Search.
    - Keep Azure index accessible for fallback during initial production use.
@@ -185,6 +262,25 @@ These runbooks outline the phased process for migrating DT-IFG workloads from Az
 4. **Cutover**
    - Disable Azure Functions (stop triggers) once Cloud Run Jobs produce expected results.
    - Monitor Cloud Logging for failures during initial days.
+
+### 6.1 Weekly Refresh Cloud Run Job (dev only)
+
+- Container image: build and push `docker/weekly-refresh-job.Dockerfile` to `us-central1-docker.pkg.dev/i4g-dev/applications/weekly-refresh-job:dev`.
+   ```bash
+   docker build -f docker/weekly-refresh-job.Dockerfile -t us-central1-docker.pkg.dev/i4g-dev/applications/weekly-refresh-job:dev .
+   docker push us-central1-docker.pkg.dev/i4g-dev/applications/weekly-refresh-job:dev
+   ```
+- Terraform wiring lives in `infra/environments/dev/terraform.tfvars` (`run_jobs.weekly_refresh`). `terraform apply` provisions:
+   - Cloud Run job `weekly-azure-refresh` (timeout 60 minutes, 1 CPU/2 GiB) executing `run_weekly_refresh.py`.
+   - Cloud Scheduler trigger `weekly-azure-refresh-schedule` that runs Mondays at 11:00 UTC (token creator binding handled automatically).
+- Secrets: Terraform creates Secret Manager placeholders `azure-sql-connection-string`, `azure-storage-connection-string`, and `azure-search-admin-key`. Populate each before the first scheduled run with the helper script:
+   ```bash
+   python scripts/infra/add_azure_secrets.py --project i4g-dev
+   ```
+   Use `--use-env` if you have exported `AZURE_SQL_CONNECTION_STRING`, `AZURE_STORAGE_CONNECTION_STRING`, and `AZURE_SEARCH_ADMIN_KEY` locally.
+- Non-secret config (`AZURE_SEARCH_ENDPOINT`) is injected via Terraform; adjust the tfvars file if Azure renames the service.
+- Prod has a matching but disabled definition (`enabled = false`) so the scheduler stays off until we intentionally warm the production cadence.
+- The job logs the JSON summary emitted by `data/weekly_refresh_<date>.json`; check Cloud Logging for per-step results after each run.
 
 ## 7. Communication & Go-Live Checklist
 
