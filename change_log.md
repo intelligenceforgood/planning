@@ -1,8 +1,14 @@
 # DT-IFG Migration Change Log
 
-_Last updated: 16 Nov 2025_
+_Last updated: 18 Nov 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
+
+## 2025-11-18
+- Resolved the Cloud Run intake job regression caused by missing job records when using API mode: updated the worker to treat 404 status updates as warnings, rebuilt `intake-job:dev`, and verified the end-to-end run in `i4g-dev` with API-hosted state.
+- Documented the split between local and GCP smoke tests in `docs/smoke_test.md`, adding the new Cloud Run procedure (including baked-in environment variables) so future executions only need the intake/job identifiers.
+- Captured the Cloud Run job configuration in code by updating `process-intakes` environment variables (`I4G_INTAKE__API_BASE`, `I4G_STORAGE__SQLITE_PATH`, vector toggle) and noted the verification commands to keep dev/prod parity checks straightforward.
+- Logged the successful dev smoke run (FastAPI submission → Cloud Run job → case attachment) so the migration team can reference the baseline when revalidating infrastructure changes.
 
 ## 2025-11-16
 - TODO: Confirm whether the `serverless-egress-nat` replacement (now `endpoint_types=["ENDPOINT_TYPE_SERVERLESS"]`) needs to include VM traffic; adjust before prod apply if any instances still rely on the default-network NAT.

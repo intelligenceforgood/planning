@@ -5,7 +5,7 @@ Use this file to rehydrate context whenever a coding session restarts (e.g., VS 
 ## 1. Immediate Setup Checklist
 - **Scan planning artifacts:** Read the latest versions of the files in `planning/` (`change_log.md`, `future_architecture.md`, `gap_analysis.md`, `implementation_roadmap.md`, `migration_plan.md`, `system_review.md`, `technology_evaluation.md`, etc.) to refresh project state.
 - **Review recent decisions:** `planning/change_log.md` captures the running ledger of architectural choices and coding conventions. Always skim the newest entries.
-- **Confirm environment:** Workspace assumes the Conda env `i4g` (`/Users/jerry/miniforge3/envs/i4g`). Verify interpreter selection if commands fail.
+- **Confirm environment:** Workspace assumes the Conda env `i4g` (`/Users/jerry/miniforge3/envs/i4g`). Verify interpreter selection if commands fail and avoid spawning ad-hoc shells or unnamed envs—always run tools via `conda run -n i4g` (or the VS Code-selected interpreter) so dependencies stay consistent.
 
 ## 2. Engineering Conventions (Always Active)
 - Write comprehensive **type hints** for new/modified Python code.
