@@ -210,8 +210,8 @@ The swimlanes emphasize the Cloud Run deployment boundary: user requests travers
 
 | Component | Service Account | Key Roles |
 |---|---|---|
-| FastAPI Cloud Run service | `sa-fastapi@{project}` | `roles/run.invoker`, `roles/datastore.user`, `roles/storage.objectViewer`, custom `roles/vertex.searchUser` or AlloyDB client role, Secret Manager accessor |
-| Streamlit Cloud Run service | `sa-streamlit@{project}` | `roles/run.invoker`, `roles/datastore.viewer`, `roles/storage.objectViewer`, `roles/logging.logWriter`, custom `streamlitDiscoverySearch` role, Secret Manager accessor |
+| FastAPI Cloud Run service | `sa-app@{project}` | `roles/run.invoker`, `roles/datastore.user`, `roles/storage.objectViewer`, custom `roles/vertex.searchUser` or AlloyDB client role, Secret Manager accessor |
+| Streamlit Cloud Run service | `sa-app@{project}` | `roles/run.invoker`, `roles/datastore.viewer`, `roles/storage.objectViewer`, `roles/logging.logWriter`, custom `streamlitDiscoverySearch` role, Secret Manager accessor |
 | Ingestion jobs / schedulers | `sa-ingest@{project}` | `roles/run.invoker`, `roles/storage.objectAdmin`, `roles/datastore.user`, Pub/Sub publisher (if workflows emit events), Secret Manager accessor for source credentials |
 | Report worker (Cloud Run job or scheduler) | `sa-report@{project}` | `roles/storage.objectAdmin`, `roles/datastore.user`, Secret Manager accessor |
 | PII vault micro-service | `sa-vault@{project}` | `roles/datastore.user`, Cloud KMS encrypter/decrypter (if KMS used), no Cloud Storage access |
@@ -219,6 +219,7 @@ The swimlanes emphasize the Cloud Run deployment boundary: user requests travers
 
 > Note: Discovery Engine access is granted via a custom IAM role (`streamlitDiscoverySearch`) that wraps the `discoveryengine.servingConfigs.search` permission. Terraform provisions the role per project to avoid unsupported project-level grants.
 
+- FastAPI, Streamlit, and the Next.js console share the `sa-app` runtime identity to keep IAM bindings centralized without sacrificing least privilege.
 - Each service account is provisioned via Terraform with minimum privileges and Workload Identity Federation annotations to avoid JSON key distribution.
 - Administrative access (manual scripts, ad-hoc queries) executes via `gcloud auth login` + `impersonate-service-account` patterns; no shared credentials.
 

@@ -1,8 +1,16 @@
 # DT-IFG Migration Change Log
 
-_Last updated: 18 Nov 2025_
+_Last updated: 20 Nov 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
+
+## 2025-11-20
+- Consolidated the FastAPI, Streamlit, and Next.js console Cloud Run services onto the shared `sa-app` runtime service account so operators only manage one principal for UI workloads; Terraform now removes `sa-fastapi`, drops the console-specific account, and carries forward the required IAM roles on the shared identity.
+- Tightened Cloud Run IAM by making Terraform manage the full `roles/run.invoker` binding, defaulting access to
+	the shared runtime account plus `i4g_analyst_members` so services stay private while analysts can still reach them.
+- Replaced the confusing `project_owner_members` variable with `i4g_analyst_members` and stopped auto-granting
+	project Owner via Terraform; analysts now gain access either individually or through Google Groups listed in the
+	new variable.
 
 ## 2025-11-18
 - Resolved the Cloud Run intake job regression caused by missing job records when using API mode: updated the worker to treat 404 status updates as warnings, rebuilt `intake-job:dev`, and verified the end-to-end run in `i4g-dev` with API-hosted state.

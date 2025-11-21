@@ -376,3 +376,18 @@ _Search sync log_
 ---
 
 These runbooks are living documents—update steps as scripts are built, credentials generated, and validation results collected.
+
+## Dual-Frontend Operations Note
+
+The production rollout maintains two first-party frontends:
+
+- **Next.js Portal**: The external, production-facing portal for victims, volunteer analysts, and law enforcement. Deployed to Cloud Run and subject to strict end-user OAuth flows, server-side proxying, and public domain configuration.
+- **Streamlit Operations Console**: An internal-only console for developers and sys-admins providing dashboards, telemetry, and ad-hoc data exploration. Access is limited via Cloud Run IAM and group-based approvals.
+
+Action items for cutover and onboarding:
+
+- Update the onboarding checklist and runbooks to include role-specific login steps for both frontends (how to access Streamlit ops vs. Next.js portal).
+- Add deployment notes that describe domain mappings, Cloud Run IAM bindings, and any separate environment variables used by Streamlit (for internal analytics mode).
+- Include a short verification matrix in the Hypercare checklist that confirms both frontends can authenticate, call the FastAPI backend, and render expected data (smoke tests for victim intake, analyst review, and internal telemetry).
+
+Keep this section synchronized with `docs/architecture.md` and `docs/tdd.md` so stakeholders and operators have a single source-of-truth for frontend responsibilities.
