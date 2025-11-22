@@ -1,8 +1,14 @@
 # DT-IFG Migration Change Log
 
-_Last updated: 20 Nov 2025_
+Last updated: 21 Nov 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
+
+## 2025-11-21
+- Shipped the Quick Auth helper SPA (`ui/apps/iam-helper`) with a production-ready Dockerfile and documented build/deploy guidance in `proto/docs/iam.md`; the helper is the only unauthenticated Cloud Run surface and exists solely to mint GIS ID tokens client-side.
+- Added Terraform inputs for the upcoming `iam-helper` Cloud Run service so dev/prod can deploy the helper with `allUsers` invoke while still running under the shared `sa-app` runtime.
+- Updated IAM documentation to include concrete Cloud Run URLs, explicit ID-token troubleshooting steps, and the Artifact Registry/Cloud Run deployment playbook for the helper.
+- **Pivot:** Retired the helper SPA / GIS flow after repeated failures; removed all helper code, Terraform inputs, and docs references across proto/ui/infra. Identity now relies on IAP in front of every Cloud Run surface, with Terraform (next) managing the IAP policy for analyst Google Groups.
 
 ## 2025-11-20
 - Consolidated the FastAPI, Streamlit, and Next.js console Cloud Run services onto the shared `sa-app` runtime service account so operators only manage one principal for UI workloads; Terraform now removes `sa-fastapi`, drops the console-specific account, and carries forward the required IAM roles on the shared identity.
