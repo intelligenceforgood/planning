@@ -1,8 +1,15 @@
 # DT-IFG Migration Change Log
 
-Last updated: 21 Nov 2025_
+Last updated: 24 Nov 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
+
+## 2025-11-24
+- Finalized Workspace-group IAM for human access: Terraform now binds `group:gcp-i4g-admin@intelligenceforgood.org` to `roles/owner` (new `i4g_admin_members` variable) and routes all Cloud Run/IAP access through `group:gcp-i4g-analyst@intelligenceforgood.org` via `i4g_analyst_members`.
+- Updated `infra/environments/{dev,prod}` tfvars/README files plus `proto/docs/iam.md` to document the groups, ensuring onboarding/offboarding happens via Workspace instead of editing Terraform.
+
+## 2025-11-25
+- Added a temporary org-policy override in `infra/environments/dev/main.tf` to set `constraints/iam.allowedPolicyMemberDomains` `enforced = false`, unblocking `scripts/make-unauthed.sh` until the Cloud Run services sit behind a Load Balancer + IAP. **Reminder:** remove this override once the public domain + LB path is live and we no longer need emergency public toggles.
 
 ## 2025-11-21
 - Shipped the Quick Auth helper SPA (`ui/apps/iam-helper`) with a production-ready Dockerfile and documented build/deploy guidance in `proto/docs/iam.md`; the helper is the only unauthenticated Cloud Run surface and exists solely to mint GIS ID tokens client-side.
