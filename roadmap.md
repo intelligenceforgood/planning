@@ -1,7 +1,7 @@
 # I4G Platform Implementation Roadmap
 
 **Status**: Living Document<br/>
-**Date**: November 25, 2025
+**Date**: November 26, 2025
 
 ## Executive Summary
 This roadmap defines the path from our current "Prototype" state to the "Production" vision outlined in `prd_production.md`. It prioritizes feature parity with the legacy DTP system, robust security (PII/Auth), and a scalable "Dual Extraction" architecture.
@@ -19,8 +19,8 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 
 ### Milestone 1: Parity Verification & Gap Closure (Weeks 1-2)
 **Objective**: Confirm the codebase matches the "Ported" assumptions and close critical functional gaps.
-- [ ] **Port `account_list_extract`**: Implement the logic for extracting Bank/Crypto/Payment info from cases. This is currently **MISSING** in `proto` and must be ported from `dtp`.
-- [ ] **Port `account_list_extract_client`**: Implement the client-side consumption of this data (PDF/XLSX generation and Google Drive upload) in the `proto` environment.
+- [x] **Port `account_list_extract`**: New `i4g.services.account_list` package ships retriever/extractor/exporter orchestration, FastAPI `/accounts/extract`, and worker entrypoints consumed by the Streamlit console + CLI smokes.
+- [x] **Port `account_list_extract_client`**: Artifact exports (CSV/JSON/XLSX/PDF) now mirror the legacy workflow, including optional Drive uploads, Cloud Run job wiring, and dashboard surfacing with summary/status panels.
 - [ ] **Legacy Cleanup**: Finalize the archiving of `dtp` references once parity is confirmed.
 
 ### Milestone 2: The "Dual Extraction" Pipeline (Weeks 3-4)
@@ -59,6 +59,6 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 - [ ] **Handover**: Final documentation and runbooks.
 
 ## Immediate Next Steps
-1.  Begin porting `account_list_extract` to `src/i4g/ingestion`.
-2.  Define the SQL schema for the Dual Extraction pipeline (covering legacy entities plus the new IP/ASN/browser attributes).
-3.  Draft the LEA report agent blueprint (toolchain + data dependencies) so Milestone 4 can start without delay.
+1.  Rebuild/ingest structured + vector stores so the account list retriever finds November cases; document results in `planning/change_log.md`.
+2.  Provision the `account-list` Cloud Run job in `i4g-dev` (Terraform or manual), rerun the dry/full smokes, and capture artifact URLs for analysts.
+3.  Kick off the Dual Extraction schema definition to unblock Milestone 2 (SQL tables, Vertex AI Search documents, and migration plan).
