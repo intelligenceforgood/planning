@@ -9,7 +9,7 @@ This roadmap is the single source of truth for how we move from today’s MVP-re
 | Phase | Target Window | Primary Outcomes | Status |
 |---|---|---|---|
 | **Foundation** | Complete (Milestone 2) | Architecture decisions locked (Identity Platform, Vertex AI Search, Gemini, Terraform baseline). Dev + prod Terraform stacks scaffolding. | ✅ Done |
-| **MVP Search Preview** | Nov → Dec 2025 | Shareable Streamlit dashboard on Cloud Run, Discovery Engine seeded with exported data, stakeholder feedback loop open. | 🔄 In flight |
+| **MVP Search Preview** | Nov → Dec 2025 | Shareable Streamlit dashboard on Cloud Run, Discovery seeded with exported data, stakeholder feedback loop open. | 🔄 In flight |
 | **Cloud Run Hardening & Ingestion** | Dec 2025 → Jan 2026 | GCP-native ingestion jobs live, FastAPI endpoints hardened, secrets/monitoring policies enforced. | ⏳ Upcoming |
 | **Migration & Production Cutover** | Feb → Mar 2026 | Azure data migrations complete, identity cutover rehearsed, production go-live checklist satisfied. | ⏳ Upcoming |
 
@@ -24,7 +24,7 @@ This roadmap is the single source of truth for how we move from today’s MVP-re
 Outcomes already delivered:
 - Finalised architecture & tech stack (`planning/future_architecture.md`, `planning/technology_stack_decisions.md`).
 - Terraform modules for Cloud Run, IAM, storage, Vertex AI Search; dev + prod environments scaffolded.
-- Discovery Engine indexing validated with Azure exports, Streamlit dashboard querying dev data store.
+- Discovery indexing validated with Azure exports, Streamlit dashboard querying dev data store.
 
 Residual actions:
 - Keep change log current when infra modules evolve.
@@ -34,8 +34,8 @@ Residual actions:
 Goal: deliver a stable, shareable analyst search experience on `i4g-dev` with clear deployment runbooks.
 
 Key tasks:
-- **Discovery Engine & UX**
-	- [ ] Finalise Discovery Engine metadata hygiene (dataset labels, sample queries, evaluation notes).
+- **Discovery & UX**
+	- [ ] Finalise Discovery metadata hygiene (dataset labels, sample queries, evaluation notes).
 	- [ ] Harden Streamlit UX (caption metadata, error states, download flows) and document rapid redeploy workflow (`docs/dev_guide.md`).
 	- [ ] Automate container build + deploy steps (GitHub Action or reusable script) so iterative redeploys stay consistent.
 - **Weekly Incremental Migration Cadence**
@@ -65,18 +65,18 @@ Streams & tasks:
 - [ ] Rehearse dual-run period where Azure + GCP ingestion operate in parallel, comparing outputs.
 
 **API & Retrieval Hardening**
-- [ ] Expose FastAPI endpoints for search/chat/report using Discovery Engine client abstraction.
+- [ ] Expose FastAPI endpoints for search/chat/report using Discovery client abstraction.
 - [ ] Implement PII tokenization service backing Firestore vault collections.
 - [ ] Integrate LangChain evaluation harness to monitor response quality + latency.
 
 **Security & Observability**
-- [ ] Finalise IAM roles via Terraform custom roles (e.g., Discovery Engine search role already staged in dev/prod).
+- [ ] Finalise IAM roles via Terraform custom roles (e.g., Discovery search role already staged in dev/prod).
 - [ ] Configure dashboards/alerts (ingest duration, Cloud Run errors, IAM policy drift checks).
 - [ ] Document incident response (who to page, where to look) in `planning/migration_runbook.md` appendices.
 
 Exit criteria:
 - All ingestion paths can run in GCP without Azure dependencies.
-- FastAPI + Streamlit talk exclusively to GCP resources (Discovery Engine, Firestore, Storage).
+- FastAPI + Streamlit talk exclusively to GCP resources (Discovery, Firestore, Storage).
 - Monitoring/alerts in place for ingestion failures and Cloud Run errors.
 
 ### 4. Migration & Production Cutover (Later)
@@ -108,14 +108,14 @@ Exit criteria:
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Discovery Engine quota or relevance issues delay analyst adoption | High | Monitor usage, capture mis-ranked queries, keep AlloyDB fallback plan on deck. |
+| Discovery quota or relevance issues delay analyst adoption | High | Monitor usage, capture mis-ranked queries, keep AlloyDB fallback plan on deck. |
 | Single-operator bandwidth | Medium | Keep roadmap lightweight, focus on highest leverage tasks; defer non-essential polish. |
 | Identity migration surprises (MFA, account recovery) | Medium | Rehearse with pilot users early; document support flow in runbook. |
 | Report workflow requirements still evolving | Medium | Prototype minimal PDF delivery now; collect requirements before committing to automation scope. |
 
 ## Next 2-Week Focus
 1. Run the first full Friday cadence (Azure SQL import + blob sync + Cognitive Search export/import) and capture all reports/LRO IDs in `planning/migration_runbook.md`.
-2. Finish Discovery Engine data hygiene + sample query documentation for stakeholder testing.
+2. Finish Discovery data hygiene + sample query documentation for stakeholder testing.
 3. Automate Streamlit image build/redeploy workflow (script or GH Action).
 4. Outline the GitBook MVP stakeholder guide and publish the initial table of contents for review.
 

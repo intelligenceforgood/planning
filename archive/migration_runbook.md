@@ -162,7 +162,7 @@ _Unstructured sync log_
        --input-dir data/search_exports/${RUN_DATE} \
        --output-dir data/search_exports/${RUN_DATE}/vertex
     ```
-4. Import into Discovery Engine (global data store `retrieval-poc` shown):
+4. Import into Discovery (global data store `retrieval-poc` shown):
     ```bash
     python scripts/migration/import_vertex_documents.py \
        --project i4g-dev \
@@ -213,7 +213,7 @@ _Search sync log_
           --input-dir data/search_exports \
           --output-dir data/search_exports/vertex
        ```
-    - Prepared Vertex JSONL staged at `gs://i4g-migration-artifacts-dev/search/20251114/vertex/` for Discovery Engine import.
+    - Prepared Vertex JSONL staged at `gs://i4g-migration-artifacts-dev/search/20251114/vertex/` for Discovery import.
 2. **Transform for Vertex AI Search**
    - Map fields from Azure documents to Vertex AI Search schema; ensure vector embeddings or semantic fields are recomputable via GCP models.
    - Transformer updates (2025-11-15): populate `structData.index_type`/`source` with the Azure index name, encode long-form text as `Document.content.rawBytes` (base64) to satisfy GA API requirements, and hash Azure IDs exceeding 128 characters while storing the original ID in `structData.source_id`.
@@ -225,7 +225,7 @@ _Search sync log_
 4. **Validation**
    - Run representative queries in both systems; compare top results for parity.
    - Capture metrics (precision@k, recall) where possible; document differences.
-   - Latest import (2025-11-15): `success_count=1159`, `failure_count=0` after excluding attachment-only intake rows; Discovery Engine document IDs prefixed with `hash_` verify hashed ID logic works.
+   - Latest import (2025-11-15): `success_count=1159`, `failure_count=0` after excluding attachment-only intake rows; Discovery document IDs prefixed with `hash_` verify hashed ID logic works.
 5. **Cutover Plan**
    - Update `VectorClient` configuration to point to Vertex AI Search.
    - Keep Azure index accessible for fallback during initial production use.
@@ -307,7 +307,7 @@ _Search sync log_
 2. Verify final Azure snapshots/backups: SQL export timestamp, blob storage snapshot IDs, Cognitive Search export manifest.
 3. Pause or disable Azure ingestion jobs to prevent new data writes during migration window.
 4. Run structured and unstructured migration scripts with `I4G_ENV=prod`, capturing logs to Cloud Logging + local JSON artifact.
-5. Execute Vertex AI Search import job and wait for success indicator in Discovery Engine console/API.
+5. Execute Vertex AI Search import job and wait for success indicator in Discovery console/API.
 6. Assign Google Identity as primary IdP in application settings and revoke Azure AD B2C client access.
 7. Update DNS/API endpoints (e.g., Cloud Run domain mapping, Streamlit custom domain) to point to GCP services.
 8. Run post-cutover smoke tests: FastAPI health, Streamlit login for each role, ingestion job dry-run, report generation.

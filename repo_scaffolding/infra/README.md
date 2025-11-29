@@ -39,7 +39,7 @@ terraform {
 ## Getting Started
 1. Install required tools: `terraform >=1.9`, `tflint`, `gcloud`.
 2. Authenticate: `gcloud auth login && gcloud auth application-default login`.
-3. Set quota project when working with Discovery Engine: `gcloud auth application-default set-quota-project i4g-dev`.
+3. Set quota project when working with Discovery: `gcloud auth application-default set-quota-project i4g-dev`.
 4. Run `./bootstrap/create_state_bucket.sh dev` to create the state bucket and automation SA.
 5. `cd environments/dev && terraform init`.
 6. `terraform plan` (override `-var "github_repository=owner/repo"` if using a fork).

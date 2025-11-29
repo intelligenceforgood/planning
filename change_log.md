@@ -1,8 +1,27 @@
 # DT-IFG Migration Change Log
 
-Last updated: 24 Nov 2025_
+Last updated: 29 Nov 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
+
+## 2025-11-29
+- Followed up on the `account-list` Cloud Run smoke by executing `gcloud run jobs execute account-list --project i4g-dev --region us-central1` after clearing the `I4G_ACCOUNT_JOB__DRY_RUN` override. Execution `account-list-dvrq4` finished in ~78s but surfaced `Account list run account-run-cb63651e completed: indicators=0 sources=3` with warnings for every indicator category (bank/crypto/payments) because the LLM extractor could not reach Ollama inside Cloud Run.
+- Pulled the job logs via `gcloud logging read ... account-list-dvrq4` and captured the stack traces showing both embedding and chat calls failing (`ConnectionError: Failed to connect to Ollama...`). Until we swap the provider to Vertex/mock for Cloud Run, the worker will keep falling back to text search and emit zero indicators, so this remains the top blocker for Milestone 1 validation.
+- Exporter still produced local `/tmp/i4g/reports/account_list/account-run-cb63651e_20251129T005352Z.{pdf,xlsx}` artifacts, but no new objects landed in `gs://i4g-reports-dev/account_list/` for this run (confirmed via `gsutil ls`). Need to wire the warning propagation back through the API/worker responses and add automated alerts when uploads fail or produce empty indicator sets so analysts know the report is incomplete.
+- Updated the job to run with `I4G_LLM__PROVIDER=mock` via `gcloud run jobs update ... --set-env-vars` and re-executed it (`account-list-5bd7f`). The run completed in 1m46s with the expected mock output (`account-run-92d1b4af`: 6 indicators / 3 sources), confirming the extractor path is unblocked once Ollama is bypassed in Cloud Run.
+- Even with the mock provider, Chroma embeddings still try to call Ollama and emit warnings before falling back to text search; need to either disable embeddings in Cloud Run or route them through a managed backend so logs stop filling with connection errors.
+- GCS uploads remain broken for dev runs: `/tmp/i4g/reports/account_list/account-run-92d1b4af_20251129T010107Z.{pdf,xlsx}` exist locally on the job, but `gsutil ls gs://i4g-reports-dev/account_list/*92d1b4af*` returned no matches. Track this alongside the warning-surface work so analysts get actionable signals when uploads fail.
+- Set the job’s env vars explicitly (`I4G_ENV=dev`, `I4G_STORAGE__REPORTS_BUCKET=i4g-reports-dev`, `I4G_STORAGE__FIRESTORE__PROJECT=i4g-dev`, `I4G_LLM__PROVIDER=mock`, `I4G_ACCOUNT_LIST__ENABLE_VECTOR=false`). Execution `account-list-5pq2j` now disables vector search without error spam and uploads artifacts straight to `gs://i4g-reports-dev/account_list/account-run-6484995e_20251129T010803Z.{pdf,xlsx}`—confirms bucket wiring + warning surfacing path works once the env is set correctly.
+- Wired audit/logging end-to-end: the `/accounts/extract` API now tags audit entries with a requester header (`X-ACCOUNTLIST-REQUESTER` fallback to client IP) and logs run counts/artifacts; the Cloud Run job records runs as `account_job:<env>`. `log_account_list_run` captures request metadata alongside indicator/source counts, and the refreshed unit tests cover the API, worker entrypoint, and audit helper.
+- Extended the FastAPI router with `/accounts/runs` (pulling structured payloads from `ReviewStore`) and relaxed `/accounts/extract` so analyst `X-API-KEY` tokens can trigger runs without a separate service key. Updated the Next.js console with a dedicated `/accounts` page that launches manual runs, refreshes audit history via `/api/account-list/{run,runs}`, and surfaces artifact links + warning text directly in the UI.
+
+## 2025-11-28
+- Revalidated HybridRetriever coverage after latest data refresh by running the financial-entity probe (bank/crypto/payments, 30-day window, top_k=50). Each category surfaced 50 documents with representative case IDs (`ucisms-120-0`, `ucisms-123-0`, etc.), and datasets still report as `unknown` because the mock bundle omits explicit tags—tracking this until new metadata lands.
+- Rehydrated the sandbox (`scripts/bootstrap_local_sandbox.py --reset`) and re-ran the Milestone 1 data coverage probe. Discovered `FinancialEntityRetriever` was discarding vector-only hits (no structured `record` payload), so coverage still read zero despite populated stores.
+- Updated the retriever to merge metadata/text from vector entries, added regression tests (`tests/unit/services/test_account_list_retriever.py`), and reran the probe. All three indicator categories now return 50 source docs within the 30-day window (datasets resolve to `unknown` because the mock smoke bundle lacks explicit source tags), so we can proceed to the dev job smoke.
+- Ran the local `i4g-account-job` smoke (dry run + full execution) with the mock LLM provider. The real run generated `i4g/data/reports/account_list/account-run-deecf0f8_20251129T000158Z.{pdf,xlsx}`, logged 122 source docs (1 payments indicator, bank/crypto warned empty), and confirms exporter + artifact plumbing work end-to-end on the laptop build.
+- Executed `gcloud run jobs execute account-list --project i4g-dev --region us-central1` (dry run + full). Execution `account-list-4z8mj` completed with 6 indicators / 3 sources and published artifacts to `gs://i4g-reports-dev/account_list/account-run-6c4f7933_20251129T000756Z.{pdf,xlsx}`; captured logs via `gcloud logging read` for the smoke record.
+- Hardened the account list exporter so Drive/GCS upload failures append warnings back through the API/worker responses (and tests now assert the behavior). Exporter `export()` returns `(artifacts, warnings)` and the service merges those warnings so analysts know when outputs fell back to local paths.
 
 ## 2025-11-27
 - Added a dedicated `data/bundles/account_list_smoke.jsonl` fixture with bank/crypto/payment indicators, reingested the bundle (total structured cases now 5,580), and updated the account-job Docker build to process every `bundles/*.jsonl` file so smoke datasets ride along with the container image.
@@ -48,7 +67,7 @@ This log captures significant planning decisions and architecture changes as we 
 
 ## 2025-11-16
 - TODO: Confirm whether the `serverless-egress-nat` replacement (now `endpoint_types=["ENDPOINT_TYPE_SERVERLESS"]`) needs to include VM traffic; adjust before prod apply if any instances still rely on the default-network NAT.
-- TODO: Run `terraform apply` for the dev VPC connector/NAT changes and replicate in prod (including the new Discovery Engine editor binding) once the change window opens.
+- TODO: Run `terraform apply` for the dev VPC connector/NAT changes and replicate in prod (including the new Discovery editor binding) once the change window opens.
 - Logged the first weekly incremental Azure SQL → Firestore sync (`data/intake_migration_report_20251115.json`) in the runbook, confirming counts and checksums remain stable while stakeholders exercise the MVP.
 - Added detailed weekly procedures for Azure Blob and Cognitive Search refreshes so the unstructured data and Vertex AI Search indexes stay aligned with the MVP feedback loop.
 - Introduced `scripts/migration/run_weekly_refresh.py` to execute the SQL, blob, and search cadences end-to-end (with summary artifacts under `data/weekly_refresh_<date>.json`) and documented how to use it or slice the flow per data type.
@@ -57,7 +76,7 @@ This log captures significant planning decisions and architecture changes as we 
 
 ## 2025-11-15
 - Closed out Milestone 2: Security/IAM blueprint finalized with Terraform WIF pipeline validated in CI, prod scaffolding documented, and a summary committed to the milestone outline so downstream teams adopt the two-project model with confidence.
-- Captured MVP-ready migration notes: Vertex AI Search imports now include per-corpus `source` tags, the import helper gained a `--dry-run` mode for safe verification, and the runbook reflects the new validation flow for Discovery Engine loads.
+- Captured MVP-ready migration notes: Vertex AI Search imports now include per-corpus `source` tags, the import helper gained a `--dry-run` mode for safe verification, and the runbook reflects the new validation flow for Discovery loads.
 - Expanded the MVP roadmap with a weekly incremental migration cadence, GitBook stakeholder guide deliverable, and a refreshed two-week focus list so Phase 2 execution stays on track while documentation spins up.
 - Retired `planning/azure_migration_notes_20251113.md` after folding its content into `planning/migration_runbook.md`, keeping a single canonical source for Azure-to-GCP migration steps across planning docs.
 

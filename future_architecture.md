@@ -170,7 +170,7 @@ The swimlanes emphasize the Cloud Run deployment boundary: user requests travers
 
 ### 3.3 Retrieval & RAG
 - **LangChain orchestration** deployed in the FastAPI service.
-- Retrieval layer defaults to **Vertex AI Search** (Discovery Engine) for MVP. Documents carry `structData.index_type` so multiple datasets coexist cleanly. AlloyDB + pgvector remains the contingency option if we later need deeper control or cost optimisation.
+- Retrieval layer defaults to **Vertex AI Search** (Discovery) for MVP. Documents carry `structData.index_type` so multiple datasets coexist cleanly. AlloyDB + pgvector remains the contingency option if we later need deeper control or cost optimisation.
 - LLM inference:
   - Start with **Vertex AI** models for reliability (Gemini 1.5). Abstracted via LangChain to allow drop-in replacement.
   - Maintain optional path for **Ollama** hosted on Cloud Run GPU instances for cost control / openness.
@@ -217,7 +217,7 @@ The swimlanes emphasize the Cloud Run deployment boundary: user requests travers
 | PII vault micro-service | `sa-vault@{project}` | `roles/datastore.user`, Cloud KMS encrypter/decrypter (if KMS used), no Cloud Storage access |
 | Terraform / automation pipeline | `sa-infra@{project}` | `roles/resourcemanager.projectIamAdmin`, `roles/run.admin`, `roles/storage.admin`, `roles/iam.securityReviewer` (scoped to infra project) |
 
-> Note: Discovery Engine access is granted via a custom IAM role (`streamlitDiscoverySearch`) that wraps the `discoveryengine.servingConfigs.search` permission. Terraform provisions the role per project to avoid unsupported project-level grants.
+> Note: Discovery access is granted via a custom IAM role (`streamlitDiscoverySearch`) that wraps the `discoveryengine.servingConfigs.search` permission. Terraform provisions the role per project to avoid unsupported project-level grants.
 
 - FastAPI, Streamlit, and the Next.js console share the `sa-app` runtime identity to keep IAM bindings centralized without sacrificing least privilege.
 - Each service account is provisioned via Terraform with minimum privileges and Workload Identity Federation annotations to avoid JSON key distribution.
@@ -340,7 +340,7 @@ Track active evaluations here (full detail lives in `planning/technology_stack_d
 ## 8. Next Steps
 1. Share the MVP discovery dashboard with stakeholders and capture feedback (log queries, mis-ranked results, UX gaps).
 2. Template the Streamlit + FastAPI deployment workflow (build/push + Terraform apply) so redeploys are scripted.
-3. Continue enriching `planning/migration_runbook.md` with Azure → GCP rehearsal notes (structured data, blobs, Discovery Engine imports).
+3. Continue enriching `planning/migration_runbook.md` with Azure → GCP rehearsal notes (structured data, blobs, Discovery imports).
 4. Translate stakeholder feedback into backlog items for the “Cloud Run Hardening & Ingestion” phase of the roadmap.
 
 This architecture will continue to evolve with roadmap execution—refresh it when technology decisions shift or new components are added.
