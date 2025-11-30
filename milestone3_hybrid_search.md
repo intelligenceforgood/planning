@@ -1,0 +1,121 @@
+# Milestone 3 Hybrid Search Design Spike
+
+_Last updated: 30 Nov 2025_
+
+Milestone 3 focuses on empowering analysts with a unified search experience that merges semantic retrieval (Vertex AI Search) with structured filtering backed by SQL/Firestore entities. This spike captures the architecture decisions, API contracts, UI requirements, and delivery plan needed before implementation begins.
+
+## 1. Goals & Success Criteria
+
+1. **Single Search Surface**: Analysts issue one query and receive deduplicated results that blend Vertex AI semantic hits with SQL/Firestore structured matches.
+2. **Deterministic Filters**: Analysts can constrain searches by indicator type, entity value (bank account, wallet, email, IP, ASN, browser agent, etc.), classification, dataset, and time range.
+3. **Auditable Results**: Every merged result exposes provenance metadata (source store, scores, entity matches) so analysts can explain why a document appeared.
+4. **Pluggable Backends**: The design must honor the existing settings/factory pattern so local dev sticks with Chroma/SQLite while dev/prod speak Vertex AI Search + Cloud SQL/Firestore.
+
+## 2. Current State Recap
+
+- **Ingestion**: Milestone 2 dual-write pipeline stores entities in SQLite/SQL + Firestore and pushes documents to Vertex AI Search. Retry queue guarantees Vertex parity.
+- **API**: `HybridRetriever` currently proxies a text query to the vector + structured stores but lacks configurable filters, scoring policies, or dataset awareness.
+- **UI**: Streamlit + Next.js consoles expose basic search (text + case/classification filters) without structured entity selectors.
+
+## 3. Proposed Retrieval Architecture
+
+### 3.1 Service-level Changes
+
+- Introduce `services/hybrid_search.py` that orchestrates retrieval across:
+  - **Semantic Provider**: Vertex AI Search (or Chroma locally) via a `VectorSearchClient` abstraction.
+  - **Structured Provider**: SQL/Firestore via `ReviewStore` + future `EntityStore` queries.
+- The service accepts a `HybridSearchQuery` dataclass with:
+  - `text: str | None`
+  - `entities: list[EntityFilter]` (type, value, match mode)
+  - `classifications: list[str]`
+  - `datasets: list[str]`
+  - `time_range: tuple[datetime, datetime] | None`
+  - `limit/vector_limit/structured_limit`
+- Response surface: list of `HybridSearchResult` containing case metadata, structured attributes, semantic snippet, `scores` dict, and `source` ("vertex", "structured", "merged").
+
+### 3.2 API Updates (`src/i4g/api/review.py`)
+
+1. Add request models for the richer filters (entity filters, date ranges, dataset selectors).
+2. Replace direct `HybridRetriever` calls with the new service, ensuring dependency injection still flows through factories for testability.
+3. Emit audit logs that capture:
+   - filter payloads
+   - per-store hit counts
+   - normalized scores after deduplication/merging
+4. Support pagination by carrying cursor tokens for Vertex (if available) and offsets for SQL queries; default to 25 merged results.
+
+### 3.3 Deduplication & Scoring
+
+- Merge results by `case_id` (primary) and document URI (secondary).
+- Score policy proposal:
+  - `merged_score = max(vertex_score * semantic_weight, structured_rank * structured_weight)`
+  - Expose weights via settings, defaulting to 0.65 semantic / 0.35 structured.
+- Track `vector_hits`, `structured_hits`, and `merged_count` for UI metrics.
+
+### 3.4 Observability
+
+- Emit structured logs (JSON) with request_id, filters, backend latencies, result counts.
+- Add `metrics/hybrid_search.py` helper for StatsD/OTel counters: total queries, per-backend latency, cache hit rate (future).
+
+## 4. Structured Filter Requirements
+
+### 4.1 Supported Filters (MVP)
+
+| Filter | Description | Backend Source |
+| --- | --- | --- |
+| Indicator Type | Enum (bank_account, crypto_wallet, email, phone, ip_address, asn, browser_agent, url, merchant) | SQL/Firestore (entity tables) |
+| Indicator Value | Exact or prefix match, case-insensitive | SQL LIKE + Firestore queries |
+| Dataset | `retrieval_poc_dev`, `account_list`, etc. | SQL + Vertex metadata |
+| Classification | `romance`, `tech_support`, `pig_butcher`, etc. | Stored on cases/entities |
+| Time Range | `created_at` or `ingested_at` window | SQL timestamps + Vertex metadata |
+| Loss Threshold | Numeric min/max (USD) | SQL case summary |
+
+### 4.2 API Contract for Filters
+
+Add `GET /reviews/search/schema` (or repurpose `/reviews/search/tag-presets`) to return:
+
+```json
+{
+  "indicator_types": ["bank_account", "crypto_wallet", "ip_address"],
+  "datasets": ["retrieval_poc_dev", "account_list"],
+  "classifications": ["romance", "tech_support"],
+  "loss_buckets": ["<10k", "10k-50k", ">50k"],
+  "time_presets": ["7d", "30d", "90d"],
+  "entity_examples": {
+    "bank_account": ["021000021-123456789"],
+    "crypto_wallet": ["bc1q..."],
+    "ip_address": ["203.0.113.25"]
+  }
+}
+```
+
+This allows the UI to populate dropdowns without hardcoding enumerations.
+
+### 4.3 UI Implications
+
+- **Streamlit Console**: add an “Advanced Filters” drawer with multi-select chips. Persist selections per user via existing saved-search infrastructure.
+- **Next.js Console**: implement reusable filter components under `ui/apps/web/src/components/search/filters/`, leveraging the API schema to stay dynamic.
+- **Saved Searches**: extend the schema to include the new filter objects so analysts can re-run structured searches. Requires migrations/UI validation.
+
+## 5. Delivery Plan
+
+| Week | Workstream | Key Tasks |
+| --- | --- | --- |
+| Week 5 (Dev Sprint 1) | Backend | Build `HybridSearchService`, extend Review API models/endpoints, add settings + metrics. |
+| Week 5 | Data | Ensure ingestion populates new entity fields (browser agent, IP, ASN) and expose SQL views for filter queries. |
+| Week 6 (Dev Sprint 2) | UI | Implement Streamlit + Next.js filter components; wire to new API contract. |
+| Week 6 | Testing | Add pytest coverage for query permutations, load-test hybrid search, capture golden responses for UI regression tests. |
+
+## 6. Dependencies & Open Questions
+
+1. **Entity Coverage**: confirm ingestion emits browser agent/IP/ASN fields before UI depends on them. Otherwise gate the filters via feature flags.
+2. **Vertex Quota**: evaluate whether merging requires additional Vertex read quotas; consider caching frequent searches.
+3. **SQL Backend**: local dev uses SQLite; need deterministic ordering + case-insensitive search (likely via indexed `LOWER()` columns).
+4. **Security**: ensure new filters don’t expose PII beyond authenticated analysts; audit logging must include filter payloads for compliance.
+5. **Saved Search Schema Migration**: decide whether to version saved searches or auto-migrate when new filters appear.
+
+## 7. Next Actions
+
+1. Finalize `HybridSearchService` interface and add stubs to `src/i4g/services/`.
+2. Update `ReviewStore` and the forthcoming `EntityStore` with helper queries for indicator filters.
+3. Define the JSON schema for `GET /reviews/search/schema` and mock responses for UI development.
+4. Create Jira/Trello tasks (or equivalent) per table in the delivery plan and link them to this spike.

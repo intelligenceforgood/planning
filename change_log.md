@@ -29,6 +29,9 @@ This log captures significant planning decisions and architecture changes as we 
 - Closed out Milestone 2 with the documentation refresh: roadmap + architecture docs now capture the dev backfill,
 	retry drain workflow, and Vertex quota mitigations. Shifted the immediate roadmap focus toward Milestone 3 hybrid
 	search design and the analyst UI structured-filter requirements.
+- Kicked off Milestone 3 with the hybrid search design spike (`planning/milestone3_hybrid_search.md`). Captured the
+	proposed `HybridSearchService`, deduplication/scoring policy, `/reviews/search/schema` contract, Streamlit/Next.js
+	filter requirements, and the sprint-by-sprint delivery plan so engineering tasks can spin up immediately.
 
 ## 2025-11-29
 - Forced a Firestore fan-out failure by running `python -m i4g.worker.jobs.ingest` with `I4G_ENV=dev`,

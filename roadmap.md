@@ -32,6 +32,7 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 
 ### Milestone 3: Advanced Search & Analysis (Weeks 5-6)
 **Objective**: Empower analysts with hybrid search and structured filtering.
+- _Design spike_: `planning/milestone3_hybrid_search.md` captures the architecture, API contracts, UI requirements, and delivery plan for this milestone.
 - [ ] **Hybrid Retriever**: Update `src/i4g/api/review.py` to query both Vertex AI and SQL.
 - [ ] **Analyst Dashboard**: Add "Structured Search" filters (e.g., "Find all cases with Crypto Wallet X") to the Streamlit/Next.js UI.
 - [ ] **Entity Taxonomy Expansion**: Add browser agent, IP address, ASN, and future indicators through configuration so new signals can ship without code changes.
@@ -56,6 +57,6 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 - [ ] **Handover**: Final documentation and runbooks.
 
 ## Immediate Next Steps
-1.  Finalize Milestone 3 scope and begin design spikes for hybrid search so SQL + Vertex retrieval paths can be composed inside the Review API.
-2.  Update the analyst UI requirements for structured filters and plan the backend contracts needed to support them.
-3.  Decide whether to throttle ingestion batches or request a higher Vertex "document batch requests/min" quota before running larger corpora.
+1.  Implement `HybridSearchService` + Review API plumbing per `planning/milestone3_hybrid_search.md`, including scoring, deduplication, and audit logging.
+2.  Expose the `/reviews/search/schema` endpoint + saved-search schema updates so the Streamlit/Next.js filters can stay in sync with backend capabilities.
+3.  Prototype the analyst UI structured-filter components (Streamlit + Next.js) using the schema endpoint, then integrate them with saved searches and search history.
