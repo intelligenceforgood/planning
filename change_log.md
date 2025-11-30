@@ -32,6 +32,15 @@ This log captures significant planning decisions and architecture changes as we 
 - Kicked off Milestone 3 with the hybrid search design spike (`planning/milestone3_hybrid_search.md`). Captured the
 	proposed `HybridSearchService`, deduplication/scoring policy, `/reviews/search/schema` contract, Streamlit/Next.js
 	filter requirements, and the sprint-by-sprint delivery plan so engineering tasks can spin up immediately.
+- Added a proper testing stack for the Next.js console: Vitest + Testing Library now cover the search experience helpers
+	and entity-filter payloads, Playwright powers a `/search` smoke test that boots the dev server, and the package README
+	documents `pnpm --filter web test` plus `test:smoke` so hybrid-search work can gate on automated checks.
+- Mirrored proto’s automation discipline in the UI repo by adding `scripts/git-hooks/pre-commit` (Prettier check,
+	`pnpm --filter web lint`, `pnpm --filter web test`) and documenting the symlink command in `ui/README.md` so every
+	commit runs format + unit suites automatically.
+- Added `I4G_UI_PRECOMMIT_QUICK=1` support to the hook for lint-only iterations, clarified in `ui/README.md` +
+	`docs/dev_guide.md` that quick mode must be temporary, and documented when the Playwright smoke (`pnpm --filter web
+	test:smoke`) is required (hybrid-search changes, routing/server-action updates, pre-release checks).
 
 ## 2025-11-29
 - Forced a Firestore fan-out failure by running `python -m i4g.worker.jobs.ingest` with `I4G_ENV=dev`,
