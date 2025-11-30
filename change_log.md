@@ -22,6 +22,13 @@ This log captures significant planning decisions and architecture changes as we 
 - Archived the Milestone 2 planning packet (`planning/milestone2_*.md`) now that the Dual Extraction deliverables are
 	complete. The files live under `planning/archive/` for historical reference; all active tracking moves to the change
 	log and roadmap.
+- Replaced the ad-hoc environment-variable sprawl for ingestion jobs with TOML-backed configuration overrides. Pydantic
+	settings now read `config/settings.default.toml` (tracked) plus developer-local `config/settings.local.toml` and an
+	optional `I4G_SETTINGS_FILE` pointing to any single TOML. Docs/dev_guide + docs/config include examples so running the
+	ingest worker, retry worker, or verification script in `i4g-dev` no longer requires a dozen env exports per command.
+- Closed out Milestone 2 with the documentation refresh: roadmap + architecture docs now capture the dev backfill,
+	retry drain workflow, and Vertex quota mitigations. Shifted the immediate roadmap focus toward Milestone 3 hybrid
+	search design and the analyst UI structured-filter requirements.
 
 ## 2025-11-29
 - Forced a Firestore fan-out failure by running `python -m i4g.worker.jobs.ingest` with `I4G_ENV=dev`,

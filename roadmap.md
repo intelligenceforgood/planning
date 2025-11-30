@@ -28,7 +28,7 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 - [x] **Design Schema**: SqlWriter metadata + Alembic migrations finalized; SQLite + dev schemas created during the dual-write rollout so both local + Cloud SQL environments share identical entity tables.
 - [x] **Ingestion Worker**: `i4g.worker.jobs.ingest` now extracts entities, dual-writes SQL + Firestore + Vertex, records counters per backend, and persists payload/context to the ingestion retry queue for Firestore/Vertex replays.
 - [x] **Backfill**: Dev run `01993af5-09ab-4ecf-b0c8-cd86702b8edd` processed 200 `retrieval_poc_dev` cases. SQL/Firestore writes reached 200/200; Vertex stopped at 155 because of the "Document batch requests/min" quota (429 ResourceExhausted). `python -m i4g.worker.jobs.ingest_retry` (batch 10) drained the 45 queued Vertex payloads once quota recovered, confirming eventual consistency.
-- [ ] **Documentation Refresh**: Capture the dev backfill summary, retry procedure, and Vertex quota mitigations across `planning/roadmap.md`, `docs/architecture.md`, and the runbook so operators know how to throttle or request higher import quotas before the next dataset.
+- [x] **Documentation Refresh**: Captured the dev backfill summary, retry procedure, and Vertex quota mitigations across `planning/change_log.md`, `docs/architecture.md`, `docs/config/README.md`, and the ingestion runbook so operators know how to throttle or request higher import quotas before the next dataset.
 
 ### Milestone 3: Advanced Search & Analysis (Weeks 5-6)
 **Objective**: Empower analysts with hybrid search and structured filtering.
@@ -56,6 +56,6 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 - [ ] **Handover**: Final documentation and runbooks.
 
 ## Immediate Next Steps
-1.  Publish the dev backfill + Vertex quota findings across architecture/runbook docs, including the retry drain procedure and verification script expectations.
-2.  Decide whether to throttle ingestion batches or request a higher Vertex "document batch requests/min" quota before running larger corpora.
-3.  Transition focus to Milestone 3 planning now that dual extraction is validated, ensuring hybrid search requirements reference the new SQL + Vertex stores.
+1.  Finalize Milestone 3 scope and begin design spikes for hybrid search so SQL + Vertex retrieval paths can be composed inside the Review API.
+2.  Update the analyst UI requirements for structured filters and plan the backend contracts needed to support them.
+3.  Decide whether to throttle ingestion batches or request a higher Vertex "document batch requests/min" quota before running larger corpora.
