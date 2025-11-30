@@ -1,7 +1,7 @@
 # I4G Platform Implementation Roadmap
 
 **Status**: Living Document<br/>
-**Date**: November 26, 2025
+**Date**: November 30, 2025
 
 ## Executive Summary
 This roadmap defines the path from our current "Prototype" state to the "Production" vision outlined in `prd_production.md`. It prioritizes feature parity with the legacy DTP system, robust security (PII/Auth), and a scalable "Dual Extraction" architecture.
@@ -17,21 +17,18 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 
 ## Milestones
 
-### Milestone 1: Parity Verification & Gap Closure (Weeks 1-2)
-**Objective**: Confirm the codebase matches the "Ported" assumptions and close critical functional gaps.
+### Milestone 1: Parity Verification & Gap Closure (Completed – Nov 29, 2025)
+**Outcome**: Confirmed the proto stack fully replaces the Azure Functions workflow, including API/worker parity, artifact generation, and analyst-console surfacing. All planning docs for this milestone are retired and tracked via the change log.
 - [x] **Port `account_list_extract`**: New `i4g.services.account_list` package ships retriever/extractor/exporter orchestration, FastAPI `/accounts/extract`, and worker entrypoints consumed by the Streamlit console + CLI smokes.
 - [x] **Port `account_list_extract_client`**: Artifact exports (CSV/JSON/XLSX/PDF) now mirror the legacy workflow, including optional Drive uploads, Cloud Run job wiring, and dashboard surfacing with summary/status panels.
-- [ ] **Legacy Cleanup**: Finalize the archiving of `dtp` references once parity is confirmed.
+- [x] **Legacy Cleanup**: Archived the dedicated planning docs and captured the final status in `planning/change_log.md`, leaving any residual `dtp` references tracked via the general backlog.
 
 ### Milestone 2: The "Dual Extraction" Pipeline (Weeks 3-4)
 **Objective**: Implement the robust ingestion architecture for hybrid search.
-- [ ] **Design Schema**: Define the SQL schema for extracted entities (Banks, Crypto Wallets, Phone Numbers).
-- [ ] **Ingestion Worker**: Update `i4g.worker` to:
-    1.  Extract entities via LLM.
-    2.  Write to Firestore (Case View).
-    3.  Write to Vertex AI Search (Semantic Index).
-    4.  Write to Cloud SQL (Structured Index).
-- [ ] **Backfill**: Run the new pipeline against existing `data/entities_semantic.json` data.
+- [x] **Design Schema**: SqlWriter metadata + Alembic migrations finalized; SQLite + dev schemas created during the dual-write rollout so both local + Cloud SQL environments share identical entity tables.
+- [x] **Ingestion Worker**: `i4g.worker.jobs.ingest` now extracts entities, dual-writes SQL + Firestore + Vertex, records counters per backend, and persists payload/context to the ingestion retry queue for Firestore/Vertex replays.
+- [x] **Backfill**: Dev run `01993af5-09ab-4ecf-b0c8-cd86702b8edd` processed 200 `retrieval_poc_dev` cases. SQL/Firestore writes reached 200/200; Vertex stopped at 155 because of the "Document batch requests/min" quota (429 ResourceExhausted). `python -m i4g.worker.jobs.ingest_retry` (batch 10) drained the 45 queued Vertex payloads once quota recovered, confirming eventual consistency.
+- [ ] **Documentation Refresh**: Capture the dev backfill summary, retry procedure, and Vertex quota mitigations across `planning/roadmap.md`, `docs/architecture.md`, and the runbook so operators know how to throttle or request higher import quotas before the next dataset.
 
 ### Milestone 3: Advanced Search & Analysis (Weeks 5-6)
 **Objective**: Empower analysts with hybrid search and structured filtering.
@@ -59,6 +56,6 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 - [ ] **Handover**: Final documentation and runbooks.
 
 ## Immediate Next Steps
-1.  Rebuild/ingest structured + vector stores so the account list retriever finds November cases; document results in `planning/change_log.md`.
-2.  Provision the `account-list` Cloud Run job in `i4g-dev` (Terraform or manual), rerun the dry/full smokes, and capture artifact URLs for analysts.
-3.  Kick off the Dual Extraction schema definition to unblock Milestone 2 (SQL tables, Vertex AI Search documents, and migration plan).
+1.  Publish the dev backfill + Vertex quota findings across architecture/runbook docs, including the retry drain procedure and verification script expectations.
+2.  Decide whether to throttle ingestion batches or request a higher Vertex "document batch requests/min" quota before running larger corpora.
+3.  Transition focus to Milestone 3 planning now that dual extraction is validated, ensuring hybrid search requirements reference the new SQL + Vertex stores.

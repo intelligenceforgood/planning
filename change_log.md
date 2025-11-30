@@ -1,10 +1,54 @@
 # DT-IFG Migration Change Log
 
-Last updated: 29 Nov 2025_
+Last updated: 30 Nov 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
 
+## 2025-11-30
+- Executed the ingestion backfill against `i4g-dev` using `python -m i4g.worker.jobs.ingest` with the Firestore + Vertex
+	fan-out toggles enabled (`I4G_ENV=dev`, `I4G_STORAGE__FIRESTORE_PROJECT=i4g-dev`,
+	`I4G_VERTEX_SEARCH_PROJECT=i4g-dev`, `I4G_VERTEX_SEARCH_LOCATION=global`, `I4G_VERTEX_SEARCH_DATA_STORE=retrieval-poc`). Run
+	`01993af5-09ab-4ecf-b0c8-cd86702b8edd` processed all 200 cases in `retrieval_poc_dev`, dual-wrote SQL + Firestore, and
+	recorded entity counts (820) in the ingestion tracker. Vertex AI Search only accepted 155 documents during the live run
+	because the 200-case burst tripped the “Document batch requests per minute” quota (429 ResourceExhausted) after the
+	initial batches landed.
+- Replayed the backlog with `python -m i4g.worker.jobs.ingest_retry` (batch size 10) until the worker reported “No
+	ingestion retry entries ready; exiting.” A total of 45 vertex payloads were reprocessed successfully with zero
+	failures/drops once quota recovered, confirming the retry queue captured every rejected batch and the worker can drain
+	dev-scale spikes. `scripts/verify_ingestion_run.py --run-id 01993af5-... --verbose` still shows `vertex_writes=155` and
+	`retry_count=45` because the run tracker currently records retries but does not increment the vertex counter on replay;
+	follow-on work will either update the tracker or adjust the verification script so it can validate “retries consumed”
+	runs.
+- Archived the Milestone 2 planning packet (`planning/milestone2_*.md`) now that the Dual Extraction deliverables are
+	complete. The files live under `planning/archive/` for historical reference; all active tracking moves to the change
+	log and roadmap.
+
 ## 2025-11-29
+- Forced a Firestore fan-out failure by running `python -m i4g.worker.jobs.ingest` with `I4G_ENV=dev`,
+	`I4G_STORAGE__FIRESTORE_PROJECT=i4g-dev`, and `FIRESTORE_EMULATOR_HOST=127.0.0.1:8787` pointed at a closed port.
+	Run `26ff94bf-4128-45f6-834f-d4e04658841d` ingested three cases (SQL writes succeeded) and enqueued retries for
+	`romance_bitcoin-012`, `impostor_refund-012`, and `tech_support-038`, exercising the retry payload context.
+- Installed `openjdk@21` so the `gcloud beta emulators firestore start` command can run locally, launched the
+	emulator, and executed `python -m i4g.worker.jobs.ingest_retry` (dry run + live). The live pass replayed all three
+	Firestore entries against the emulator, and a follow-up run reported `No ingestion retry entries ready; exiting`.
+	Verified the run metadata via `scripts/verify_ingestion_run.py --dataset retry_demo --max-retry-count 3 --verbose` to
+	confirm the retry counter increments while the status stays `succeeded`.
+- Refreshed `docs/smoke_test.md` §2c with the working Firestore failure recipe (`I4G_STORAGE__FIRESTORE_PROJECT`,
+	emulator instructions, and verification flags) so the retry smoke stays reproducible.
+- Added an `i4g-ingest-retry-job` Cloud Run entrypoint plus docs/tests to drain `ingestion_retry_queue`. The worker
+	replays Firestore + Vertex fan-out using the stored classification payload, enforces `settings.ingestion.max_retries`,
+	and exposes a dry-run mode so queued work can be inspected without mutating state. `_maybe_enqueue_retry` now records
+	the serialized `SqlWriterResult` + backend errors alongside each payload to power the replays.
+- Fixed a regression where running `python -m i4g.worker.jobs.ingest` raised `NameError: _maybe_enqueue_retry` because the
+	retry helpers were declared after the `if __name__ == "__main__"` guard. Moving `_clone_payload`, `_serialise_sql_result`,
+	and `_maybe_enqueue_retry` above `main()` unblocks the CLI path and keeps the test imports unchanged. Re-ran the retry
+	helper/job tests plus the ingress retry store tests to confirm coverage (12 passing).
+- Completed the local vector-enabled smoke: `i4g.worker.jobs.ingest` ingested 50 records from `data/retrieval_poc/cases.jsonl`
+	with embeddings reset, dual-wrote SQL successfully, and recorded run `22f54e5f-70e2-46d4-ae75-c08c2e61b0e6` in
+	`/Users/jerry/Work/project/i4g/data/i4g_store.db` with case/sql counts (vector enabled). Followed up with
+	`python -m i4g.worker.jobs.ingest_retry`, which exited cleanly because the queue was empty—validating the new worker path.
+- Wired the ingestion job to the dual-write pipeline: IngestPipeline now emits a structured `IngestResult`, feeds the new SqlWriter (case/doc/entity tables), and exposes a run tracker that records progress in `ingestion_runs`. Added ingestion fan-out toggles/default dataset settings plus docs/test coverage so `I4G_INGEST__*` overrides stay source-of-truth.
+- Implemented Vertex fan-out inside the ingestion pipeline: added a Vertex writer factory, document builder shared with the standalone Discovery scripts, payload normalization (dataset/categories/indicator IDs/tags), and worker toggles so `i4g-ingest-job` pushes each case to Vertex AI Search. Run tracker now increments vertex_writes, and smoke docs include a verification query.
 - Followed up on the `account-list` Cloud Run smoke by executing `gcloud run jobs execute account-list --project i4g-dev --region us-central1` after clearing the `I4G_ACCOUNT_JOB__DRY_RUN` override. Execution `account-list-dvrq4` finished in ~78s but surfaced `Account list run account-run-cb63651e completed: indicators=0 sources=3` with warnings for every indicator category (bank/crypto/payments) because the LLM extractor could not reach Ollama inside Cloud Run.
 - Pulled the job logs via `gcloud logging read ... account-list-dvrq4` and captured the stack traces showing both embedding and chat calls failing (`ConnectionError: Failed to connect to Ollama...`). Until we swap the provider to Vertex/mock for Cloud Run, the worker will keep falling back to text search and emit zero indicators, so this remains the top blocker for Milestone 1 validation.
 - Exporter still produced local `/tmp/i4g/reports/account_list/account-run-cb63651e_20251129T005352Z.{pdf,xlsx}` artifacts, but no new objects landed in `gs://i4g-reports-dev/account_list/` for this run (confirmed via `gsutil ls`). Need to wire the warning propagation back through the API/worker responses and add automated alerts when uploads fail or produce empty indicator sets so analysts know the report is incomplete.
@@ -14,8 +58,12 @@ This log captures significant planning decisions and architecture changes as we 
 - Set the job’s env vars explicitly (`I4G_ENV=dev`, `I4G_STORAGE__REPORTS_BUCKET=i4g-reports-dev`, `I4G_STORAGE__FIRESTORE__PROJECT=i4g-dev`, `I4G_LLM__PROVIDER=mock`, `I4G_ACCOUNT_LIST__ENABLE_VECTOR=false`). Execution `account-list-5pq2j` now disables vector search without error spam and uploads artifacts straight to `gs://i4g-reports-dev/account_list/account-run-6484995e_20251129T010803Z.{pdf,xlsx}`—confirms bucket wiring + warning surfacing path works once the env is set correctly.
 - Wired audit/logging end-to-end: the `/accounts/extract` API now tags audit entries with a requester header (`X-ACCOUNTLIST-REQUESTER` fallback to client IP) and logs run counts/artifacts; the Cloud Run job records runs as `account_job:<env>`. `log_account_list_run` captures request metadata alongside indicator/source counts, and the refreshed unit tests cover the API, worker entrypoint, and audit helper.
 - Extended the FastAPI router with `/accounts/runs` (pulling structured payloads from `ReviewStore`) and relaxed `/accounts/extract` so analyst `X-API-KEY` tokens can trigger runs without a separate service key. Updated the Next.js console with a dedicated `/accounts` page that launches manual runs, refreshes audit history via `/api/account-list/{run,runs}`, and surfaces artifact links + warning text directly in the UI.
+- Completed the docs/settings sync (architecture overview, smoke guide, and config manifest) and retired `planning/account_list_execution_plan.md` plus `planning/milestone1_account_list.md` now that every task is shipped. Milestone 1 is officially closed, a new `planning/milestone2_dual_extraction.md` plan captures the next wave, and planning efforts shift to the dual-extraction pipeline.
 
 ## 2025-11-28
+- Implemented Firestore fan-out inside the ingestion pipeline: added a Firestore writer with batch commits,
+	wired it through the factory helpers, exposed `firestore_written` counters on `IngestResult`, and updated the
+	worker job/run tracker so ingestion runs report `firestore_writes` alongside SQL/Vertex totals.
 - Revalidated HybridRetriever coverage after latest data refresh by running the financial-entity probe (bank/crypto/payments, 30-day window, top_k=50). Each category surfaced 50 documents with representative case IDs (`ucisms-120-0`, `ucisms-123-0`, etc.), and datasets still report as `unknown` because the mock bundle omits explicit tags—tracking this until new metadata lands.
 - Rehydrated the sandbox (`scripts/bootstrap_local_sandbox.py --reset`) and re-ran the Milestone 1 data coverage probe. Discovered `FinancialEntityRetriever` was discarding vector-only hits (no structured `record` payload), so coverage still read zero despite populated stores.
 - Updated the retriever to merge metadata/text from vector entries, added regression tests (`tests/unit/services/test_account_list_retriever.py`), and reran the probe. All three indicator categories now return 50 source docs within the 30-day window (datasets resolve to `unknown` because the mock smoke bundle lacks explicit source tags), so we can proceed to the dev job smoke.
