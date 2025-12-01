@@ -1,10 +1,32 @@
 # DT-IFG Migration Change Log
 
-Last updated: 30 Nov 2025_
+Last updated: 1 Dec 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
 
+## 2025-12-01
+- Extended the ingestion settings surface with first-class knobs for `dataset_path`, `batch_limit`, `dry_run`, and
+	`reset_vector`, refreshed the config manifests in both proto/docs repos, and added regression coverage in
+	`tests/unit/settings/test_settings_env_overrides.py` so TOML-driven runs stay fully tested. Introduced
+	`config/settings.network_smoke.toml` (local) and `config/settings.dev_network_smoke.toml` (dev) so ingestion jobs can
+	target the manual network-entity bundle without exporting transient env vars.
+- Re-ran the ingestion worker against `i4g-dev` using the new config-only workflow:
+	`I4G_ENV=dev I4G_SETTINGS_FILE=config/settings.dev_network_smoke.toml conda run -n i4g python -m i4g.worker.jobs.ingest`.
+	Run `f43506cc-c41c-4edf-9c4a-5860010ee2e5` ingested `network-test-001`, persisted the record via SQL + Firestore, and
+	pushed the document to Vertex AI Search (vector embeddings skipped because the Vertex vector backend is still
+	unimplemented locally). This validates that the dev dataset now contains explicit browser-agent/IP/ASN entities.
+- Spot-checked `/reviews/search/schema` under the same config (FastAPI `TestClient` + `X-API-KEY=dev-analyst-token`) and
+	confirmed the endpoint returns the expanded indicator list (`browser_agent`, `ip_address`, `asn`, etc.), so the
+	analyst UI can surface the new structured filters immediately after the dev ingestion run.
+
 ## 2025-11-30
+- Added a reusable observability helper (`src/i4g/observability.py`) that emits structured JSON logs plus StatsD/OTLP
+	metrics based on the runtime settings, then wired `HybridSearchService` to record query counters, timings, cache hits,
+	and structured summaries for every search request. Extended `ObservabilitySettings` with StatsD + service-name knobs,
+	refreshed the config manifests/docs, and added pytest coverage for the new env overrides and observability hooks.
+- Verified the ingestion pipeline emits browser agent/IP/ASN entities by enriching `prepare_ingest_payload` with
+	structured network fields and adding dual-write regression tests so SQL/Firestore surfaces stay filter-ready for UI
+	work. The milestone tracker now marks the ingestion verification task complete.
 - Executed the ingestion backfill against `i4g-dev` using `python -m i4g.worker.jobs.ingest` with the Firestore + Vertex
 	fan-out toggles enabled (`I4G_ENV=dev`, `I4G_STORAGE__FIRESTORE_PROJECT=i4g-dev`,
 	`I4G_VERTEX_SEARCH_PROJECT=i4g-dev`, `I4G_VERTEX_SEARCH_LOCATION=global`, `I4G_VERTEX_SEARCH_DATA_STORE=retrieval-poc`). Run

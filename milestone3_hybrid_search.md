@@ -119,3 +119,31 @@ This allows the UI to populate dropdowns without hardcoding enumerations.
 2. Update `ReviewStore` and the forthcoming `EntityStore` with helper queries for indicator filters.
 3. Define the JSON schema for `GET /reviews/search/schema` and mock responses for UI development.
 4. Create Jira/Trello tasks (or equivalent) per table in the delivery plan and link them to this spike.
+
+## 8. Execution Checklist & Status
+
+### Backend / API
+- [x] Ship `SearchSettings`, `HybridSearchService`, and `/reviews/search/schema` so FastAPI exposes the richer payloads.
+- [ ] Extend `ReviewStore`/`EntityStore` query helpers for entity filters (prefix/exact, dataset scoping, loss buckets).
+- [ ] Finalize dedupe + scoring policy (semantic vs structured weights, tie-breakers) and add audit logging for merged counts.
+- [x] Add observability hooks (structured logs + metrics helper) and wire to existing StatsD/OTel exporters.
+
+### Data & Ingestion
+- [x] Verify ingestion emits browser agent / IP / ASN fields and backfill any gaps before UI surfaces those filters.
+- [x] Document ingestion smoke for the new entity columns (tests + `docs/smoke_test.md`).
+
+### UI Workstreams
+- [x] Fetch schema server-side (Next.js) and plumb into search experience.
+- [ ] Finish Next.js filter UX (entity builder polish, saved-search parity, `/api/search` payload forwarding).
+- [ ] Update Streamlit console with the same schema-driven filters and persistence.
+- [ ] Migrate saved-search payloads to persist the structured filters (schema versioning + validation UI).
+
+### Testing & Quality Gates
+- [x] Add Vitest coverage for helper utilities (schema parsing, SearchExperience interactions).
+- [ ] Expand backend pytest suite with hybrid query permutations + dedupe scoring assertions.
+- [ ] Grow Playwright smoke coverage for `/search` (filters, saved-search create/run) and run before releases.
+
+### Documentation & Operations
+- [x] Refresh `docs/config` + UI README with hybrid search env vars and testing strategy.
+- [ ] Draft analyst runbook entry (how to use structured filters, schema definitions, saved-search migration notes).
+- [ ] Capture deployment checklist (env vars, Task_STATUS expectations, metrics dashboards) ahead of dev → prod promotion.
