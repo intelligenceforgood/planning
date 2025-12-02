@@ -18,6 +18,8 @@ This log captures significant planning decisions and architecture changes as we 
 - Spot-checked `/reviews/search/schema` under the same config (FastAPI `TestClient` + `X-API-KEY=dev-analyst-token`) and
 	confirmed the endpoint returns the expanded indicator list (`browser_agent`, `ip_address`, `asn`, etc.), so the
 	analyst UI can surface the new structured filters immediately after the dev ingestion run.
+- Drafted `docs/analyst_runbook.md` so analysts can refresh the schema, run structured hybrid queries, and migrate saved
+	searches via `i4g-admin` export/import workflows without waiting on ad-hoc Slack instructions.
 
 ## 2025-11-30
 - Added a reusable observability helper (`src/i4g/observability.py`) that emits structured JSON logs plus StatsD/OTLP

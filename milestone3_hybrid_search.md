@@ -124,7 +124,7 @@ This allows the UI to populate dropdowns without hardcoding enumerations.
 
 ### Backend / API
 - [x] Ship `SearchSettings`, `HybridSearchService`, and `/reviews/search/schema` so FastAPI exposes the richer payloads.
-- [ ] Extend `ReviewStore`/`EntityStore` query helpers for entity filters (prefix/exact, dataset scoping, loss buckets).
+- [x] Extend `ReviewStore`/`EntityStore` query helpers for entity filters (prefix/exact, dataset scoping, loss buckets), including dataset + entity example surfacing for the schema endpoint.
 - [ ] Finalize dedupe + scoring policy (semantic vs structured weights, tie-breakers) and add audit logging for merged counts.
 - [x] Add observability hooks (structured logs + metrics helper) and wire to existing StatsD/OTel exporters.
 
@@ -145,5 +145,19 @@ This allows the UI to populate dropdowns without hardcoding enumerations.
 
 ### Documentation & Operations
 - [x] Refresh `docs/config` + UI README with hybrid search env vars and testing strategy.
-- [ ] Draft analyst runbook entry (how to use structured filters, schema definitions, saved-search migration notes).
+- [x] Draft analyst runbook entry (how to use structured filters, schema definitions, saved-search migration notes).
 - [ ] Capture deployment checklist (env vars, Task_STATUS expectations, metrics dashboards) ahead of dev → prod promotion.
+
+## 9. Two-Week Execution Plan (Dec 1–12)
+
+### Week of Dec 1 (Sprint 5 wrap-up)
+- **Backend core** (owner: Jerry, due Dec 4): finalize `HybridSearchService` scoring knobs (`semantic_weight`, `structured_weight`) and surface diagnostics in `/reviews/search/query` responses; ship unit tests that assert merged ordering across mixed result sets.
+- **Structured store extensions** (owner: Jerry, due Dec 5): land `EntityStore` helpers for prefix/contains filters plus dataset scoping; wire them into the service factories so local and dev environments stay in parity.
+- **Schema + documentation** (owner: Jerry, done Dec 1): publish `docs/analyst_runbook.md` (complete) and keep `/reviews/search/schema` payload examples in sync inside `docs/dev_guide.md` + the UI handbook.
+- **Ingestion verification** (owner: Jerry, due Dec 5): re-run the dev `ingest-network-smoke` Cloud Run job after any schema change, then execute `pnpm --filter web test:smoke` to confirm the Next.js filter drawer renders the new chips.
+
+### Week of Dec 8 (Sprint 6 kickoff)
+- **Next.js integration** (owner: UI lead, target Dec 10): consume the expanded schema via server-side data fetch, migrate the Filter Drawer to schema-driven chips, and ensure saved searches persist the enriched payload.
+- **Saved-search migration tooling** (owner: Jerry, target Dec 9): add `--schema-version` awareness to `i4g-admin export-saved-searches` plus a helper script that auto-tags migrated searches (`hybrid-v1`); document the workflow updates inside the analyst runbook.
+- **Testing & observability** (owner: Jerry, target Dec 11): expand pytest coverage with dedupe/scoring fixtures, add StatsD counters for per-source result ratios, and update Playwright smoke to assert that entity chips/datasets populate from live schema calls.
+- **Operational readiness** (owner: Jerry, target Dec 12): draft the remaining deployment checklist (env vars, Task_STATUS expectations, dashboards) so Milestone 3 handoff notes cover both backend knobs and UI verification steps.
