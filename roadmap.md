@@ -32,10 +32,10 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 
 ### Milestone 3: Advanced Search & Analysis (Weeks 5-6)
 **Objective**: Empower analysts with hybrid search and structured filtering.
-- _Design spike_: `planning/milestone3_hybrid_search.md` captures the architecture, API contracts, UI requirements, and delivery plan for this milestone.
-- [ ] **Hybrid Retriever**: Update `src/i4g/api/review.py` to query both Vertex AI and SQL.
-- [ ] **Analyst Dashboard**: Add "Structured Search" filters (e.g., "Find all cases with Crypto Wallet X") to the Streamlit/Next.js UI.
-- [ ] **Entity Taxonomy Expansion**: Add browser agent, IP address, ASN, and future indicators through configuration so new signals can ship without code changes.
+- [x] _Design spike_: `planning/milestone3_hybrid_search.md` captures the architecture, API contracts, UI requirements, and delivery plan for this milestone. (Completed Dec 2)
+- [x] **Hybrid Retriever**: `HybridSearchService` plus `/reviews/search/{schema,query}` now orchestrate Vertex AI + SQL results with scoring/audit diagnostics. Streamlit + Next.js consume the same schema payloads. (Completed Dec 2)
+- [x] **Analyst Dashboard**: Streamlit’s Advanced Filters drawer and the Next.js `/search` console both support taxonomy/dataset/entity filters, saved-search parity, and smoke coverage. (Completed Dec 2)
+- [x] **Entity Taxonomy Expansion**: Browser agent, IP address, ASN, loss buckets, and schema-driven examples are live in `/reviews/search/schema` and the ingestion pipeline, so new indicators can be toggled without code. (Completed Dec 1)
 
 ### Milestone 4: Agentic LEA Evidence Dossiers (Weeks 7-8)
 **Objective**: Produce export packages that law enforcement can adopt directly.
@@ -57,6 +57,6 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 - [ ] **Handover**: Final documentation and runbooks.
 
 ## Immediate Next Steps
-1.  Implement `HybridSearchService` + Review API plumbing per `planning/milestone3_hybrid_search.md`, including scoring, deduplication, and audit logging.
-2.  Expose the `/reviews/search/schema` endpoint + saved-search schema updates so the Streamlit/Next.js filters can stay in sync with backend capabilities.
-3.  Prototype the analyst UI structured-filter components (Streamlit + Next.js) using the schema endpoint, then integrate them with saved searches and search history.
+1.  Kick off Milestone 4 (Agentic LEA Evidence Dossiers): finalize the report-agent blueprint and begin thresholding/bundling experiments.
+2.  Harden the ingestion telemetry + observability from Milestone 3 (StatsD dashboards, saved-search migration CLI coverage) so the next milestone inherits stable signals.
+3.  Schedule the Cloud Run smoke cadence (account list + hybrid search) and document the handoff plan for evidence dossier reviewers ahead of Milestone 4 delivery.

@@ -4,6 +4,30 @@ Last updated: 1 Dec 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
 
+## 2025-12-02
+- Finished the Next.js hybrid-search UX polish: the console now forwards saved-search descriptors through `/api/search`,
+  clears them the moment analysts tweak filters/entities, and includes Vitest coverage for the rerun flow to match the
+  backend + Streamlit parity requirement.
+- Expanded the Next.js `/search` Playwright smoke to exercise taxonomy + dataset toggles, the entity-filter builder,
+  and the saved-search flow (prompt acceptance). `conda run -n i4g pnpm --filter web test:smoke` now runs clean so the
+  milestone testing checklist item is satisfied end-to-end.
+- Promoted the saved-search migration defaults into `[search.saved_search]` (settings + env overrides) so every CLI flag
+	and helper script consumes the same source of truth. Added regression tests for the new settings and refreshed the
+	exported manifests under `docs/config/`.
+- Documented the end-to-end analyst workflow (export → tag/annotate → import) in `docs/analyst_runbook.md`, including
+	the new `--schema-version` flag on `i4g-admin export-saved-searches` and the `scripts/tag_saved_searches.py` helper.
+- Expanded the hybrid-search backend test suite with overlap/time-window/tie-breaker assertions in
+	`tests/unit/services/test_hybrid_search_service.py`, closing the “pytest coverage” checklist item from the milestone.
+- Authored `docs/hybrid_search_deployment_checklist.md`, covering required env vars, `TASK_STATUS` expectations, smoke
+	tests, and observability counters for dev → prod promotions.
+- Normalized all saved-search params through the `HybridSearchRequest` schema (API `/reviews/search/saved` now injects
+	schema_version, structured filters, and ISO `time_range` values). Streamlit search now posts to `/reviews/search/query`
+	and replays any saved search that contains structured filters, ensuring UI and Next.js share the same payload contract.
+- `/reviews/search/query` now accepts optional saved-search descriptors (id/name/owner/tags) and persists them in
+	review action logs so `/reviews/search/history` surfaces the saved-search title instead of “Untitled search.” The
+	Next.js console passes this metadata through the SDK client, enriches saved-search rerun links, and updates history
+	parsing/tests to render the saved-search badge + label when analysts rerun presets.
+
 ## 2025-12-01
 - Extended the ingestion settings surface with first-class knobs for `dataset_path`, `batch_limit`, `dry_run`, and
 	`reset_vector`, refreshed the config manifests in both proto/docs repos, and added regression coverage in

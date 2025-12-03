@@ -1,6 +1,6 @@
 # Milestone 3 Hybrid Search Design Spike
 
-_Last updated: 30 Nov 2025_
+_Last updated: 2 Dec 2025_
 
 Milestone 3 focuses on empowering analysts with a unified search experience that merges semantic retrieval (Vertex AI Search) with structured filtering backed by SQL/Firestore entities. This spike captures the architecture decisions, API contracts, UI requirements, and delivery plan needed before implementation begins.
 
@@ -125,7 +125,7 @@ This allows the UI to populate dropdowns without hardcoding enumerations.
 ### Backend / API
 - [x] Ship `SearchSettings`, `HybridSearchService`, and `/reviews/search/schema` so FastAPI exposes the richer payloads.
 - [x] Extend `ReviewStore`/`EntityStore` query helpers for entity filters (prefix/exact, dataset scoping, loss buckets), including dataset + entity example surfacing for the schema endpoint.
-- [ ] Finalize dedupe + scoring policy (semantic vs structured weights, tie-breakers) and add audit logging for merged counts.
+- [x] Finalize dedupe + scoring policy (semantic vs structured weights, tie-breakers) and add audit logging for merged counts. _Dec 2: HybridSearchService now emits winner/tie diagnostics, source breakdowns, and the Review API logs merged counts for every search._
 - [x] Add observability hooks (structured logs + metrics helper) and wire to existing StatsD/OTel exporters.
 
 ### Data & Ingestion
@@ -134,19 +134,19 @@ This allows the UI to populate dropdowns without hardcoding enumerations.
 
 ### UI Workstreams
 - [x] Fetch schema server-side (Next.js) and plumb into search experience.
-- [ ] Finish Next.js filter UX (entity builder polish, saved-search parity, `/api/search` payload forwarding).
-- [ ] Update Streamlit console with the same schema-driven filters and persistence.
-- [ ] Migrate saved-search payloads to persist the structured filters (schema versioning + validation UI).
+- [x] Finish Next.js filter UX (entity builder polish, saved-search parity, `/api/search` payload forwarding). _Dec 2: Next.js now forwards/clears saved-search descriptors, reuses the new payload builder everywhere, and has Vitest coverage for the rerun flows._
+- [x] Update Streamlit console with the same schema-driven filters and persistence. _Dec 2: Streamlit adds a schema-driven Advanced Filters drawer (datasets, loss buckets, entity builder, time presets) backed by `/reviews/search/schema`, and saved searches now capture/replay the structured payloads._
+- [x] Migrate saved-search payloads to persist the structured filters (schema versioning + validation UI). _Dec 2: backend + Streamlit now normalize saved-search params into the `HybridSearchRequest` schema, auto-inject schema_version, and replay via `/reviews/search/query`._
 
 ### Testing & Quality Gates
 - [x] Add Vitest coverage for helper utilities (schema parsing, SearchExperience interactions).
-- [ ] Expand backend pytest suite with hybrid query permutations + dedupe scoring assertions.
-- [ ] Grow Playwright smoke coverage for `/search` (filters, saved-search create/run) and run before releases.
+- [x] Expand backend pytest suite with hybrid query permutations + dedupe scoring assertions. _Dec 2: added overlap/time-range/tie tests in `tests/unit/services/test_hybrid_search_service.py`._
+- [x] Grow Playwright smoke coverage for `/search` (filters, saved-search create/run) and run before releases. _Dec 2: new smoke scenario exercises entity filters, taxonomy/dataset chips, and saved-search prompts via `conda run -n i4g pnpm --filter web test:smoke`._
 
 ### Documentation & Operations
 - [x] Refresh `docs/config` + UI README with hybrid search env vars and testing strategy.
 - [x] Draft analyst runbook entry (how to use structured filters, schema definitions, saved-search migration notes).
-- [ ] Capture deployment checklist (env vars, Task_STATUS expectations, metrics dashboards) ahead of dev → prod promotion.
+- [x] Capture deployment checklist (env vars, Task_STATUS expectations, metrics dashboards) ahead of dev → prod promotion. _See `docs/hybrid_search_deployment_checklist.md` (Dec 2)._
 
 ## 9. Two-Week Execution Plan (Dec 1–12)
 
@@ -158,6 +158,6 @@ This allows the UI to populate dropdowns without hardcoding enumerations.
 
 ### Week of Dec 8 (Sprint 6 kickoff)
 - **Next.js integration** (owner: UI lead, target Dec 10): consume the expanded schema via server-side data fetch, migrate the Filter Drawer to schema-driven chips, and ensure saved searches persist the enriched payload.
-- **Saved-search migration tooling** (owner: Jerry, target Dec 9): add `--schema-version` awareness to `i4g-admin export-saved-searches` plus a helper script that auto-tags migrated searches (`hybrid-v1`); document the workflow updates inside the analyst runbook.
+- **Saved-search migration tooling** (owner: Jerry, completed Dec 2): added `--schema-version` to `i4g-admin export-saved-searches`, created `scripts/tag_saved_searches.py` for tagging/annotation, wired defaults through `[search.saved_search]`, and updated the analyst runbook with the workflow.
 - **Testing & observability** (owner: Jerry, target Dec 11): expand pytest coverage with dedupe/scoring fixtures, add StatsD counters for per-source result ratios, and update Playwright smoke to assert that entity chips/datasets populate from live schema calls.
 - **Operational readiness** (owner: Jerry, target Dec 12): draft the remaining deployment checklist (env vars, Task_STATUS expectations, dashboards) so Milestone 3 handoff notes cover both backend knobs and UI verification steps.
