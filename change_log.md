@@ -1,8 +1,51 @@
 # DT-IFG Migration Change Log
 
-Last updated: 1 Dec 2025_
+Last updated: 3 Dec 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
+
+## 2025-12-03
+- Documented the Milestone 4 dossier runtime contract by adding a dedicated env-var table to
+	`docs/dev_guide.md` (Drive parent ID, dossier loss/recency thresholds, hash algorithm, and Drive
+	service-account scopes) so FastAPI, worker jobs, and Cloud Run deployments share the same
+	configuration checklist.
+- Introduced the `/reports/dossiers` FastAPI router (`src/i4g/api/reports.py`) backed by
+	`DossierQueueStore.list_plans()`, exposing manifest/signature metadata plus inline payloads when
+	requested. Added regression coverage in `tests/unit/api/test_reports.py` to assert manifest +
+	signature rendering and to guard the warning path when a manifest file is missing.
+- Surfaced the new reports API inside the Streamlit analyst dashboard: the **Evidence dossiers** panel
+	(status filters, inline manifest toggle, download button, signature warnings) keeps LEA pilots
+	unblocked until the Next.js portal consumes the endpoint. Session state + API helpers now live in
+	`src/i4g/ui/{state,api}.py`, and the UI walks analysts through manifest/path validation.
+- Extended `docs/dev_guide.md` with the Streamlit dossier viewer workflow and a manual regression
+	checklist (pilot bundle generation → panel refresh → manifest/signature hash verification) so
+	Milestone 4 smoke tests stay reproducible prior to LEA portal enablement.
+- Added inline signature verification to the Streamlit dossier panel: each plan now exposes a
+	**Verify signatures** action that hashes every artifact from `{plan_id}.signatures.json`, surfaces
+	missing/mismatch counts inline, and renders artifact-level details for LEA reviewers. The dev
+	guide now walks through the button-driven workflow plus the optional CLI hash cross-check.
+- Landed the `dossier_candidate_metrics` SQLite view plus mirroring Firestore
+	`bundle_metrics` payload so BundleBuilder + CLI runs can pull deterministic loss/geo bands and
+	cross-border flags. `BundleCandidateProvider` now prefers the view (with StructuredStore
+	fallback) and Firestore fan-out writes the metrics on every case document; unit tests cover the
+	store helper, candidate provider, bundle metrics helper, and Firestore writer integration.
+- Built the first dossier visual assets: loss timeline charts, GeoJSON feature collections, and
+	world-map previews live under `src/i4g/reports/dossier_visuals.py` and are wired into
+	`DossierGenerator`. Each generated manifest now references on-disk PNG/JSON assets, and pytest
+	coverage exercises the renderers plus queue processor integration.
+- Defined the dossier signature contract: `report.hash_algorithm` drives SHA-256 manifests,
+	`dossier_signatures.py` hashes every artifact (manifest + visuals), and a companion
+	`*.signatures.json` file ships alongside the dossier bundle. The generator exposes the signature
+	file through `payload.signature_manifest`, and new tests cover the helper + queue processor flow.
+- Kicked off Milestone 4 (Agentic LEA Evidence Dossiers) via `planning/milestone4_agentic_evidence_dossiers.md`, outlining
+	the agent orchestration flow (BundleBuilder, LangChain tool suite, modular templates) plus the delivery plan for Weeks 7-8.
+- Defined bundling criteria (loss thresholds, geo/cross-border flags, entity clusters) and the queue-driven dossier builder so
+	Cloud Run jobs can deterministically select prosecutable case sets before invoking the agent pipeline.
+- Captured dependencies for geo data licensing, signature strategy, and LEA portal auth while seeding next actions (chart
+	renderer prototype, signature metadata contract, pilot dossier run) ahead of the implementation start.
+- Updated the plan to route dossier artifacts through the Google Workspace Shared Drive (Drive parent ID controls, future
+	subfolders/ACLs) instead of the `i4g-reports-*` bucket so LEA access mirrors Workspace governance.
+- Added a curated pilot dataset (`data/manual_demo/dossier_pilot_cases.json`) plus `i4g-admin pilot-dossiers` so we can seed/queue three historical cases on demand; the helper writes structured + queue records, dry-runs plan generation, and ships with pytest coverage (`tests/unit/reports/test_dossier_pilot.py`).
 
 ## 2025-12-02
 - Finished the Next.js hybrid-search UX polish: the console now forwards saved-search descriptors through `/api/search`,
