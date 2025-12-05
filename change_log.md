@@ -4,7 +4,33 @@ Last updated: 3 Dec 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
 
+## 2025-12-05
+- Recorded why `/reports/dossiers` verification kept failing: the admin principals only had `roles/owner`, which
+	lacks `serviceAccounts.getAccessToken`, so `gcloud auth print-identity-token --impersonate-service-account=sa-report@i4g-dev.iam.gserviceaccount.com`
+	returned `IAM_PERMISSION_DENIED` before we could reach the IAP endpoint. Added Terraform bindings in both
+	`infra/environments/{dev,prod}/main.tf` granting `roles/iam.serviceAccountTokenCreator` on `sa-report` to every entry in
+	`i4g_admin_members`, unblocking local/CI smoke tests that need to mint identity tokens for the dossier API.
+- Extended the FastAPI IAP bindings (`infra/environments/{dev,prod}/main.tf`) with the `sa-report` principal directly so
+	service-account identity tokens can clear IAP without stuffing the SA into the human analyst group. Cloud Run dossier
+	verification now works headlessly once Terraform applies.
+
+## 2025-12-04
+- Split the analyst guidance into console-specific runbooks: `docs/analyst_runbook.md` now serves as an index that
+	links to `docs/runbooks/console/search.md` (hybrid search filters, schema refresh, saved-search migration) and
+	`docs/runbooks/console/reports.md` (Evidence Dossiers workflow, inline signature verification, LEA handoff steps).
+- Generated sanitized console screenshots via Pillow and committed the placeholders under
+	`docs/assets/console/{dossiers-list,dossiers-verify}.png` so documentation can showcase the Reports tab without
+	exposing real case data.
+- Updated the Milestone 4 plan to note the new runbooks/screenshots under the Documentation & Enablement checklist,
+	keeping the execution tracker aligned with the docs split.
+- Expanded `tests/unit/reports/test_dossier_signatures.py` with base-path resolution + missing-hash regression cases so
+	the manifest verification helpers now have deterministic pytest coverage.
+- Added dossier queue smoke procedures to `docs/smoke_test.md`: local runs use `i4g-admin pilot-dossiers` followed by
+	`i4g-dossier-job`, while the dev flow documents `gcloud run jobs execute dossier-queue` plus FastAPI verification so
+	Cloud Run parity checks stay reproducible.
+
 ## 2025-12-03
+
 - Documented the Milestone 4 dossier runtime contract by adding a dedicated env-var table to
 	`docs/dev_guide.md` (Drive parent ID, dossier loss/recency thresholds, hash algorithm, and Drive
 	service-account scopes) so FastAPI, worker jobs, and Cloud Run deployments share the same

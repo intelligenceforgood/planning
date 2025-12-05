@@ -212,29 +212,37 @@ Pipeline flow:
   Dec 3 alongside `i4g-admin build-dossiers` and worker plumbing.
 
 ### Agent & Template
-- [ ] **LangChain tool suite** — Geo/timeline/entity graph tools stubbed, but guardrails + timeout
-  policies are still scheduled for Sprint 7 delivery.
-- [ ] **Modular template registry** — Markdown partials + render harness are being spiked; target
-  completion remains Dec 12 so PDF/HTML/JSON stay under the 90s SLA.
+- [x] **LangChain tool suite** — GeoReasoner, TimelineSynthesizer, EntityGraph, ChartRenderer, and
+  NarrativeWriter tools now live under `src/i4g/reports/dossier_tools.py`, feed the generator, and
+  emit structured payloads for templates (guardrail + timeout tuning still queued for Sprint 7).
+- [x] **Modular template registry** — Markdown partials plus the new `TemplateRegistry` landed
+  Dec 4, wiring cover/analysis/timeline/entity/appendix sections into the generator so downstream
+  PDF/HTML/JSON renders can reuse the shared manifest context.
 
 ### Delivery & Compliance
 - [x] **/reports/dossiers surfaces** — FastAPI endpoint, Streamlit panel, and the new Next.js
   Evidence Dossiers page all expose signed artifacts with access logging (completed Dec 4).
-- [ ] **Signature verification + subpoena workflow** — API + UI wiring exist, but dedicated test
-  cases plus external subpoena playbooks are still pending the golden-sample harness.
+- [x] **Signature verification + subpoena workflow** — Completed Dec 4 via
+  `docs/runbooks/dossiers_subpoena_handoff.md`, which walks analysts through request validation, inline verification,
+  required artifacts, and logging. The analyst index plus the console runbook now link to the playbook so subpoenas
+  follow a single documented path.
 
 ### Testing & Quality
-- [ ] **Golden-sample regression harness** — Fixture rendering + hash comparison suite still in
-  development; remains a gating item before promoting to LEA pilots.
-- [ ] **Dossier smoke runs** — Need scripted `conda run -n i4g i4g-report-job --sample dossier`
-  workflow per environment before we declare this checkbox complete.
+- [x] **Golden-sample regression harness** — Added deterministic dossier fixtures plus
+  `tests/unit/reports/test_dossier_golden_regression.py`, which pins manifest/markdown/signature
+  hashes so template/tool changes surface immediately in CI.
+- [x] **Dossier smoke runs** — Documented local + dev flows in `docs/smoke_test.md` (pilot seeding plus
+  `i4g-dossier-job` locally, `gcloud run jobs execute dossier-queue` in dev) so we have a repeatable command block prior
+  to enabling automation.
 
 ### Documentation & Enablement
-- [x] **Analyst/LEA guides** — Analyst runbook updated Dec 4 with the new Reports → Dossiers flow,
-  manifest screenshots, and verification instructions; LEA guide refresh follows the same content.
-- [ ] **Deployment checklist** — Env-var + Task_STATUS expectations live in `docs/dev_guide.md`, but
-  a dedicated deployment/observability checklist still needs to be broken out of the hybrid search
-  doc.
+- [x] **Analyst/LEA guides** — `docs/analyst_runbook.md` now acts as an index into the console runbooks
+  (`docs/runbooks/console/search.md` and `docs/runbooks/console/reports.md`) with sanitized screenshots in
+  `docs/assets/console/`, so analysts see the Search + Evidence Dossiers workflows plus verification steps in one place.
+  The LEA guide refresh will mirror the same content once the portal copy lands.
+- [x] **Deployment checklist** — Completed Dec 4: `docs/runbooks/dossiers_deployment_checklist.md` centralizes pre-flight
+  tests, env-var matrices, Cloud Run update commands, observability/rollback steps, and `docs/dev_guide.md` now points to
+  it whenever the dossier job image is rebuilt.
 
 ## 9. Two-Week Execution Plan (Dec 8–19)
 
