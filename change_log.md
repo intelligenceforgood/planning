@@ -42,10 +42,19 @@ This log captures significant planning decisions and architecture changes as we 
 
 ## 2025-12-06
 - Completed portal parity for dossier downloads/verification: Next.js console now renders local/remote artifacts with
-	inline signature results, backed by an API download proxy (`/api/dossiers/download`) and SDK download typings. Added
-	Vitest coverage for download rendering.
+ - Completed portal parity for dossier downloads/verification: Next.js console now renders local/remote artifacts with
+inline signature results, backed by an API download proxy (`/api/dossiers/download`) and SDK download typings. Added
+Vitest coverage for download rendering.
 - Updated milestone doc (Milestone 4) current-state to reflect portal parity; remaining gap is LEA distribution UX and
 	optional client-side verification.
+- Landed LEA handoff UX in the portal: dossier cards now surface a copyable LEA link banner plus in-browser hash
+- Landed LEA handoff UX in the portal: dossier cards now surface a copyable LEA link banner plus in-browser hash
+verification (Web Crypto) so analysts can prove downloads without backend calls. Added a client-side verification
+Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow and handoff steps.
+ - Added `scripts/run_lea_pilot.py` to automate a local pilot dossier creation and verification harness via FastAPI TestClient.
+ - Added `scripts/enqueue_sample_dossier.py` to populate the production-like SQLite queue so CI/Action runs can verify the real API.
+ - Added GitHub Action `.github/workflows/nightly-smoke-dossiers.yml` to run the smoke test each night and fail on mismatches.
+ - Added monitoring runbook (`docs/runbooks/console/dossier_monitoring.md`) with sample Prometheus / Grafana rules for mismatch/missing alerts.
 
 ## 2025-12-03
 

@@ -1,6 +1,6 @@
 # Milestone 4 Agentic Evidence Dossier Spike
 
-_Last updated: 5 Dec 2025_
+_Last updated: 6 Dec 2025_
 
 Milestone 4 delivers an agent-assisted reporting pipeline that turns curated case bundles into
 law-enforcement-ready dossiers (interactive PDF + data manifest). This spike mirrors the Milestone 3
@@ -32,10 +32,11 @@ and alerts for failed renders, missing assets, or regulators requiring re-issuan
 - **APIs/UX (portal parity)**: `/reports/dossiers` FastAPI surface powers Streamlit and the
   Next.js console. Portal now surfaces local + Drive downloads and inline signature verification
   (API proxy + UI wiring), matching the Streamlit panel.
+- **Drive ACL preview**: `/reports/dossiers/{plan_id}/drive_acl` exposes folder metadata +
+  permissions so the portal can render Shared Drive ACL previews alongside downloads.
 - **Distribution**: PDF/HTML exports and Drive uploads flow through `DossierExporter` and
   `DossierUploader`; signature manifests include uploaded hashes.
-- **Remaining gaps**: LEA-facing distribution UX polish (foldering/ACL previews) and optional
-  client-side signature verification remain.
+- **Remaining gaps**: LEA-facing distribution UX polish (foldering/ACL previews). Diagrams and runbooks are refreshed and available in `docs/diagrams` + `docs/runbooks`.
 
 ## 3. Proposed Dossier Architecture
 
@@ -106,33 +107,7 @@ Pipeline flow:
 3. Queue consumer (agent job) processes entries, marks success/failure, and pushes metrics to
    Task_STATUS + StatsD (e.g., `dossier.generated`, `dossier.skipped.loss_below_threshold`).
 
-## 5. Next Spike Plan (Dec 8–19)
-
-**Objectives**
-- Ship PDF/HTML dossier exports from the existing Markdown + assets.
-- Enable Drive upload and hash verification for uploaded artifacts.
-- Add guardrails/telemetry (timeouts, retries, warnings) around tool executions.
-- Stand up golden-sample regression harness to pin manifests, Markdown, and signatures.
-
-**Workstreams & Tasks**
-- **Rendering & Exports**
-  - Convert Markdown dossiers to PDF (WeasyPrint/ReportLab) and HTML preview bundles.
-  - Add template manifest (`dossier_schema.json`) for required/optional sections and surface in docs.
-- **Distribution & Integrity**
-  - Wire Drive upload in `i4g-report-job` with parent ID + ACL knobs; persist Drive file IDs in the
-    manifest.
-  - Extend signature manifest to include uploaded file hashes and post-upload verification.
-- **Agent Guardrails**
-  - Add per-tool timeouts/fallback payloads; capture warnings/errors in manifests.
-  - Add small fixture-based tests for tool outputs (geo/timeline/entity) to prevent regressions.
-- **Regression Harness**
-  - Create golden-sample bundles and hash assertions (manifest + Markdown + signatures) in tests.
-  - Add smoke script to regenerate bundles locally and compare hashes.
-- **Docs & UX**
-  - Refresh analyst/LEA docs with new export/download flow and verification steps.
-  - Keep `/reports/dossiers` API docs in sync with Drive fields and signature semantics.
-
-## 6. Dependencies & Open Questions
+## 5. Dependencies & Open Questions
 
 1. **LLM provider**: Stay on Ollama for offline runs vs introduce Vertex Gemini for narratives?
 2. **Geo data licensing**: Confirm MaxMind/GADM terms; select fallback data set if redistribution is
@@ -143,16 +118,17 @@ Pipeline flow:
 5. **Portal auth**: Streamlit + IAP vs future Next.js portal with agency-level ACLs.
 6. **Retention**: Align dossier retention/lifecycle with Drive policies and per-agency subfolders.
 
-## 7. Task Checklist (Dec 8–19)
+## 6. Immediate Checklist (keep short)
 
-- [x] PDF export from Markdown + assets (primary LEA artifact)
-- [x] HTML preview bundle for portal/Streamlit
-- [x] `dossier_schema.json` published and linked in docs
-- [x] Drive upload with parent ID + ACL knobs; manifest persists Drive IDs
-- [x] Signature manifest extended to uploaded files; post-upload verification
-- [x] Per-tool timeouts/fallbacks with warnings/errors captured in manifests
-- [x] Fixture-based tests for Geo/Timeline/Entity tool outputs
-- [x] Golden-sample regression harness (manifest + Markdown + signatures + export presence)
-- [x] Smoke script for local/dev runs comparing hashes
-- [x] Docs update for export/download/verification flows and API fields
-- [x] Portal download/verification wiring — Streamlit now surfaces local/Drive downloads + verification links; Next.js parity will be tracked in the UI repo.
+- [x] LEA pilot verification — run portal handoff banner + Drive ACL preview + Web Crypto hash on a fresh pilot bundle; capture sign-off and defects.
+- [x] Nightly smoke cadence — schedule `scripts/smoke_dossiers.py --api-url <fastapi> --token <key>` via cron/CI with alerts on hash mismatches or missing artifacts.
+- [x] Dashboard/alerts — pipe `reports.dossiers.*` StatsD counters into the existing dashboards and alert on verify failures or missing artifacts.
+- [x] Roll-forward notes captured below.
+- [x] UI: LEA folder/ACL preview — Next.js portal can call `/reports/dossiers/{plan_id}/drive_acl`
+  to render the Shared Drive folder metadata + ACL badges and link copy UI.
+
+## 7. Roll-forward notes (to Milestone 5)
+
+- PII vault/IAP enforcement: carry LEA portal lessons into hardening; ensure dossier downloads continue to respect IAP/ACLs.
+- Hash verification UX: keep Web Crypto as default with API fallback for headless/air-gapped reviewers; document both in runbooks.
+- Smoke cadence: require nightly smoke before merges; alert on `missing_count>0` or `mismatch_count>0`.

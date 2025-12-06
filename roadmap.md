@@ -39,10 +39,13 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 
 ### Milestone 4: Agentic LEA Evidence Dossiers (Weeks 7-8)
 **Objective**: Produce export packages that law enforcement can adopt directly.
-- [ ] **Agentic Report Blueprint**: Define the toolchain for charts, graphs, maps, and PDF assembly (ReportGenerator + notebook helpers + agent orchestration).
-- [ ] **Thresholding & Case Bundling**: Implement logic to group cases by dollar loss, geography, or cross-border signals so only prosecutable dossiers ship.
-- [ ] **Template Extensibility**: Ensure new visualization/report widgets can be plugged in (e.g., geo heatmaps, loss timelines) without modifying the agent harness.
-- [ ] **Diagram Sync**: Begin migrating architecture/data-flow diagrams to Figma/Miro and link them from `proto/docs/architecture.md` and the TDD.
+- [x] **LEA Distribution UX**: Portal surfaces Drive folder/ACL previews, remote refs, and a handoff banner with one-click manifest/download links.
+- [x] **Client-side Verification**: Web Crypto hash verification of downloaded artifacts with clear API fallback; test coverage (Vitest/Playwright happy path).
+- [x] **Telemetry & Smoke**: StatsD counters for queue/verification plus a documented smoke that hits `/reports/dossiers` and downloads via the proxy.
+- [x] **Runbooks & Env Docs**: Update analyst/LEA runbooks with portal download/verify steps and env references (`I4G_DOSSIER_BASE_PATH`, Drive IDs, IAP tokens).
+- [x] **Diagram Sync**: Migrate dossier architecture flow to Figma/Miro and link from `docs/architecture.md`.
+
+**Status**: Feature-complete (Dec 6); running pilot verification and smoke cadence before closing.
 
 ### Milestone 5: Production Hardening (Week 9)
 **Objective**: Secure the platform for public launch.
@@ -57,6 +60,7 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 - [ ] **Handover**: Final documentation and runbooks.
 
 ## Immediate Next Steps
-1.  Kick off Milestone 4 (Agentic LEA Evidence Dossiers): finalize the report-agent blueprint and begin thresholding/bundling experiments.
-2.  Harden the ingestion telemetry + observability from Milestone 3 (StatsD dashboards, saved-search migration CLI coverage) so the next milestone inherits stable signals.
-3.  Schedule the Cloud Run smoke cadence (account list + hybrid search) and document the handoff plan for evidence dossier reviewers ahead of Milestone 4 delivery.
+1.  Run LEA dossier pilot verification: portal handoff banner + Drive ACL preview + Web Crypto hash check against a pilot bundle; capture sign-off and regressions.
+2.  Enforce nightly dossier smoke before merges: automate `scripts/smoke_dossiers.py` + API download proxy and alert on hash mismatches or missing artifacts.
+3.  Codify verification UX defaults: keep Web Crypto as the primary verifier with API fallback for headless/air-gapped reviewers; document both paths in the runbook.
+4.  Prep Milestone 5 kickoff: lock the PII vault/IAP enforcement plan (align with vault/IAP lessons from Milestone 4) and carry remaining hardening items forward.
