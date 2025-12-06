@@ -5,6 +5,12 @@ Last updated: 3 Dec 2025_
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
 
 ## 2025-12-05
+- Wired dossier Drive uploads: `DossierUploader` now pushes manifest/markdown/PDF/HTML/signatures to the configured
+  Shared Drive, records remote hashes in the signature manifest, and warns on checksum mismatches. Queue processor and
+  generation tests cover the upload path plus PDF/HTML export presence.
+- Added `scripts/verify_dossier_hashes.py` smoke helper to scan signature manifests under
+	`data/reports/dossiers/` (or a provided path) and fail on missing/mismatched artifacts so local/dev runs can quickly
+	validate dossier bundles.
 - Recorded why `/reports/dossiers` verification kept failing: the admin principals only had `roles/owner`, which
 	lacks `serviceAccounts.getAccessToken`, so `gcloud auth print-identity-token --impersonate-service-account=sa-report@i4g-dev.iam.gserviceaccount.com`
 	returned `IAM_PERMISSION_DENIED` before we could reach the IAP endpoint. Added Terraform bindings in both
@@ -13,6 +19,11 @@ This log captures significant planning decisions and architecture changes as we 
 - Extended the FastAPI IAP bindings (`infra/environments/{dev,prod}/main.tf`) with the `sa-report` principal directly so
 	service-account identity tokens can clear IAP without stuffing the SA into the human analyst group. Cloud Run dossier
 	verification now works headlessly once Terraform applies.
+- Refreshed the dossier golden regression harness to include deterministic PDF/HTML exports and updated SHA-256 anchors
+	after wiring the exporter into the generator. The golden test now asserts markdown/manifest/signature hashes and the
+	presence of rendered exports.
+- Added `templates/reports/dossiers/dossier_schema.json` to document required/optional dossier sections (plan, analysis,
+	context, tools, assets, template render, exports, signatures) so UI/docs can align with the manifest contract.
 
 ## 2025-12-04
 - Split the analyst guidance into console-specific runbooks: `docs/analyst_runbook.md` now serves as an index that
@@ -28,6 +39,13 @@ This log captures significant planning decisions and architecture changes as we 
 - Added dossier queue smoke procedures to `docs/smoke_test.md`: local runs use `i4g-admin pilot-dossiers` followed by
 	`i4g-dossier-job`, while the dev flow documents `gcloud run jobs execute dossier-queue` plus FastAPI verification so
 	Cloud Run parity checks stay reproducible.
+
+## 2025-12-06
+- Completed portal parity for dossier downloads/verification: Next.js console now renders local/remote artifacts with
+	inline signature results, backed by an API download proxy (`/api/dossiers/download`) and SDK download typings. Added
+	Vitest coverage for download rendering.
+- Updated milestone doc (Milestone 4) current-state to reflect portal parity; remaining gap is LEA distribution UX and
+	optional client-side verification.
 
 ## 2025-12-03
 
