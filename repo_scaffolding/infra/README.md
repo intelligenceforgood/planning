@@ -4,7 +4,7 @@ This repository manages Terraform modules, environment configuration, and automa
 
 ## Structure (proposed)
 - `bootstrap/` — scripts to create the remote state bucket, enable APIs, and provision the automation service account.
-- `environments/` — root modules for each environment (`dev`, `prod`) that compose reusable modules.
+- `environments/app/` — root modules for the application stack (`dev`, `prod`) that compose reusable modules. Additional stacks (e.g., `pii-vault`) can sit alongside `app/` using the same layout.
 - `modules/` — building blocks for Cloud Run services, IAM roles, buckets, VPC connectors, schedulers, etc.
 - `policy/` — optional Conftest/OPA policies for static analysis.
 - `scripts/` — tooling wrappers for `terraform fmt`, `tflint`, drift detection, or credential helpers.
@@ -32,8 +32,8 @@ terraform {
 ## Dev → Prod Promotion Flow
 1. Build and tag container images in dev (`:dev` tags) via application repo workflows.
 2. Merge infra/app changes to `main`; `.github/workflows/terraform-dev.yml` applies to the `i4g-dev` project automatically.
-3. After validation, retag approved image digests to `:prod` and update `environments/prod/terraform.tfvars` as needed.
-4. Run `terraform plan/apply` from `environments/prod/` (manual or future GitHub Actions job) to promote infrastructure and service revisions.
+3. After validation, retag approved image digests to `:prod` and update `environments/app/prod/terraform.tfvars` as needed.
+4. Run `terraform plan/apply` from `environments/app/prod/` (manual or future GitHub Actions job) to promote infrastructure and service revisions.
 5. Execute smoke tests (FastAPI/Streamlit health, Vertex AI Search connectivity) and log outcomes in `planning/change_log.md`.
 
 ## Getting Started
@@ -41,7 +41,7 @@ terraform {
 2. Authenticate: `gcloud auth login && gcloud auth application-default login`.
 3. Set quota project when working with Discovery: `gcloud auth application-default set-quota-project i4g-dev`.
 4. Run `./bootstrap/create_state_bucket.sh dev` to create the state bucket and automation SA.
-5. `cd environments/dev && terraform init`.
+5. `cd environments/app/dev && terraform init`.
 6. `terraform plan` (override `-var "github_repository=owner/repo"` if using a fork).
 
 ## When Moving Projects Under the Official Org/Billing
