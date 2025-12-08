@@ -45,22 +45,27 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 - [x] **Runbooks & Env Docs**: Update analyst/LEA runbooks with portal download/verify steps and env references (`I4G_DOSSIER_BASE_PATH`, Drive IDs, IAP tokens).
 - [x] **Diagram Sync**: Migrate dossier architecture flow to Figma/Miro and link from `docs/architecture.md`.
 
-**Status**: Feature-complete (Dec 6); running pilot verification and smoke cadence before closing.
+### Milestone 5: PII Vault Separation (Weeks 9-10)
+**Objective**: Isolate secrets/PII in dedicated vault projects and wire least-privileged access.
+- [ ] **Projects & State**: Create `i4g-pii-vault-{dev,prod}` projects and Terraform backends.
+- [ ] **KMS & Secrets**: Provision key ring/keys and baseline Secret Manager entries with rotation policy.
+- [ ] **Cross-Project IAM**: Grant app runtime SAs minimal roles (secret accessor, KMS cryptoKeyEncrypterDecrypter) via WIF.
+- [ ] **App Plumbing**: Route Cloud Run env vars through vault secrets; add regression tests/docs for overrides.
+- [ ] **Smoke**: Validate secret access from Cloud Run dev/prod without local copies.
 
-### Milestone 5: Production Hardening (Week 9)
+### Milestone 6: Production Hardening (Week 11)
 **Objective**: Secure the platform for public launch.
-- [ ] **PII Vault Audit**: Verify tokenization and encryption for all PII fields (FR-1).
-- [ ] **Auth Enforcement**: Enable IAP and enforce OAuth 2.0 for all endpoints (FR-2).
+- [ ] **Auth Enforcement**: Confirm IAP/OAuth across all surfaces; remove temporary overrides.
 - [ ] **Monitoring**: Configure Cloud Logging/Monitoring alerts for error rates and PII access (FR-4).
+- [ ] **Perf/Resilience**: Load test for 20+ concurrent users; capture SLOs and alert thresholds.
 
-### Milestone 6: Production Launch (Week 10)
+### Milestone 7: Production Launch (Week 12)
 **Objective**: Go Live.
 - [ ] **Infra Lockdown**: Re-enable `constraints/iam.allowedPolicyMemberDomains`.
-- [ ] **Load Testing**: Validate system against 20+ concurrent users.
 - [ ] **Handover**: Final documentation and runbooks.
 
 ## Immediate Next Steps
 1.  Run LEA dossier pilot verification: portal handoff banner + Drive ACL preview + Web Crypto hash check against a pilot bundle; capture sign-off and regressions.
 2.  Enforce nightly dossier smoke before merges: automate `scripts/smoke_dossiers.py` + API download proxy and alert on hash mismatches or missing artifacts.
 3.  Codify verification UX defaults: keep Web Crypto as the primary verifier with API fallback for headless/air-gapped reviewers; document both paths in the runbook.
-4.  Prep Milestone 5 kickoff: lock the PII vault/IAP enforcement plan (align with vault/IAP lessons from Milestone 4) and carry remaining hardening items forward.
+4.  Kick off the PII vault milestone: lock project naming, Terraform backends, KMS/Secret baseline, and cross-project IAM plan.
