@@ -3,7 +3,7 @@ Repo: proto
 User: Jerry Soung
 Branch: main
 Last commit: f16206a
-Files changed: scripts/session_snapshot.sh,planning/
+Files changed: planning/copilot_prompt/session_snapshot.sh, planning/
 
 Repo: infra
 User: Jerry Soung
