@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Snapshot for planning/copilot_prompt
-OUT_DIR="$(cd "$(dirname "$0")/.." && pwd -P)"
+OUT_DIR="$(cd "$(dirname "$0")" && pwd -P)"
 OUT_FILE="$OUT_DIR/COPILOT_SESSION.md"
 mkdir -p "$OUT_DIR"
 
