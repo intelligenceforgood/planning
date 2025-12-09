@@ -3,16 +3,16 @@
 Use this checklist to stand up dedicated vault projects and wire least-privileged access from app runtimes.
 
 ## Projects & State
-- [ ] Create `i4g-pii-vault-dev` and `i4g-pii-vault-prod` projects (or agreed naming).
-- [ ] Configure Terraform backends/state buckets for the vault roots (dev/prod) and document init commands.
+- [x] Create `i4g-pii-vault-dev` and `i4g-pii-vault-prod` projects (or agreed naming).
+- [x] Configure Terraform backends/state buckets for the vault roots (dev/prod) and document init commands.
 
 ## KMS & Secrets
-- [ ] Create KMS key ring/keys per env with rotation policy; record resource IDs for consumers.
-- [ ] Seed baseline Secret Manager entries (placeholders OK) and wire KMS protection where required.
+- [x] Create KMS key ring/keys per env with rotation policy; record resource IDs for consumers.
+- [x] Seed baseline Secret Manager entries (placeholders OK) and wire KMS protection where required (tokenization key added).
 - [ ] Document rotation/runbook (owners, cadence, break-glass).
 
 ## Cross-Project Access
-- [ ] Grant app runtime SAs (dev/prod) secret accessor + cryptoKeyEncrypterDecrypter via WIF; avoid broad roles.
+- [x] Grant app runtime SAs (dev/prod) secret accessor + cryptoKeyEncrypterDecrypter via WIF (resource and var created; pass app_service_accounts to enable).
 - [ ] Add a small verifier (script or test) that fetches a vault secret using the app SA to validate bindings.
 
 ## App Integration
