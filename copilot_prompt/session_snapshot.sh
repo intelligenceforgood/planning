@@ -7,7 +7,7 @@ OUT_FILE="$OUT_DIR/COPILOT_SESSION.md"
 mkdir -p "$OUT_DIR"
 
 echo "Session timestamp: $(date -u '+%Y-%m-%d %H:%M UTC')" >"$OUT_FILE"
-REPO_DIRS=("$OUT_DIR/../proto" "$OUT_DIR/../infra" "$OUT_DIR")
+REPO_DIRS=("$OUT_DIR/../../proto" "$OUT_DIR/../../infra" "$OUT_DIR/..")
 for repo_dir in "${REPO_DIRS[@]}"; do
   if [[ -d "$repo_dir" ]] && git -C "$repo_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     repo_name=$(basename "$repo_dir")
