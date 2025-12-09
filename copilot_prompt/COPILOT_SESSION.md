@@ -9,7 +9,7 @@ Repo: infra
 User: Jerry Soung
 Branch: main
 Last commit: e7825b2
-Files changed: 
+Files changed:
 
 Repo: planning
 User: Jerry Soung
@@ -18,8 +18,8 @@ Last commit: a13f97e
 Files changed: COPILOT_SESSION.md
 
 
-Active task: 
-Next step: 
+Active task:
+Next step:
 Relevant todos: planning/pii_vault_spike_checklist.md
 
 Note: Edit this file with a short Active task & Next step summary before closing VS Code.
