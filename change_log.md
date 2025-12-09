@@ -26,7 +26,7 @@ This log captures significant planning decisions and architecture changes as we 
 	context, tools, assets, template render, exports, signatures) so UI/docs can align with the manifest contract.
 
 ## 2025-12-04
-- Split the analyst guidance into console-specific runbooks: `docs/analyst_runbook.md` now serves as an index that
+ - Split the analyst guidance into console-specific runbooks: `docs/runbooks/analyst_runbook.md` now serves as an index that
 	links to `docs/runbooks/console/search.md` (hybrid search filters, schema refresh, saved-search migration) and
 	`docs/runbooks/console/reports.md` (Evidence Dossiers workflow, inline signature verification, LEA handoff steps).
 - Generated sanitized console screenshots via Pillow and committed the placeholders under
@@ -110,7 +110,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 - Promoted the saved-search migration defaults into `[search.saved_search]` (settings + env overrides) so every CLI flag
 	and helper script consumes the same source of truth. Added regression tests for the new settings and refreshed the
 	exported manifests under `docs/config/`.
-- Documented the end-to-end analyst workflow (export → tag/annotate → import) in `docs/analyst_runbook.md`, including
+ - Documented the end-to-end analyst workflow (export → tag/annotate → import) in `docs/runbooks/analyst_runbook.md`, including
 	the new `--schema-version` flag on `i4g-admin export-saved-searches` and the `scripts/tag_saved_searches.py` helper.
 - Expanded the hybrid-search backend test suite with overlap/time-window/tie-breaker assertions in
 	`tests/unit/services/test_hybrid_search_service.py`, closing the “pytest coverage” checklist item from the milestone.
@@ -138,7 +138,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 - Spot-checked `/reviews/search/schema` under the same config (FastAPI `TestClient` + `X-API-KEY=dev-analyst-token`) and
 	confirmed the endpoint returns the expanded indicator list (`browser_agent`, `ip_address`, `asn`, etc.), so the
 	analyst UI can surface the new structured filters immediately after the dev ingestion run.
-- Drafted `docs/analyst_runbook.md` so analysts can refresh the schema, run structured hybrid queries, and migrate saved
+ - Drafted `docs/runbooks/analyst_runbook.md` so analysts can refresh the schema, run structured hybrid queries, and migrate saved
 	searches via `i4g-admin` export/import workflows without waiting on ad-hoc Slack instructions.
 
 ## 2025-11-30

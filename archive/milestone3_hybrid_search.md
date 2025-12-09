@@ -153,7 +153,7 @@ This allows the UI to populate dropdowns without hardcoding enumerations.
 ### Week of Dec 1 (Sprint 5 wrap-up)
 - **Backend core** (owner: Jerry, due Dec 4): finalize `HybridSearchService` scoring knobs (`semantic_weight`, `structured_weight`) and surface diagnostics in `/reviews/search/query` responses; ship unit tests that assert merged ordering across mixed result sets.
 - **Structured store extensions** (owner: Jerry, due Dec 5): land `EntityStore` helpers for prefix/contains filters plus dataset scoping; wire them into the service factories so local and dev environments stay in parity.
-- **Schema + documentation** (owner: Jerry, done Dec 1): publish `docs/analyst_runbook.md` (complete) and keep `/reviews/search/schema` payload examples in sync inside `docs/dev_guide.md` + the UI handbook.
+- **Schema + documentation** (owner: Jerry, done Dec 1): publish `docs/runbooks/analyst_runbook.md` (complete) and keep `/reviews/search/schema` payload examples in sync inside `docs/dev_guide.md` + the UI handbook.
 - **Ingestion verification** (owner: Jerry, due Dec 5): re-run the dev `ingest-network-smoke` Cloud Run job after any schema change, then execute `pnpm --filter web test:smoke` to confirm the Next.js filter drawer renders the new chips.
 
 ### Week of Dec 8 (Sprint 6 kickoff)
