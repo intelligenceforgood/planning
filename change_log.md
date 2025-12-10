@@ -8,8 +8,8 @@ This log captures significant planning decisions and architecture changes as we 
 - Rebuilt the PII vault design with globally deterministic tokens (`AAA-XXXXXXXX`), expanded prefix catalog (identity,
 	gov IDs incl. student/employer, financial, crypto, network/device, health/biometric, vehicle, location, docs, `UNK`),
 	and sharded artifact storage by type + content hash for indefinite retention.
-- Added architecture doc `docs/architecture/pii_vault.md` covering token format, prefix registry/schema flexibility,
-	normalization rules, vault data model, detokenization controls, and storage layout.
+- Captured the design in `proto/docs/pii_vault.md` (linked from `docs/architecture.md`); removed the stray doc from the
+	end-user `docs` repo to keep developer vs end-user docs separated.
 - Updated roadmap Milestone 5 and PII vault checklist to reflect cross-environment determinism, broadened detectors,
 	prefix registry, and hashed artifact sharding tasks.
 
