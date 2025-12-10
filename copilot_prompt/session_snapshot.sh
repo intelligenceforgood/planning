@@ -22,7 +22,14 @@ echo "Session timestamp: $(date -u '+%Y-%m-%d %H:%M UTC')" >"$OUT_FILE"
 
 # 3. Gather repo context
 # Use relative paths that are robust to where the script is run
-REPO_DIRS=("$OUT_DIR/../../proto" "$OUT_DIR/../../infra" "$OUT_DIR/..")
+REPO_DIRS=(
+  "$OUT_DIR/../../proto"
+  "$OUT_DIR/../../planning"
+  "$OUT_DIR/../../docs"
+  "$OUT_DIR/../../infra"
+  "$OUT_DIR/../../ui"
+  "$OUT_DIR/../../mobile"
+)
 
 for repo_dir in "${REPO_DIRS[@]}"; do
   if [[ -d "$repo_dir" ]] && git -C "$repo_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
