@@ -1,8 +1,17 @@
 # DT-IFG Migration Change Log
 
-Last updated: 3 Dec 2025_
+Last updated: 9 Dec 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
+
+## 2025-12-09
+- Rebuilt the PII vault design with globally deterministic tokens (`AAA-XXXXXXXX`), expanded prefix catalog (identity,
+	gov IDs incl. student/employer, financial, crypto, network/device, health/biometric, vehicle, location, docs, `UNK`),
+	and sharded artifact storage by type + content hash for indefinite retention.
+- Added architecture doc `docs/architecture/pii_vault.md` covering token format, prefix registry/schema flexibility,
+	normalization rules, vault data model, detokenization controls, and storage layout.
+- Updated roadmap Milestone 5 and PII vault checklist to reflect cross-environment determinism, broadened detectors,
+	prefix registry, and hashed artifact sharding tasks.
 
 ## 2025-12-05
 - Wired dossier Drive uploads: `DossierUploader` now pushes manifest/markdown/PDF/HTML/signatures to the configured
