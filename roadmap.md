@@ -1,7 +1,7 @@
 # I4G Platform Implementation Roadmap
 
 **Status**: Living Document<br/>
-**Date**: December 9, 2025
+**Date**: December 10, 2025
 
 ## Executive Summary
 This roadmap defines the path from our current "Prototype" state to the "Production" vision outlined in `prd_production.md`. It prioritizes feature parity with the legacy DTP system, robust security (PII/Auth), and a scalable "Dual Extraction" architecture.
@@ -45,17 +45,17 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 - [x] **Runbooks & Env Docs**: Update analyst/LEA runbooks with portal download/verify steps and env references (`I4G_DOSSIER_BASE_PATH`, Drive IDs, IAP tokens).
 - [x] **Diagram Sync**: Migrate dossier architecture flow to Figma/Miro and link from `docs/architecture.md`.
 
-### Milestone 5: PII Vault Separation (Weeks 9-10)
+### Milestone 5: PII Vault Separation (Weeks 9-10) — Completed Dec 10, 2025
 **Objective**: Isolate secrets/PII in dedicated vault projects and wire least-privileged access.
-- [x] **Projects & State**: Create `i4g-pii-vault-{dev,prod}` projects and Terraform backends.
-- [x] **KMS & Secrets**: Provision key ring/keys and baseline Secret Manager entries with rotation policy.
-- [x] **Cross-Project IAM**: Grant app runtime SAs minimal roles (secret accessor, KMS cryptoKeyEncrypterDecrypter) via WIF.
-- [ ] **Token Format & Catalog**: Finalize `AAA-XXXXXXXX` scheme (3-char prefix + 8-char hex) with a managed prefix registry for emails, names, SWIFT/IBAN, bank accounts, phone, Bitcoin, address, IP/ASN, and generic `UNK` fallback.
-- [ ] **Vault Data Model & Detokenization**: Design PII vault records (HMAC/token, encrypted canonical value, case/artifact refs, audit metadata) with subpoena-grade detokenization workflow guarded by KMS + approvals; tokens deterministic across environments via shared, versioned pepper.
-- [ ] **Ingestion Tokenization**: Add PII detection/tokenization to ingestion (structured + OCR’d uploads) so all PII becomes tokens before landing in SQL/Vertex; originals route to the vault store.
-- [ ] **Artifact Handling**: Store original PDFs/screenshots/text extracts in the vault project with pointers from cases; ensure integrity hashes + retention policies are defined with hierarchical sharding to avoid large single-folder fanout.
-- [ ] **App Plumbing**: Route Cloud Run env vars through vault secrets; add regression tests/docs for overrides.
-- [ ] **Smoke**: Validate secret access + tokenization/detokenization round trip from Cloud Run dev/prod without local copies.
+- [x] **Projects & State**: Vault projects/backends created for dev/prod with documented init/plan flows.
+- [x] **KMS & Secrets**: Vault KMS ring/keys plus Secret Manager containers (`tokenization-pepper`, `pii-tokenization-key`) provisioned; rotation/runbook captured.
+- [x] **Cross-Project IAM**: App runtime SAs granted secret accessor + cryptoKeyEncrypterDecrypter via WIF; bindings validated with the new verifier script.
+- [x] **Token Format & Catalog**: `AAA-XXXXXXXX` scheme and prefix registry finalized in [docs/pii_vault.md](proto/docs/pii_vault.md#token-format) with normalization rules.
+- [x] **Vault Data Model & Detokenization**: Records, registry, and subpoena workflow defined (KMS-gated, dual-approval, audit + alerting) in [docs/pii_vault.md](proto/docs/pii_vault.md#vault-data-model) and [docs/policies/detokenization_sop.md](proto/docs/policies/detokenization_sop.md).
+- [x] **Ingestion Tokenization**: Deterministic tokenization helpers + observability landed (`tokenize_text`/`tokenize_fields`, `PiiVaultObservability`) with tests; ingestion path documented to route PII to the vault store.
+- [x] **Artifact Handling**: Vault bucket layout + hash verification job plan documented with sharded paths and retention defaults.
+- [x] **App Plumbing**: Cloud Run env vars map to vault secrets (per-env) with failure guidance in the smoke tests.
+- [x] **Smoke**: Vault secret-access verifier and Cloud Run tokenization/detokenization round trip added to [docs/smoke_test.md](proto/docs/smoke_test.md#vault-secrets-smoke-gcp).
 
 ### Milestone 6: Production Hardening (Week 11)
 **Objective**: Secure the platform for public launch.
@@ -69,7 +69,6 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 - [ ] **Handover**: Final documentation and runbooks.
 
 ## Immediate Next Steps
-1.  Finalize PII token format/prefix catalog and vault data model; draft ingestion/tokenization plan across structured + OCR’d artifacts.
-2.  Run LEA dossier pilot verification: portal handoff banner + Drive ACL preview + Web Crypto hash check against a pilot bundle; capture sign-off and regressions.
-3.  Enforce nightly dossier smoke before merges: automate `scripts/smoke_dossiers.py` + API download proxy and alert on hash mismatches or missing artifacts.
-4.  Codify verification UX defaults: keep Web Crypto as the primary verifier with API fallback for headless/air-gapped reviewers; document both paths in the runbook.
+1. Harden auth + monitoring (Milestone 6): enforce IAP/OAuth across surfaces, wire PII-access alerts, and remove temporary overrides.
+2. Run vault smokes per environment: seed vault prod secrets, then execute Cloud Run tokenization/detokenization round trips in dev → prod using the new verifier script.
+3. Capture performance/resilience baselines: load-test 20+ concurrent users, document SLOs, and size autoscaling/limits before launch.

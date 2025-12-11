@@ -1,8 +1,23 @@
 # DT-IFG Migration Change Log
 
-Last updated: 9 Dec 2025_
+Last updated: 10 Dec 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
+
+## 2025-12-10
+- Finalized vault artifact handling: sharded GCS layout by artifact kind + SHA-256, immutable metadata with hash/size,
+	scheduled hash verification job, and explicit lifecycle/hold guidance captured in `proto/docs/pii_vault.md`.
+- Added `scripts/infra/verify_vault_secret_access.py` to impersonate app SAs and confirm vault Secret Manager bindings via
+	Workload Identity; marked the cross-project verifier checklist item complete.
+- Documented Cloud Run app integration: map `tokenization-pepper` and optional `pii-tokenization-key` secrets from the
+	vault project into runtime env vars; stop keeping secret material in app projects. Captured in `proto/docs/pii_vault.md`
+	and `infra/environments/pii-vault/README.md`.
+- Added regression/smoke guidance: fail fast on missing/denied secrets and require a Cloud Run dev smoke (pepper read +
+	tokenization/detokenization round trip) before promotion.
+- Wired Terraform to match the dev binding: `environments/pii-vault/dev/terraform.tfvars` now grants
+	`sa-app@i4g-dev.iam.gserviceaccount.com` Secret Manager + KMS access so applies mirror the gcloud change.
+- Archived the completed `pii_vault_spike_checklist.md` into `planning/archive/` now that the spike deliverables are
+	reflected in docs and the roadmap.
 
 ## 2025-12-09
 - Rebuilt the PII vault design with globally deterministic tokens (`AAA-XXXXXXXX`), expanded prefix catalog (identity,
