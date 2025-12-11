@@ -45,7 +45,7 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 - [x] **Runbooks & Env Docs**: Update analyst/LEA runbooks with portal download/verify steps and env references (`I4G_DOSSIER_BASE_PATH`, Drive IDs, IAP tokens).
 - [x] **Diagram Sync**: Migrate dossier architecture flow to Figma/Miro and link from `docs/architecture.md`.
 
-### Milestone 5: PII Vault Separation (Weeks 9-10) — Completed Dec 10, 2025
+### Milestone 5: PII Vault Separation (Weeks 9-10) — In Progress
 **Objective**: Isolate secrets/PII in dedicated vault projects and wire least-privileged access.
 - [x] **Projects & State**: Vault projects/backends created for dev/prod with documented init/plan flows.
 - [x] **KMS & Secrets**: Vault KMS ring/keys plus Secret Manager containers (`tokenization-pepper`, `pii-tokenization-key`) provisioned; rotation/runbook captured.
@@ -54,8 +54,15 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 - [x] **Vault Data Model & Detokenization**: Records, registry, and subpoena workflow defined (KMS-gated, dual-approval, audit + alerting) in [docs/pii_vault.md](proto/docs/pii_vault.md#vault-data-model) and [docs/policies/detokenization_sop.md](proto/docs/policies/detokenization_sop.md).
 - [x] **Ingestion Tokenization**: Deterministic tokenization helpers + observability landed (`tokenize_text`/`tokenize_fields`, `PiiVaultObservability`) with tests; ingestion path documented to route PII to the vault store.
 - [x] **Artifact Handling**: Vault bucket layout + hash verification job plan documented with sharded paths and retention defaults.
-- [x] **App Plumbing**: Cloud Run env vars map to vault secrets (per-env) with failure guidance in the smoke tests.
-- [x] **Smoke**: Vault secret-access verifier and Cloud Run tokenization/detokenization round trip added to [docs/smoke_test.md](proto/docs/smoke_test.md#vault-secrets-smoke-gcp).
+- [x] **App Plumbing**: Cloud Run env vars map to vault secrets (per-env) with failur
+e guidance in the smoke tests.
+- [x] **Smoke**: Vault secret-access verifier and Cloud Run tokenization/detokenization round trip added to [docs/smoke_test.md](proto/docs/smoke_test.md#vault-secrets-smoke-gcp); dev run (Dec 11) verified tokenize/detokenize via IAP; prod run still optional before close-out.
+
+#### Sprint: Tokenization Hardening (Dec 11–Dec 18)
+- [x] Implement FastAPI tokenization/detokenization endpoints (IAP + API key guarded) that use vault secrets (`I4G_TOKENIZATION__PEPPER`, `I4G_CRYPTO__PII_KEY`) for deterministic tokens.
+- [x] Integrate tokenization into ingestion: replace raw PII writes with tokens, persist canonical PII to the vault store, and emit observability via `PiiVaultObservability`.
+- [x] Ensure search/discovery surfaces (SQL/Vertex/UI) return tokens only; validate responses contain no raw PII for ingested fields.
+- [x] Re-run Cloud Run smoke (tokenize + detokenize) in dev (Dec 11) and update status here; prod check remains optional unless we promote this week.
 
 ### Milestone 6: Production Hardening (Week 11)
 **Objective**: Secure the platform for public launch.
