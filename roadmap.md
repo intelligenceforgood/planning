@@ -7,7 +7,7 @@
 This roadmap defines the path from our current "Prototype" state to the "Production" vision outlined in `prd_production.md`. It prioritizes feature parity with the legacy DTP system, robust security (PII/Auth), and a scalable "Dual Extraction" architecture.
 
 ## Strategic Goals
-1.  **Feature Parity**: Ensure all critical DTP capabilities (specifically `account_list_extract`) are fully ported and operational in `proto`.
+1.  **Feature Parity**: Ensure all critical DTP capabilities (specifically `account_list_extract`) are fully ported and operational in `core`.
 2.  **Dual Extraction**: Implement the ingestion pipeline to write structured data to both **Vertex AI Search** (for semantic retrieval) and **Cloud SQL/AlloyDB** (for structured/analytical queries).
 3.  **Production Readiness**: Harden security, auth, and infrastructure for the "Unauthed" -> "IAP" transition.
 4.  **Scalability & Extensibility**: Establish a platform that supports future apps (e.g., Mobile SDKs, Partner APIs) via clean API contracts and event-driven architecture.
@@ -18,7 +18,7 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 ## Milestones
 
 ### Milestone 1: Parity Verification & Gap Closure (Completed – Nov 29, 2025)
-**Outcome**: Confirmed the proto stack fully replaces the Azure Functions workflow, including API/worker parity, artifact generation, and analyst-console surfacing. All planning docs for this milestone are retired and tracked via the change log.
+**Outcome**: Confirmed the core stack fully replaces the Azure Functions workflow, including API/worker parity, artifact generation, and analyst-console surfacing. All planning docs for this milestone are retired and tracked via the change log.
 - [x] **Port `account_list_extract`**: New `i4g.services.account_list` package ships retriever/extractor/exporter orchestration, FastAPI `/accounts/extract`, and worker entrypoints consumed by the Streamlit console + CLI smokes.
 - [x] **Port `account_list_extract_client`**: Artifact exports (CSV/JSON/XLSX/PDF) now mirror the legacy workflow, including optional Drive uploads, Cloud Run job wiring, and dashboard surfacing with summary/status panels.
 - [x] **Legacy Cleanup**: Archived the dedicated planning docs and captured the final status in `planning/change_log.md`, leaving any residual `dtp` references tracked via the general backlog.
@@ -50,13 +50,13 @@ This roadmap defines the path from our current "Prototype" state to the "Product
 - [x] **Projects & State**: Vault projects/backends created for dev/prod with documented init/plan flows.
 - [x] **KMS & Secrets**: Vault KMS ring/keys plus Secret Manager containers (`tokenization-pepper`, `pii-tokenization-key`) provisioned; rotation/runbook captured.
 - [x] **Cross-Project IAM**: App runtime SAs granted secret accessor + cryptoKeyEncrypterDecrypter via WIF; bindings validated with the new verifier script.
-- [x] **Token Format & Catalog**: `AAA-XXXXXXXX` scheme and prefix registry finalized in [docs/pii_vault.md](proto/docs/pii_vault.md#token-format) with normalization rules.
-- [x] **Vault Data Model & Detokenization**: Records, registry, and subpoena workflow defined (KMS-gated, dual-approval, audit + alerting) in [docs/pii_vault.md](proto/docs/pii_vault.md#vault-data-model) and [docs/policies/detokenization_sop.md](proto/docs/policies/detokenization_sop.md).
+- [x] **Token Format & Catalog**: `AAA-XXXXXXXX` scheme and prefix registry finalized in [docs/pii_vault.md](core/docs/pii_vault.md#token-format) with normalization rules.
+- [x] **Vault Data Model & Detokenization**: Records, registry, and subpoena workflow defined (KMS-gated, dual-approval, audit + alerting) in [docs/pii_vault.md](core/docs/pii_vault.md#vault-data-model) and [docs/policies/detokenization_sop.md](core/docs/policies/detokenization_sop.md).
 - [x] **Ingestion Tokenization**: Deterministic tokenization helpers + observability landed (`tokenize_text`/`tokenize_fields`, `PiiVaultObservability`) with tests; ingestion path documented to route PII to the vault store.
 - [x] **Artifact Handling**: Vault bucket layout + hash verification job plan documented with sharded paths and retention defaults.
 - [x] **App Plumbing**: Cloud Run env vars map to vault secrets (per-env) with failur
 e guidance in the smoke tests.
-- [x] **Smoke**: Vault secret-access verifier and Cloud Run tokenization/detokenization round trip added to [docs/smoke_test.md](proto/docs/smoke_test.md#vault-secrets-smoke-gcp); dev run (Dec 11) verified tokenize/detokenize via IAP; prod run still optional before close-out.
+- [x] **Smoke**: Vault secret-access verifier and Cloud Run tokenization/detokenization round trip added to [docs/smoke_test.md](core/docs/smoke_test.md#vault-secrets-smoke-gcp); dev run (Dec 11) verified tokenize/detokenize via IAP; prod run still optional before close-out.
 
 #### Sprint: Tokenization Hardening (Dec 11–Dec 18)
 - [x] Implement FastAPI tokenization/detokenization endpoints (IAP + API key guarded) that use vault secrets (`I4G_TOKENIZATION__PEPPER`, `I4G_CRYPTO__PII_KEY`) for deterministic tokens.

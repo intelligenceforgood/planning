@@ -73,4 +73,4 @@ terraform {
 ## Related Repositories
 - `intelligenceforgood/i4g` — application services.
 - `intelligenceforgood/docs` — public documentation site.
-- `intelligenceforgood/proto` — experimental prototypes.
+- `intelligenceforgood/core` — experimental prototypes.

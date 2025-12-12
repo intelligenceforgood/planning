@@ -1,6 +1,6 @@
 # Proposed Repo Structure for Mobile
 
-Goal: mirror existing top-level repos (`proto`, `infra`, `ui`, `docs`) while isolating platform-specific build systems.
+Goal: mirror existing top-level repos (`core`, `infra`, `ui`, `docs`) while isolating platform-specific build systems.
 
 ```
 mobile/

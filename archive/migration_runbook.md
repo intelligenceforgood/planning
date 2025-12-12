@@ -53,7 +53,7 @@ _Incremental sync log_
    - Capture schema mapping between Azure SQL tables and their downstream consumers (forms pipeline, Groups.io cache).
       - **Post-export:** remove temporary SQL firewall rule with `az sql server firewall-rule delete --name allow-export-YYYYMMDD --server intelforgood --resource-group intelforgood` to close access from your IP.
 2. **Transform Schema**
-   - Implement a Python ETL script (preferably in `proto/scripts/migration/azure_sql_to_firestore.py`).
+   - Implement a Python ETL script (preferably in `core/scripts/migration/azure_sql_to_firestore.py`).
    - Map `intake_form_data` and `intake_form_data_last_processed` into the new intake staging collections; migrate `groupsio_message_data` into the successor messaging cache.
    - Preserve primary keys/foreign keys in document IDs or reference fields.
 3. **Load into GCP**

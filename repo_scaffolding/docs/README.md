@@ -19,6 +19,5 @@ This repository will host the public-facing documentation for the Intelligence f
 - Keep content accessible and volunteer-friendly.
 
 ## Related Repositories
-- `intelligenceforgood/i4g` — production application code.
+- `intelligenceforgood/core` — application code and experiments.
 - `intelligenceforgood/infra` — infrastructure-as-code.
-- `intelligenceforgood/proto` — experiments.

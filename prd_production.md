@@ -1,6 +1,6 @@
 # Product Requirements Document: i4g Production System
 
-> **Note**: This file is a copy of the production PRD made available in the `planning/` workspace for planning and cross-team reference. The canonical production PRD remains in `proto/docs/prd_production.md`.
+> **Note**: This file is a copy of the production PRD made available in the `planning/` workspace for planning and cross-team reference. The canonical production PRD remains in `core/docs/prd_production.md`.
 
 # Product Requirements Document: i4g Production System
 

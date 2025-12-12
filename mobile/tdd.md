@@ -1,6 +1,6 @@
 # TDD: i4g Mobile Clients (iOS & Android)
 
-Aligned to `proto/docs/architecture.md` and `proto/docs/tdd.md`. Mobile clients are thin: no business logic divergence from FastAPI/Next.js; only UI and device concerns are localized.
+Aligned to `core/docs/architecture.md` and `core/docs/tdd.md`. Mobile clients are thin: no business logic divergence from FastAPI/Next.js; only UI and device concerns are localized.
 
 ## Architecture Overview
 - **Clients**: Native iOS (SwiftUI) and Android (Kotlin/Jetpack Compose).

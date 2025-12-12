@@ -5,7 +5,7 @@ Thanks for your interest in supporting Intelligence for Good! Until Milestone 2 
 ## Before You Start
 - Review the active migration milestones and roadmap.
 - Open an issue for new work so we can confirm scope and priority.
-- For prototype experiments, use the `intelligenceforgood/proto` repository.
+- For prototype experiments, use the `intelligenceforgood/core` repository.
 
 ## Development Workflow
 1. Fork the repository (or create a feature branch if you have direct access).

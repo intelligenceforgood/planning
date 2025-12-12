@@ -2,7 +2,7 @@
 
 This repository will house the production-ready services, shared libraries, and runtime assets for the next-generation Intelligence for Good platform.
 
-> Status: Milestone 2 (architecture + technology selection) in progress. Prototype experiments continue in the separate `proto` repo until decisions are locked.
+> Status: Milestone 2 (architecture + technology selection) in progress. Prototype experiments continue in the separate `core` repo until decisions are locked.
 
 ## Repository Scope
 - `services/` — application services (FastAPI APIs, Streamlit analyst UI, background workers).
@@ -16,6 +16,6 @@ This repository will house the production-ready services, shared libraries, and 
 3. Follow CONTRIBUTING.md for branching, testing, and pull request guidelines.
 
 ## Related Repositories
-- `intelligenceforgood/proto` — sandbox for experiments and throwaway prototypes.
+- `intelligenceforgood/core` — sandbox for experiments and throwaway prototypes.
 - `intelligenceforgood/infra` — Terraform + infrastructure-as-code modules.
 - `intelligenceforgood/docs` — public documentation site.

@@ -1,16 +1,20 @@
 # DT-IFG Migration Change Log
 
-Last updated: 10 Dec 2025_
+Last updated: 11 Dec 2025_
 
 This log captures significant planning decisions and architecture changes as we progress through the migration milestones. Update entries chronologically.
 
+## 2025-12-11
+- Kicked off the proto→core rename: refreshed docs to use the `core/` repo name and paths (smoke test guide, dev guide, config README defaults for project_root/data/chroma/sqlite).
+- Maintained the rename checklist under `planning/rename_proto_to_core.md` and set the active task in `planning/copilot_prompt/COPILOT_SESSION.md` to track cross-repo reference updates.
+
 ## 2025-12-10
 - Finalized vault artifact handling: sharded GCS layout by artifact kind + SHA-256, immutable metadata with hash/size,
-	scheduled hash verification job, and explicit lifecycle/hold guidance captured in `proto/docs/pii_vault.md`.
+	scheduled hash verification job, and explicit lifecycle/hold guidance captured in `core/docs/pii_vault.md`.
 - Added `scripts/infra/verify_vault_secret_access.py` to impersonate app SAs and confirm vault Secret Manager bindings via
 	Workload Identity; marked the cross-project verifier checklist item complete.
 - Documented Cloud Run app integration: map `tokenization-pepper` and optional `pii-tokenization-key` secrets from the
-	vault project into runtime env vars; stop keeping secret material in app projects. Captured in `proto/docs/pii_vault.md`
+	vault project into runtime env vars; stop keeping secret material in app projects. Captured in `core/docs/pii_vault.md`
 	and `infra/environments/pii-vault/README.md`.
 - Added regression/smoke guidance: fail fast on missing/denied secrets and require a Cloud Run dev smoke (pepper read +
 	tokenization/detokenization round trip) before promotion.
@@ -23,7 +27,7 @@ This log captures significant planning decisions and architecture changes as we 
 - Rebuilt the PII vault design with globally deterministic tokens (`AAA-XXXXXXXX`), expanded prefix catalog (identity,
 	gov IDs incl. student/employer, financial, crypto, network/device, health/biometric, vehicle, location, docs, `UNK`),
 	and sharded artifact storage by type + content hash for indefinite retention.
-- Captured the design in `proto/docs/pii_vault.md` (linked from `docs/architecture.md`); removed the stray doc from the
+- Captured the design in `core/docs/pii_vault.md` (linked from `docs/architecture.md`); removed the stray doc from the
 	end-user `docs` repo to keep developer vs end-user docs separated.
 - Updated roadmap Milestone 5 and PII vault checklist to reflect cross-environment determinism, broadened detectors,
 	prefix registry, and hashed artifact sharding tasks.
@@ -150,7 +154,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 
 ## 2025-12-01
 - Extended the ingestion settings surface with first-class knobs for `dataset_path`, `batch_limit`, `dry_run`, and
-	`reset_vector`, refreshed the config manifests in both proto/docs repos, and added regression coverage in
+	`reset_vector`, refreshed the config manifests in both core/docs repos, and added regression coverage in
 	`tests/unit/settings/test_settings_env_overrides.py` so TOML-driven runs stay fully tested. Introduced
 	`config/settings.network_smoke.toml` (local) and `config/settings.dev_network_smoke.toml` (dev) so ingestion jobs can
 	target the manual network-entity bundle without exporting transient env vars.
@@ -203,7 +207,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 - Added a proper testing stack for the Next.js console: Vitest + Testing Library now cover the search experience helpers
 	and entity-filter payloads, Playwright powers a `/search` smoke test that boots the dev server, and the package README
 	documents `pnpm --filter web test` plus `test:smoke` so hybrid-search work can gate on automated checks.
-- Mirrored proto’s automation discipline in the UI repo by adding `scripts/git-hooks/pre-commit` (Prettier check,
+- Mirrored core’s automation discipline in the UI repo by adding `scripts/git-hooks/pre-commit` (Prettier check,
 	`pnpm --filter web lint`, `pnpm --filter web test`) and documenting the symlink command in `ui/README.md` so every
 	commit runs format + unit suites automatically.
 - Added `I4G_UI_PRECOMMIT_QUICK=1` support to the hook for lint-only iterations, clarified in `ui/README.md` +
@@ -266,7 +270,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 ## 2025-11-25
 - Ran the first structured-source validation pass for Milestone 1 using `FinancialEntityRetriever` across the bank/crypto/payment indicator queries (Nov 12–26 window as well as unrestricted). Every query returned zero source documents, indicating the local structured/vector stores are empty or stale. Next steps: rerun `scripts/bootstrap_local_sandbox.py --reset` (or ingest fresh cases) before the Cloud Run smoke so the retriever has data to mine.
 - Attempted to execute the `account-list` Cloud Run job in `i4g-dev` (`gcloud run jobs execute account-list --project i4g-dev --region us-central1 ...`). The command failed because the job does not yet exist in the project (`Cannot find job [account-list]`). Need to add the job via Terraform (or stand up manually) before we can complete the dev smoke test; recorded the gcloud failure output for reference.
-- Kicked off Milestone 1 (Account List Extraction parity). Added `planning/milestone1_account_list.md` outlining the service architecture, API/worker plan, and deliverables for porting `account_list_extract` + client workflows into proto. Next actions focus on scaffolding the new service module and validating data sources.
+- Kicked off Milestone 1 (Account List Extraction parity). Added `planning/milestone1_account_list.md` outlining the service architecture, API/worker plan, and deliverables for porting `account_list_extract` + client workflows into core. Next actions focus on scaffolding the new service module and validating data sources.
 - Created `src/i4g/services/account_list/` with request/response models, indicator query catalog, retriever adapter, and LLM-backed service orchestration. This establishes the core dependency graph for Milestone 1 implementation.
 - Added `/accounts/extract` FastAPI router with settings-driven API key enforcement, plus unit tests to cover success, limit validation, and auth failures. Introduced `account_list` settings section for header name, API key, and `top_k` guardrails.
 - Built artifact exporter plumbing: account list requests can now ask for CSV/JSON outputs via `output_formats`, generated by `AccountListExporter` and surfaced in responses/tests. This sets the stage for the worker + storage jobs.
@@ -275,16 +279,16 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 
 ## 2025-11-24
 - Finalized Workspace-group IAM for human access: Terraform now binds `group:gcp-i4g-admin@intelligenceforgood.org` to `roles/owner` (new `i4g_admin_members` variable) and routes all Cloud Run/IAP access through `group:gcp-i4g-analyst@intelligenceforgood.org` via `i4g_analyst_members`.
-- Updated `infra/environments/{dev,prod}` tfvars/README files plus `proto/docs/iam.md` to document the groups, ensuring onboarding/offboarding happens via Workspace instead of editing Terraform.
+- Updated `infra/environments/{dev,prod}` tfvars/README files plus `core/docs/iam.md` to document the groups, ensuring onboarding/offboarding happens via Workspace instead of editing Terraform.
 
 ## 2025-11-25
 - Added a temporary org-policy override in `infra/environments/dev/main.tf` to set `constraints/iam.allowedPolicyMemberDomains` `enforced = false`, unblocking `scripts/make-unauthed.sh` until the Cloud Run services sit behind a Load Balancer + IAP. **Reminder:** remove this override once the public domain + LB path is live and we no longer need emergency public toggles.
 
 ## 2025-11-21
-- Shipped the Quick Auth helper SPA (`ui/apps/iam-helper`) with a production-ready Dockerfile and documented build/deploy guidance in `proto/docs/iam.md`; the helper is the only unauthenticated Cloud Run surface and exists solely to mint GIS ID tokens client-side.
+- Shipped the Quick Auth helper SPA (`ui/apps/iam-helper`) with a production-ready Dockerfile and documented build/deploy guidance in `core/docs/iam.md`; the helper is the only unauthenticated Cloud Run surface and exists solely to mint GIS ID tokens client-side.
 - Added Terraform inputs for the upcoming `iam-helper` Cloud Run service so dev/prod can deploy the helper with `allUsers` invoke while still running under the shared `sa-app` runtime.
 - Updated IAM documentation to include concrete Cloud Run URLs, explicit ID-token troubleshooting steps, and the Artifact Registry/Cloud Run deployment playbook for the helper.
-- **Pivot:** Retired the helper SPA / GIS flow after repeated failures; removed all helper code, Terraform inputs, and docs references across proto/ui/infra. Identity now relies on IAP in front of every Cloud Run surface, with Terraform (next) managing the IAP policy for analyst Google Groups.
+- **Pivot:** Retired the helper SPA / GIS flow after repeated failures; removed all helper code, Terraform inputs, and docs references across core/ui/infra. Identity now relies on IAP in front of every Cloud Run surface, with Terraform (next) managing the IAP policy for analyst Google Groups.
 
 ## 2025-11-20
 - Consolidated the FastAPI, Streamlit, and Next.js console Cloud Run services onto the shared `sa-app` runtime service account so operators only manage one principal for UI workloads; Terraform now removes `sa-fastapi`, drops the console-specific account, and carries forward the required IAM roles on the shared identity.

@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **PROTOTYPE DOCUMENTATION** - This PRD describes the initial prototype phase of i4g.
 >
-> For production requirements and deployment strategy, see **[prd_production.md](./prd_production.md)** (planning copy); canonical production PRD remains at `proto/docs/prd_production.md`.
+> For production requirements and deployment strategy, see **[prd_production.md](./prd_production.md)** (planning copy); canonical production PRD remains at `core/docs/prd_production.md`.
 >
 > This document serves as historical reference for the experimental phase and is no longer actively maintained.
 

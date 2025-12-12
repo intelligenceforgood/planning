@@ -1,7 +1,7 @@
 # PRD: i4g Mobile (iOS & Android)
 
 ## Purpose
-Deliver iOS and Android apps that let analysts and LEOs perform the core workflows already available in the Next.js console (`ui/`). Mobile is a **subset**: no new backend capabilities; respect the privacy-by-design architecture in `proto/docs/architecture.md` and the contracts in `proto/docs/tdd.md`.
+Deliver iOS and Android apps that let analysts and LEOs perform the core workflows already available in the Next.js console (`ui/`). Mobile is a **subset**: no new backend capabilities; respect the privacy-by-design architecture in `core/docs/architecture.md` and the contracts in `core/docs/tdd.md`.
 
 ## Goals
 - Provide secure, responsive access to assigned cases, evidence, and reports.
@@ -39,7 +39,7 @@ Deliver iOS and Android apps that let analysts and LEOs perform the core workflo
 - No PII exposure regressions (validated via security review/audit logs).
 
 ## Dependencies & Constraints
-- Backend/API: FastAPI + Firestore as defined in `proto/docs/tdd.md`.
+- Backend/API: FastAPI + Firestore as defined in `core/docs/tdd.md`.
 - Auth: Google OAuth2 with PKCE; enforced via IAP at the LB; group-based access (analyst/LEO).
 - Data: read-only Firestore paths exposed via existing APIs; no new public endpoints.
 - Device support: iOS 15+ (SwiftUI), Android 8+ (Kotlin/Jetpack Compose).

@@ -23,7 +23,7 @@ echo "Session timestamp: $(date -u '+%Y-%m-%d %H:%M UTC')" >"$OUT_FILE"
 # 3. Gather repo context
 # Use relative paths that are robust to where the script is run
 REPO_DIRS=(
-  "$OUT_DIR/../../proto"
+  "$OUT_DIR/../../core"
   "$OUT_DIR/../../planning"
   "$OUT_DIR/../../docs"
   "$OUT_DIR/../../infra"
