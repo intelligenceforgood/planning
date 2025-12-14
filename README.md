@@ -1,23 +1,17 @@
-# DT-IFG Planning Artifacts
+# Planning (Active Guidance Only)
 
-_Last updated: 6 Nov 2025_
+This folder now holds the minimal planning artifacts needed to steer ongoing and future design/development. The goal is
+to keep collaboration fast and unambiguous: engineers and designers should be able to pick up context quickly, make
+decisions with confidence, and keep execution aligned.
 
-This folder contains source material from the DT-IFG discovery project and the planning documents that guide the migration to the new i4g platform.
+## What Stays Here
+- **PRDs** and **roadmap** for future development.
+- **Current change log** (trimmed) that captures decisions still relevant to upcoming work.
+- **Copilot prompts** under `copilot_prompt/`; these must be read and used efficiently before starting tasks.
 
-## Inventory
-- `system_review.md` — detailed assessment of the current DT-IFG production environment.
-- `migration_plan.md` — milestone-based migration strategy (GCP-only focus).
-- `gap_analysis.md` — capability matrix comparing DT-IFG vs i4g target stack.
-- `technology_evaluation.md` — open-first technology options for identity, retrieval, LLMs, and ops.
-- `future_architecture.md` — proposed end-state GCP architecture.
-- `implementation_roadmap.md` — workstream breakdown and sequencing for execution.
-- `change_log.md` — running log of major planning decisions.
-- `doc_site_option.md` — documentation platform comparison for the public-facing site.
-- `public_infra_todo.md` — checklist for docs/app hosting and GitHub org setup.
-- `discovery-export.sh` — script used to capture GCP asset inventory.
-
-## How to Use This Folder
-1. **Planning reference**: Use these docs to seed the new repositories (product code, infra, documentation) as they are created.
-2. **Updates**: When decisions change, update the relevant markdown and add an entry to `change_log.md`.
-3. **Sharing**: These files are self-contained; copy them into new repos as-needed so volunteers have context.
-4. **Archival**: Keep this folder in version control until the migration is complete; afterwards archive in an "ops" or "planning" repo.
+## How We Work
+- Copilot is a first-class collaborator. Keep prompts up to date, rehydrate sessions via `copilot_prompt/persistent_prompt.md`,
+	and record state in `copilot_prompt/COPILOT_SESSION.md` when pausing work.
+- When plans change, update the PRDs/roadmap and add a concise entry to `change_log.md` so future contributors inherit
+	the latest intent without digging through archives.
+- Anything no longer actionable lives in `planning/archive/` to keep the active surface small and trustworthy.
