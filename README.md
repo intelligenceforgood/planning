@@ -1,5 +1,8 @@
 # Planning (Active Guidance Only)
 
+[![Docs](https://img.shields.io/badge/Docs-Planning%20Hub-blue.svg)](README.md)
+[![Roadmap](https://img.shields.io/badge/Artifacts-PRDs%20%2B%20Roadmap-informational.svg)](roadmap.md)
+
 This folder now holds the minimal planning artifacts needed to steer ongoing and future design/development. The goal is
 to keep collaboration fast and unambiguous: engineers and designers should be able to pick up context quickly, make
 decisions with confidence, and keep execution aligned.
