@@ -15,7 +15,7 @@ Use this file to rehydrate context whenever a coding session restarts (e.g., VS 
 - When updating configs or workflows, reflect the change in both code and the relevant planning docs (usually the change log).
 - Assume a two-person team (you + Copilot) with you as the sole decision maker—no external reviews or approvals are required. Stakeholders can share feedback, but changes only happen if you choose to take them on.
 - `I4G_ENV=local` now enforces sandbox defaults (mock identity, SQLite/Chroma backends, Ollama, Secret Manager off). Keep that profile intact for laptop runs; cloud environments focus on the two GCP projects `i4g-dev` and `i4g-prod` unless we explicitly carve out security test sandboxes.
-- Use `python scripts/bootstrap_local_sandbox.py --reset` whenever you need to rebuild local demo data (bundles, OCR outputs, Chroma store, review cases) in one step.
+- Use `i4g bootstrap local reset --report-dir data/reports/local_bootstrap` whenever you need to rebuild local demo data (bundles, OCR outputs, Chroma store, review cases) in one step.
 - Terraform automation lives in `infra/` with a GCS backend and Workload Identity Federation to GitHub Actions (`modules/iam/workload_identity_github`). Target `i4g-dev` for all applies until `i4g-prod` is ready; impersonate `sa-infra` via `gcloud auth application-default login` + token creator role before running plans locally.
 
 ## 3. Workflow Expectations
