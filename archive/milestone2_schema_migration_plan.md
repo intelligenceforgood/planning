@@ -188,7 +188,7 @@ CREATE INDEX idx_indicator_sources_document ON indicator_sources (document_id);
 - `alembic upgrade head` succeeds on both SQLite and Postgres containers inside CI.
 - `pytest tests/unit/services/test_account_list_retriever.py` still passes using the migrated schema (structured store adapts to new tables once implemented).
 - Manual smoke: run ingestion job against `data/bundles/account_list_smoke.jsonl`, verify counts in `ingestion_runs`, `cases`, `indicators` tables, and ensure `indicator_sources` rows match document IDs.
-- Document schema diagrams + commands inside `docs/architecture.md` and `docs/smoke_test.md` after the migrations ship.
+- Document schema diagrams + commands inside `docs/design/architecture.md` and `docs/cookbooks/smoke_test.md` after the migrations ship.
 
 ## 6. Outstanding Tasks
 - Scaffold Alembic config + base metadata.

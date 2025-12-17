@@ -390,4 +390,4 @@ Action items for cutover and onboarding:
 - Add deployment notes that describe domain mappings, Cloud Run IAM bindings, and any separate environment variables used by Streamlit (for internal analytics mode).
 - Include a short verification matrix in the Hypercare checklist that confirms both frontends can authenticate, call the FastAPI backend, and render expected data (smoke tests for victim intake, analyst review, and internal telemetry).
 
-Keep this section synchronized with `docs/architecture.md` and `docs/tdd.md` so stakeholders and operators have a single source-of-truth for frontend responsibilities.
+Keep this section synchronized with `docs/design/architecture.md` and `docs/development/tdd.md` so stakeholders and operators have a single source-of-truth for frontend responsibilities.

@@ -1,6 +1,6 @@
 # Mobile Workstream
 
-This folder contains product and technical plans for the i4g mobile apps (iOS and Android). The mobile experience is a **subset** of the web `ui/` Next.js console and follows the platform architecture documented in `core/docs/architecture.md` and `core/docs/tdd.md`.
+This folder contains product and technical plans for the i4g mobile apps (iOS and Android). The mobile experience is a **subset** of the web `ui/` Next.js console and follows the platform architecture documented in `core/docs/design/architecture.md` and `core/docs/development/tdd.md`.
 
 Documents:
 - `prd.md` — Product requirements for the first mobile release.

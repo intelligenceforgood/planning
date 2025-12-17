@@ -14,8 +14,8 @@ Before merging the Milestone 4 changes into `main`, run these checks and capture
 
 ## Docs & Runbooks
 - [ ] Ensure `docs/runbooks/console/reports.md` includes a step-by-step verification guide and CLI examples.
-- [ ] Ensure `docs/dev_guide.md` describes the test scripts and env vars for local runs.
-- [ ] Ensure `docs/architecture.md` reflects the current Dossier flow/version and links to the Drive diagram.
+- [ ] Ensure `docs/development/dev_guide.md` describes the test scripts and env vars for local runs.
+- [ ] Ensure `docs/design/architecture.md` reflects the current Dossier flow/version and links to the Drive diagram.
 - [ ] Ensure `docs/runbooks/console/dossier_monitoring.md` has at least one sample alert rule and remediation steps.
 
 ## Infra & CI

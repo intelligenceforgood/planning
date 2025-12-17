@@ -15,12 +15,12 @@ This log keeps only decisions that affect future development. Older history live
 
 ## 2025-12-10
 - PII vault finalized: deterministic `AAA-XXXXXXXX` tokens, sharded GCS layout, and cross-project Secret Manager/KMS bindings
-  captured in [core/docs/pii_vault.md](../core/docs/pii_vault.md). Cloud Run must read pepper/key via env vars.
+  captured in [core/docs/design/pii_vault.md](../core/docs/design/pii_vault.md). Cloud Run must read pepper/key via env vars.
 
 ## 2025-12-06
 - LEA dossier flow: portal download + verification parity (API proxy + Web Crypto); nightly smoke covers `/reports/dossiers`.
-  Use the signature manifest contract in [core/docs/architecture.md](../core/docs/architecture.md) for any new report work.
+  Use the signature manifest contract in [core/docs/design/architecture.md](../core/docs/design/architecture.md) for any new report work.
 
 ## 2025-12-02
 - Hybrid search + structured filters are baseline: Vertex AI Search + SQL dual-write with retry queue. See ingestion settings in
-  `config/settings.*.toml` and the retrieval contracts in [core/docs/architecture.md](../core/docs/architecture.md).
+  `config/settings.*.toml` and the retrieval contracts in [core/docs/design/architecture.md](../core/docs/design/architecture.md).

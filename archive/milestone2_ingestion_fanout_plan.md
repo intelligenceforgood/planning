@@ -63,7 +63,7 @@ IngestFanoutCoordinator
 4. **Retry queue**: new SQL table or reuse Firestore? Proposed: SQL table `ingestion_retry_queue` with columns `(id, case_id, payload_json, backend, attempt_count, next_attempt_at)`.
 5. **Worker update** (`src/i4g/worker/jobs/ingest.py`): instantiate coordinator with writers based on toggles, track per-run summary, persist to `ingestion_runs` when job completes.
 6. **CLI/Job**: add `i4g-ingest-retry-job` entrypoint to drain retry queue (can run as Cloud Run job scheduled hourly).
-7. **Docs**: update `docs/architecture.md`, `docs/smoke_test.md`, and change log with fan-out behavior.
+7. **Docs**: update `docs/design/architecture.md`, `docs/cookbooks/smoke_test.md`, and change log with fan-out behavior.
 
 ## 9. Testing Plan
 - **Unit tests** for each writer (mocking external clients) verifying success/failure paths and payload transformations.

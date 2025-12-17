@@ -27,7 +27,7 @@ This log captures significant planning decisions and architecture changes as we 
 - Rebuilt the PII vault design with globally deterministic tokens (`AAA-XXXXXXXX`), expanded prefix catalog (identity,
 	gov IDs incl. student/employer, financial, crypto, network/device, health/biometric, vehicle, location, docs, `UNK`),
 	and sharded artifact storage by type + content hash for indefinite retention.
-- Captured the design in `core/docs/pii_vault.md` (linked from `docs/architecture.md`); removed the stray doc from the
+- Captured the design in `core/docs/design/pii_vault.md` (linked from `docs/design/architecture.md`); removed the stray doc from the
 	end-user `docs` repo to keep developer vs end-user docs separated.
 - Updated roadmap Milestone 5 and PII vault checklist to reflect cross-environment determinism, broadened detectors,
 	prefix registry, and hashed artifact sharding tasks.
@@ -87,7 +87,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 ## 2025-12-03
 
 - Documented the Milestone 4 dossier runtime contract by adding a dedicated env-var table to
-	`docs/dev_guide.md` (Drive parent ID, dossier loss/recency thresholds, hash algorithm, and Drive
+	`docs/development/dev_guide.md` (Drive parent ID, dossier loss/recency thresholds, hash algorithm, and Drive
 	service-account scopes) so FastAPI, worker jobs, and Cloud Run deployments share the same
 	configuration checklist.
 - Introduced the `/reports/dossiers` FastAPI router (`src/i4g/api/reports.py`) backed by
@@ -98,7 +98,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 	(status filters, inline manifest toggle, download button, signature warnings) keeps LEA pilots
 	unblocked until the Next.js portal consumes the endpoint. Session state + API helpers now live in
 	`src/i4g/ui/{state,api}.py`, and the UI walks analysts through manifest/path validation.
-- Extended `docs/dev_guide.md` with the Streamlit dossier viewer workflow and a manual regression
+- Extended `docs/development/dev_guide.md` with the Streamlit dossier viewer workflow and a manual regression
 	checklist (pilot bundle generation → panel refresh → manifest/signature hash verification) so
 	Milestone 4 smoke tests stay reproducible prior to LEA portal enablement.
 - Added inline signature verification to the Streamlit dossier panel: each plan now exposes a
@@ -142,7 +142,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 	the new `--schema-version` flag on `i4g-admin export-saved-searches` and the `scripts/tag_saved_searches.py` helper.
 - Expanded the hybrid-search backend test suite with overlap/time-window/tie-breaker assertions in
 	`tests/unit/services/test_hybrid_search_service.py`, closing the “pytest coverage” checklist item from the milestone.
-- Authored `docs/hybrid_search_deployment_checklist.md`, covering required env vars, `TASK_STATUS` expectations, smoke
+- Authored `docs/runbooks/hybrid_search_deployment_checklist.md`, covering required env vars, `TASK_STATUS` expectations, smoke
 	tests, and observability counters for dev → prod promotions.
 - Normalized all saved-search params through the `HybridSearchRequest` schema (API `/reviews/search/saved` now injects
 	schema_version, structured filters, and ISO `time_range` values). Streamlit search now posts to `/reviews/search/query`
@@ -211,7 +211,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 	`pnpm --filter web lint`, `pnpm --filter web test`) and documenting the symlink command in `ui/README.md` so every
 	commit runs format + unit suites automatically.
 - Added `I4G_UI_PRECOMMIT_QUICK=1` support to the hook for lint-only iterations, clarified in `ui/README.md` +
-	`docs/dev_guide.md` that quick mode must be temporary, and documented when the Playwright smoke (`pnpm --filter web
+	`docs/development/dev_guide.md` that quick mode must be temporary, and documented when the Playwright smoke (`pnpm --filter web
 	test:smoke`) is required (hybrid-search changes, routing/server-action updates, pre-release checks).
 
 ## 2025-11-29
@@ -224,7 +224,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 	Firestore entries against the emulator, and a follow-up run reported `No ingestion retry entries ready; exiting`.
 	Verified the run metadata via `scripts/verify_ingestion_run.py --dataset retry_demo --max-retry-count 3 --verbose` to
 	confirm the retry counter increments while the status stays `succeeded`.
-- Refreshed `docs/smoke_test.md` §2c with the working Firestore failure recipe (`I4G_STORAGE__FIRESTORE_PROJECT`,
+- Refreshed `docs/cookbooks/smoke_test.md` §2c with the working Firestore failure recipe (`I4G_STORAGE__FIRESTORE_PROJECT`,
 	emulator instructions, and verification flags) so the retry smoke stays reproducible.
 - Added an `i4g-ingest-retry-job` Cloud Run entrypoint plus docs/tests to drain `ingestion_retry_queue`. The worker
 	replays Firestore + Vertex fan-out using the stored classification payload, enforces `settings.ingestion.max_retries`,
@@ -279,13 +279,13 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 
 ## 2025-11-24
 - Finalized Workspace-group IAM for human access: Terraform now binds `group:gcp-i4g-admin@intelligenceforgood.org` to `roles/owner` (new `i4g_admin_members` variable) and routes all Cloud Run/IAP access through `group:gcp-i4g-analyst@intelligenceforgood.org` via `i4g_analyst_members`.
-- Updated `infra/environments/{dev,prod}` tfvars/README files plus `core/docs/iam.md` to document the groups, ensuring onboarding/offboarding happens via Workspace instead of editing Terraform.
+- Updated `infra/environments/{dev,prod}` tfvars/README files plus `core/docs/design/iam.md` to document the groups, ensuring onboarding/offboarding happens via Workspace instead of editing Terraform.
 
 ## 2025-11-25
 - Added a temporary org-policy override in `infra/environments/dev/main.tf` to set `constraints/iam.allowedPolicyMemberDomains` `enforced = false`, unblocking `scripts/make-unauthed.sh` until the Cloud Run services sit behind a Load Balancer + IAP. **Reminder:** remove this override once the public domain + LB path is live and we no longer need emergency public toggles.
 
 ## 2025-11-21
-- Shipped the Quick Auth helper SPA (`ui/apps/iam-helper`) with a production-ready Dockerfile and documented build/deploy guidance in `core/docs/iam.md`; the helper is the only unauthenticated Cloud Run surface and exists solely to mint GIS ID tokens client-side.
+- Shipped the Quick Auth helper SPA (`ui/apps/iam-helper`) with a production-ready Dockerfile and documented build/deploy guidance in `core/docs/design/iam.md`; the helper is the only unauthenticated Cloud Run surface and exists solely to mint GIS ID tokens client-side.
 - Added Terraform inputs for the upcoming `iam-helper` Cloud Run service so dev/prod can deploy the helper with `allUsers` invoke while still running under the shared `sa-app` runtime.
 - Updated IAM documentation to include concrete Cloud Run URLs, explicit ID-token troubleshooting steps, and the Artifact Registry/Cloud Run deployment playbook for the helper.
 - **Pivot:** Retired the helper SPA / GIS flow after repeated failures; removed all helper code, Terraform inputs, and docs references across core/ui/infra. Identity now relies on IAP in front of every Cloud Run surface, with Terraform (next) managing the IAP policy for analyst Google Groups.
@@ -300,7 +300,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 
 ## 2025-11-18
 - Resolved the Cloud Run intake job regression caused by missing job records when using API mode: updated the worker to treat 404 status updates as warnings, rebuilt `intake-job:dev`, and verified the end-to-end run in `i4g-dev` with API-hosted state.
-- Documented the split between local and GCP smoke tests in `docs/smoke_test.md`, adding the new Cloud Run procedure (including baked-in environment variables) so future executions only need the intake/job identifiers.
+- Documented the split between local and GCP smoke tests in `docs/cookbooks/smoke_test.md`, adding the new Cloud Run procedure (including baked-in environment variables) so future executions only need the intake/job identifiers.
 - Captured the Cloud Run job configuration in code by updating `process-intakes` environment variables (`I4G_INTAKE__API_BASE`, `I4G_STORAGE__SQLITE_PATH`, vector toggle) and noted the verification commands to keep dev/prod parity checks straightforward.
 - Logged the successful dev smoke run (FastAPI submission → Cloud Run job → case attachment) so the migration team can reference the baseline when revalidating infrastructure changes.
 
@@ -343,7 +343,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 
 ## 2025-11-08
 - Hardened the sandbox bootstrapper by prepending `src/` to `PYTHONPATH`, allowing subprocess helpers to run without installing the package in editable mode.
-- Refreshed developer docs (`docs/dev_guide.md`, `tests/adhoc/README.md`) with the unified bootstrap flow, flag breakdown, and runtime guidance so onboarding stays accurate after the script change.
+- Refreshed developer docs (`docs/development/dev_guide.md`, `tests/adhoc/README.md`) with the unified bootstrap flow, flag breakdown, and runtime guidance so onboarding stays accurate after the script change.
 - Extended `future_architecture.md` Security & IAM section with Workload Identity Federation coverage, automation service account, artifact signing, access transparency, and a role-to-capability matrix to steer Milestone 2 security design.
 - Updated `m2_task_outline.md` to capture the expanded IAM deliverables and mark the 2025-11-08 progress.
 - Documented the Terraform-without-SaaS workflow in `infra/README.md`, selecting GCS-backed state, WIF-authenticated GitHub Actions, and a module roadmap that mirrors the IAM matrix.

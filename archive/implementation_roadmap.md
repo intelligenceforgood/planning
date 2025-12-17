@@ -36,7 +36,7 @@ Goal: deliver a stable, shareable analyst search experience on `i4g-dev` with cl
 Key tasks:
 - **Discovery & UX**
 	- [ ] Finalise Discovery metadata hygiene (dataset labels, sample queries, evaluation notes).
-	- [ ] Harden Streamlit UX (caption metadata, error states, download flows) and document rapid redeploy workflow (`docs/dev_guide.md`).
+	- [ ] Harden Streamlit UX (caption metadata, error states, download flows) and document rapid redeploy workflow (`docs/development/dev_guide.md`).
 	- [ ] Automate container build + deploy steps (GitHub Action or reusable script) so iterative redeploys stay consistent.
 - **Weekly Incremental Migration Cadence**
 	- [ ] Schedule and execute a Friday incremental Azure SQL → Firestore import using the existing ETL script; log results in `planning/migration_runbook.md` and store reports under `data/intake_migration_report_*.json`.

@@ -44,6 +44,6 @@
 - **Current**: Basic PII masking exists, but full "Vault" architecture needs audit against PRD requirements.
 
 ## 3. Documentation Gaps
-- `core/docs/architecture.md` describes the *current* state well but misses the "Dual Extraction" intent.
+- `core/docs/design/architecture.md` describes the *current* state well but misses the "Dual Extraction" intent.
 - `planning/future_architecture.md` captures the intent but is disconnected from the codebase.
 - **Action**: Merge these into a single, living Architecture document in `core/docs/`.
