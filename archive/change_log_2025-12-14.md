@@ -215,9 +215,9 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 	test:smoke`) is required (hybrid-search changes, routing/server-action updates, pre-release checks).
 
 ## 2025-11-29
-- Forced a Firestore fan-out failure by running `python -m i4g.worker.jobs.ingest` with `I4G_ENV=dev`,
-	`I4G_STORAGE__FIRESTORE_PROJECT=i4g-dev`, and `FIRESTORE_EMULATOR_HOST=127.0.0.1:8787` pointed at a closed port.
-	Run `26ff94bf-4128-45f6-834f-d4e04658841d` ingested three cases (SQL writes succeeded) and enqueued retries for
+ Rehydrated the sandbox (`i4g bootstrap local reset --report-dir data/reports/local_bootstrap`) and re-ran the Milestone 1 data coverage probe. Discovered `FinancialEntityRetriever` was discarding vector-only hits (no structured `record` payload), so coverage still read zero despite populated stores.
+ Next steps: rerun `i4g bootstrap local reset --report-dir data/reports/local_bootstrap` (or ingest fresh cases) before the Cloud Run smoke so the retriever has data to mine.
+ Introduced `i4g bootstrap local reset` to recreate demo data with a single command, keeping the laptop environment reproducible.
 	`romance_bitcoin-012`, `impostor_refund-012`, and `tech_support-038`, exercising the retry payload context.
 - Installed `openjdk@21` so the `gcloud beta emulators firestore start` command can run locally, launched the
 	emulator, and executed `python -m i4g.worker.jobs.ingest_retry` (dry run + live). The live pass replayed all three
@@ -256,7 +256,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 	wired it through the factory helpers, exposed `firestore_written` counters on `IngestResult`, and updated the
 	worker job/run tracker so ingestion runs report `firestore_writes` alongside SQL/Vertex totals.
 - Revalidated HybridRetriever coverage after latest data refresh by running the financial-entity probe (bank/crypto/payments, 30-day window, top_k=50). Each category surfaced 50 documents with representative case IDs (`ucisms-120-0`, `ucisms-123-0`, etc.), and datasets still report as `unknown` because the mock bundle omits explicit tags—tracking this until new metadata lands.
-- Rehydrated the sandbox (`scripts/bootstrap_local_sandbox.py --reset`) and re-ran the Milestone 1 data coverage probe. Discovered `FinancialEntityRetriever` was discarding vector-only hits (no structured `record` payload), so coverage still read zero despite populated stores.
+- Rehydrated the sandbox (`i4g bootstrap local reset --report-dir data/reports/local_bootstrap`) and re-ran the Milestone 1 data coverage probe. Discovered `FinancialEntityRetriever` was discarding vector-only hits (no structured `record` payload), so coverage still read zero despite populated stores.
 - Updated the retriever to merge metadata/text from vector entries, added regression tests (`tests/unit/services/test_account_list_retriever.py`), and reran the probe. All three indicator categories now return 50 source docs within the 30-day window (datasets resolve to `unknown` because the mock smoke bundle lacks explicit source tags), so we can proceed to the dev job smoke.
 - Ran the local `i4g-account-job` smoke (dry run + full execution) with the mock LLM provider. The real run generated `i4g/data/reports/account_list/account-run-deecf0f8_20251129T000158Z.{pdf,xlsx}`, logged 122 source docs (1 payments indicator, bank/crypto warned empty), and confirms exporter + artifact plumbing work end-to-end on the laptop build.
 - Executed `gcloud run jobs execute account-list --project i4g-dev --region us-central1` (dry run + full). Execution `account-list-4z8mj` completed with 6 indicators / 3 sources and published artifacts to `gs://i4g-reports-dev/account_list/account-run-6c4f7933_20251129T000756Z.{pdf,xlsx}`; captured logs via `gcloud logging read` for the smoke record.
@@ -268,7 +268,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 - Rebuilt/pushed `us-central1-docker.pkg.dev/i4g-dev/applications/account-job:dev` with the refreshed data, executed the `account-list` job in `i4g-dev`, and captured populated artifacts: `gs://i4g-reports-dev/account_list/account-run-f724963f_20251127T174416Z.xlsx` + `.pdf` (run logged 6 indicators / 3 source docs via the mock extractor).
 
 ## 2025-11-25
-- Ran the first structured-source validation pass for Milestone 1 using `FinancialEntityRetriever` across the bank/crypto/payment indicator queries (Nov 12–26 window as well as unrestricted). Every query returned zero source documents, indicating the local structured/vector stores are empty or stale. Next steps: rerun `scripts/bootstrap_local_sandbox.py --reset` (or ingest fresh cases) before the Cloud Run smoke so the retriever has data to mine.
+- Ran the first structured-source validation pass for Milestone 1 using `FinancialEntityRetriever` across the bank/crypto/payment indicator queries (Nov 12–26 window as well as unrestricted). Every query returned zero source documents, indicating the local structured/vector stores are empty or stale. Next steps: rerun `i4g bootstrap local reset --report-dir data/reports/local_bootstrap` (or ingest fresh cases) before the Cloud Run smoke so the retriever has data to mine.
 - Attempted to execute the `account-list` Cloud Run job in `i4g-dev` (`gcloud run jobs execute account-list --project i4g-dev --region us-central1 ...`). The command failed because the job does not yet exist in the project (`Cannot find job [account-list]`). Need to add the job via Terraform (or stand up manually) before we can complete the dev smoke test; recorded the gcloud failure output for reference.
 - Kicked off Milestone 1 (Account List Extraction parity). Added `planning/milestone1_account_list.md` outlining the service architecture, API/worker plan, and deliverables for porting `account_list_extract` + client workflows into core. Next actions focus on scaffolding the new service module and validating data sources.
 - Created `src/i4g/services/account_list/` with request/response models, indicator query catalog, retriever adapter, and LLM-backed service orchestration. This establishes the core dependency graph for Milestone 1 implementation.
@@ -339,7 +339,7 @@ Vite test and refreshed `docs/runbooks/console/reports.md` to cover the new flow
 - Captured single-owner context in `persistent_prompt.md` (work assumed by Jerry, with Copilot support) to keep action items grounded.
 - Elaborated the Security & IAM section (service accounts, secrets, monitoring) in `future_architecture.md` and marked the corresponding Milestone 2 workstream as drafted.
 - Added automatic local-environment overrides (`mock` auth, SQLite/Chroma stores, Ollama, Secret Manager disabled) so the sandbox can run on a laptop without cloud credentials and documented the profile in planning notes.
-- Introduced `scripts/bootstrap_local_sandbox.py` to recreate demo data with a single command, keeping the laptop environment reproducible.
+- Introduced `i4g bootstrap local reset` to recreate demo data with a single command, keeping the laptop environment reproducible.
 
 ## 2025-11-08
 - Hardened the sandbox bootstrapper by prepending `src/` to `PYTHONPATH`, allowing subprocess helpers to run without installing the package in editable mode.

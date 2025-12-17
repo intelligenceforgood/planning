@@ -84,7 +84,7 @@ _Last updated: 29 Nov 2025_
 
 ## 7. Migration & Environment Expectations
 - Author canonical SQL migrations under `migrations/dual_extraction/*.sql` (or Alembic equivalent) with paired SQLite + Postgres compatibility notes.
-- Provide bootstrap helper in `scripts/bootstrap_local_sandbox.py` to apply migrations automatically for devs.
+- Provide bootstrap helper via `i4g bootstrap local reset` to apply migrations automatically for devs.
 - Cloud SQL/AlloyDB migration scripts must be idempotent and runnable via CI/CD (Terraform null_resource or manual `psql`).
 - Local default remains SQLite but schema should avoid Postgres-only datatypes; use `TEXT` + JSON where necessary.
 

@@ -176,13 +176,13 @@ CREATE INDEX idx_indicator_sources_document ON indicator_sources (document_id);
 1. **Tooling**: Adopt Alembic under `src/i4g/migrations` (new package) with env configured to read `i4g.settings.get_settings()` for SQLite path / Postgres DSN. `poetry run alembic revision --autogenerate` is acceptable once base metadata exists.
 2. **Order of operations**: create tables in dependency order (ingestion_runs → cases → documents/entities/indicators → join tables). Wrap each migration in a transaction.
 3. **Local workflow**:
-   - `poetry run alembic upgrade head` applies migrations to SQLite.
-   - `scripts/bootstrap_local_sandbox.py --apply-migrations` invokes the same command before seeding bundles.
+    - `poetry run alembic upgrade head` applies migrations to SQLite.
+    - `i4g bootstrap local reset --report-dir data/reports/local_bootstrap` runs migrations before seeding bundles and verification.
 4. **Cloud workflow**:
    - Use Cloud SQL Proxy (or private IP) plus `ALEMBIC_DATABASE_URL=postgresql+psycopg://...` to run `poetry run alembic upgrade head` from CI/CD.
    - Terraform adds a `null_resource.run_migrations` placeholder referencing a shell script (`scripts/migrations/apply_cloud_sql.sh`) to ensure infra deploys bring databases forward.
 5. **Rollback**: each migration file includes a `downgrade()` that drops objects in reverse order and reinstates previous constraints. Operators execute `poetry run alembic downgrade -1` if a deploy must be reverted.
-6. **Data backfill**: once schema exists, run `python scripts/bootstrap_local_sandbox.py --reset --apply-migrations` locally and `i4g-ingest-job --fanout` in dev to populate baseline data before enabling Milestone 3 features.
+6. **Data backfill**: once schema exists, run `i4g bootstrap local reset --report-dir data/reports/local_bootstrap` locally and `i4g-ingest-job --fanout` in dev to populate baseline data before enabling Milestone 3 features.
 
 ## 5. Validation Checklist
 - `alembic upgrade head` succeeds on both SQLite and Postgres containers inside CI.
@@ -193,5 +193,5 @@ CREATE INDEX idx_indicator_sources_document ON indicator_sources (document_id);
 ## 6. Outstanding Tasks
 - Scaffold Alembic config + base metadata.
 - Update `i4g.store.structured` to point to the new schema (either via ORM or raw SQL helpers).
-- Extend `scripts/bootstrap_local_sandbox.py` with a migration step + data verification.
+- Extend `i4g bootstrap local reset` with a migration step + data verification.
 - Add unit tests under `tests/unit/store/test_migrations.py` to cover idempotent upgrade/downgrade sequences.

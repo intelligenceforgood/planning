@@ -42,7 +42,7 @@ Use this outline to track prep and execution tasks for Milestone 2 (designing th
 6. **Local Sandbox Profile** — ✅ Complete
    - Lock in configuration defaults for `I4G_ENV=local` (mock auth, SQLite, Chroma, Ollama, scheduler off).
    - ✅ Implemented via `settings/config.py` environment overrides; documented in `future_architecture.md` §3.9.
-   - Added `scripts/bootstrap_local_sandbox.py` to regenerate sample data end-to-end.
+   - Added `i4g bootstrap local reset` to regenerate sample data end-to-end.
 
 7. **Migration Runbooks (Azure → GCP)** — ✅ Drafted
    - Capture repeatable procedures for exporting Azure data, identity, and automation workloads and importing to GCP equivalents.
