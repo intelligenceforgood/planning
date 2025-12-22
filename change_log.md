@@ -1,8 +1,13 @@
 # Planning Change Log (active items only)
 
-Last updated: 16 Dec 2025
+Last updated: 22 Dec 2025
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2025-12-22
+- **Bootstrap Fixes**: Resolved Cloud Run job failures in `dev_bootstrap` by fixing Docker entrypoints (switched `CMD` to `ENTRYPOINT`) and updating ingestion logic to support GCS directory paths (prefixes) for bundles.
+- **Report Directory Refactor**: Standardized report output directories to `data/reports/bootstrap_dev` and `data/reports/bootstrap_local` (renamed from `dev_bootstrap`/`local_bootstrap`). Updated all CLI tools and documentation to reflect this change.
+- **Documentation**: Updated `docs/cookbooks/bootstrap_environments.md` with correct job names, verification commands, and bundle URI formats.
 
 ## 2025-12-19
 - Fixed Cloud Run job authentication: `process-intakes` now generates OIDC tokens for service-to-service calls to the API gateway.
