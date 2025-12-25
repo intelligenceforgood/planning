@@ -6,16 +6,16 @@ This document describes a simple, low-friction workflow to persist the key sessi
  - `planning/copilot_prompt/COPILOT_SESSION.md` — short snapshot used to rehydrate Copilot after a restart.
 
 2) Save the session summary before you close VS Code
- - Run the helper that gathers context and writes a short snapshot (preferred via Make):
+ - Run the helper that gathers context and writes a short snapshot:
 
 ```bash
-make save-session
+savecopilot
 ```
 
 If you are running from the repository root, use:
 
 ```bash
-make -C planning/copilot_prompt save-session
+savecopilot
 ```
 
 3) Edit `planning/copilot_prompt/COPILOT_SESSION.md` and update the `Active task` and `Next step` lines.

@@ -1,8 +1,24 @@
 # Planning Change Log (active items only)
 
-Last updated: 22 Dec 2025
+Last updated: 24 Dec 2025
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2025-12-24
+- **Infrastructure**: Added Cloud SQL (PostgreSQL 15) provisioning to Terraform (`infra/environments/app/dev/database.tf`) including database and user management.
+- **Security & Auth**: Addressed "403 Forbidden" errors in `i4g-console` by fixing OIDC token generation in `auth-helpers.ts`.
+  - Identified that `google-auth-library` requires explicit `audience` parameter in `getRequestHeaders` to generate tokens.
+  - Updated `ui/apps/web/src/lib/server/auth-helpers.ts` to include the fix.
+  - Reverted `i4g-console` ingress to `internal-and-cloud-load-balancing` for security.
+- **Documentation**: Added `docs/cookbooks/cloud_sql_primer.md` and updated `docs/cookbooks/bootstrap_environments.md`.
+
+## 2025-12-22 (Session 2)
+- **Security & Auth**: Fixed "401 Unauthorized" errors in `i4g-console` by implementing IAP-aware authentication for server-side API calls.
+  - Injected `I4G_IAP_CLIENT_ID` into `i4g-console` Cloud Run service via Terraform.
+  - Updated `platform-client.ts`, `account-list-service.ts`, and `reviews-service.ts` to generate OIDC tokens using `google-auth-library`.
+  - Rebuilt and redeployed `i4g-console` image.
+  - Verified `I4G_API_KEY` is correctly set in `terraform.tfvars` to ensure FastAPI authorization.
+  - Confirmed `sa-app` service account has `roles/iap.httpsResourceAccessor` on the API backend.
 
 ## 2025-12-22
 - **Bootstrap Fixes**: Resolved Cloud Run job failures in `dev_bootstrap` by fixing Docker entrypoints (switched `CMD` to `ENTRYPOINT`) and updating ingestion logic to support GCS directory paths (prefixes) for bundles.
