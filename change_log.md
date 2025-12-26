@@ -1,8 +1,15 @@
 # Planning Change Log (active items only)
 
-Last updated: 24 Dec 2025
+Last updated: 26 Dec 2025
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2025-12-26
+- **Search & Save Fixes**: Resolved "401 Unauthorized" and "500 Internal Server Error" issues in Search and Saved Search flows.
+  - **Backend**: Updated `VertexVectorStore` to robustly handle `struct_data` vs `json_data` from Vertex AI Search. Renamed `save_search` to `upsert_saved_search` in `ReviewStore` to match API calls and fix FK constraints.
+  - **Frontend**: Patched Next.js API routes (`reviews/saved`, `intakes`) to inject IAP OIDC tokens (`Authorization: Bearer ...`) alongside App API keys (`X-API-KEY`).
+  - **SDK**: Updated `@i4g/sdk` to send API keys in `X-API-KEY` header instead of `Authorization` to avoid conflict with IAP tokens.
+  - **Deployment**: Rebuilt and redeployed both `fastapi-gateway` and `i4g-console` to `dev`.
 
 ## 2025-12-24
 - **Infrastructure**: Added Cloud SQL (PostgreSQL 15) provisioning to Terraform (`infra/environments/app/dev/database.tf`) including database and user management.
