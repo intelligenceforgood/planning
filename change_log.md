@@ -1,8 +1,14 @@
 # Planning Change Log (active items only)
 
-Last updated: 26 Dec 2025
+Last updated: 28 Dec 2025
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2025-12-28
+- **OCR & Ingestion**:
+  - Added PDF support to OCR pipeline via `pypdfium2`.
+  - Added error handling for corrupt files in `tesseract.py` to prevent job crashes.
+  - Added `--ingest-dry-run` flag to `i4g bootstrap dev` to allow testing extraction logic without DB writes.
 
 ## 2025-12-26
 - **Search & Save Fixes**: Resolved "401 Unauthorized" and "500 Internal Server Error" issues in Search and Saved Search flows.
