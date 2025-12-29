@@ -69,22 +69,22 @@ This document outlines the step-by-step implementation plan for the PII Vault, a
     - **Access Control:** This endpoint requires high-privilege scopes (e.g., `pii:read`).
 
 ### 3.3. Audit Logging
-- [ ] **Immutable Log:** Implement a separate audit log (BigQuery or append-only SQL table) for *every* detokenization request.
-- [ ] **Context:** Capture `who`, `when`, `reason`, and `count` of records accessed.
+- [x] **Immutable Log:** Implement a separate audit log (BigQuery or append-only SQL table) for *every* detokenization request.
+- [x] **Context:** Capture `who`, `when`, `reason`, and `count` of records accessed.
 
 ## Phase 4: Integration & Migration
 *Objective: Switch the main application to use the Vault.*
 
 ### 4.1. Ingestion Pipeline Update
-- [ ] **Refactor:** Update `i4g.ingestion` to call the Vault Service (or library if running in trusted context) for all PII fields.
-- [ ] **Replacement:** Ensure only tokens are written to the Main DB and Vector Store.
+- [x] **Refactor:** Update `i4g.ingestion` to call the Vault Service (or library if running in trusted context) for all PII fields.
+- [x] **Replacement:** Ensure only tokens are written to the Main DB and Vector Store.
 
 ### 4.2. Review API Update
-- [ ] **Display:** Update the UI/API to show tokens by default.
-- [ ] **Reveal Flow:** Implement the "Reveal PII" button flow in the UI that calls the `/detokenize` endpoint (with justification).
+- [x] **Display:** Update the UI/API to show tokens by default.
+- [x] **Reveal Flow:** Implement the "Reveal PII" button flow in the UI that calls the `/detokenize` endpoint (with justification).
 
 ### 4.3. Backfill (If applicable)
-- [ ] **Script:** Create a job to scan existing records, tokenize PII, and update the records. *Note: Since we are pre-production/prototype, a wipe-and-reload is preferred over complex migration.*
+- [x] **Script:** Create a job to scan existing records, tokenize PII, and update the records. *Note: Since we are pre-production/prototype, a wipe-and-reload is preferred over complex migration.*
 
 ## Phase 5: Verification & Compliance
 *Objective: Prove the system works and is secure.*
@@ -95,7 +95,7 @@ This document outlines the step-by-step implementation plan for the PII Vault, a
 
 ### 5.2. Security Review
 - [x] **Access Review:** Verify only the Vault Service SA has access to the Pepper and Encryption Keys.
-- [ ] **Audit Check:** Verify detokenization events are correctly logged.
+- [x] **Audit Check:** Verify detokenization events are correctly logged.
 
 ## Dependencies
 - `core/docs/design/pii_vault.md` (Source of Truth)
