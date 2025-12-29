@@ -5,6 +5,11 @@ Last updated: 28 Dec 2025
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
 
 ## 2025-12-28
+- **PII Vault Implementation**:
+  - **Schema Isolation**: Separated PII Vault schema from main application schema. Created `VAULT_METADATA` in `sql.py` and a dedicated Alembic environment (`migrations_vault/`, `alembic_vault.ini`) to manage the `pii_tokens` table independently.
+  - **Infrastructure**: Provisioned Cloud SQL instance `i4g-vault-dev-db` and KMS key ring `pii-vault-keyring` via Terraform.
+  - **Migration**: Generated and applied initial schema migration for PII Vault. Verified isolation (only `pii_tokens` table exists in the vault DB).
+
 - **OCR & Ingestion**:
   - Added PDF support to OCR pipeline via `pypdfium2`.
   - Added error handling for corrupt files in `tesseract.py` to prevent job crashes.
