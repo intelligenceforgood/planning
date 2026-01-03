@@ -1,8 +1,15 @@
 # Planning Change Log (active items only)
 
-Last updated: 31 Dec 2025
+Last updated: 02 Jan 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2026-01-02
+- **Dev Environment Stabilization**:
+  - **IAM**: Granted `roles/serviceusage.serviceUsageConsumer` to `sa-report` to fix 403 errors during report generation.
+  - **Configuration Cleanup**: Removed all legacy `STORAGE__CLOUDSQL` variables from code and documentation. Standardized on `APP__CLOUDSQL` and `PII__CLOUDSQL`.
+  - **Job Specs**: Fixed `seed_reviews` job in `dev.py` to explicitly use `sa-report` (was defaulting to `sa-ingest`).
+  - **Local Verification**: Updated `settings.local.toml` to use the developer's active account (`jerry@...`) for Cloud SQL verification, aligning with local ADC credentials.
 
 ## 2025-12-31
 - **Search & Infrastructure Fixes**: Resolved multiple "500 Internal Server Error" issues in `fastapi-gateway`.

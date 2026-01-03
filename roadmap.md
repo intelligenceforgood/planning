@@ -23,6 +23,9 @@ solidify.
   - Add signing/attestation for reports where required; keep signature manifest the source of truth.
   - Define data-sharing boundaries and redaction defaults per partner.
 
+## Immediate Follow-ups
+- [ ] **Verify Attachment Retrieval**: Confirm that `source_url` in the `source_documents` SQL table correctly points to the original files in GCS/Local FS, ensuring the removal of Firestore didn't break the link between cases and their evidence.
+
 ## When Work Resumes
 - Re-read PRDs (`prd_production.md`, `prd_prototype.md`) and the trimmed `change_log.md`.
 - Rehydrate Copilot via `copilot_prompt/persistent_prompt.md` and update `copilot_prompt/COPILOT_SESSION.md` with the new
