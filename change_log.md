@@ -1,8 +1,14 @@
 # Planning Change Log (active items only)
 
-Last updated: 02 Jan 2026
+Last updated: 04 Jan 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2026-01-04
+- **Fraud Taxonomy (Phase 5)**:
+  - **Database Schema**: Added `campaigns` table and updated `cases` table to store structured `FraudClassificationResult` (JSON) and link to campaigns.
+  - **Campaign Logic**: Implemented `CampaignService` to map classification results (intents, actions, etc.) to campaigns based on taxonomy criteria.
+  - **Integration**: Completed backend integration for persisting classification results and linking them to campaigns.
 
 ## 2026-01-02
 - **Dev Environment Stabilization**:
