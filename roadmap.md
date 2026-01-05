@@ -24,6 +24,7 @@ solidify.
   - Define data-sharing boundaries and redaction defaults per partner.
 
 ## Immediate Follow-ups
+- [ ] **Performance Optimization**: Execute the [Case Classification Optimization Plan](tasks/perf_optimization_classification.md) to fix slow bootstrapping.
 - [ ] **Verify Attachment Retrieval**: Confirm that `source_url` in the `source_documents` SQL table correctly points to the original files in GCS/Local FS, ensuring the removal of Firestore didn't break the link between cases and their evidence.
 
 ## When Work Resumes
