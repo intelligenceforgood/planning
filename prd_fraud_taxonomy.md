@@ -241,8 +241,13 @@ The taxonomy will be defined in a machine-readable format (e.g., `taxonomy_defin
 - Deprecation status
 - Version introduced
 
-### 14.2 Code Generation
-> **Moved to TDD:** See [Section 2.2 of the TDD](../../core/docs/design/fraud_taxonomy_tdd.md#22-single-source-of-truth-ssot) for details on the Single Source of Truth (SSOT) and code generation pipeline.
+This definition serves as the **Single Source of Truth** for the entire system.
+
+### 14.2 API-Driven Dynamic Loading
+> **Implementation Note:** Unlike traditional systems that compile taxonomy enums into static frontend bundles, this system uses a **Dynamic Loading** approach.
+> Frontend clients fetch the current taxonomy tree from the API at runtime (`GET /taxonomy`). This allows descriptions, tooltips, and even new labels to be updated in the backend without requiring a rebuild or redeploy of the client applications.
+
+> See [Section 2.2 of the TDD](../../core/docs/design/fraud_taxonomy_tdd.md#22-single-source-of-truth-ssot) for technical details on the SSOT pipeline.
 
 ---
 
