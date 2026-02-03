@@ -1,8 +1,16 @@
 # Planning Change Log (active items only)
 
-Last updated: 05 Jan 2026
+Last updated: 02 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2026-02-02
+- **Dashboard Backend & Build Stability**:
+  - **Backend (Analytics)**: Implemented real analytics queries in `core` (Detection Rate, SLA, Trend lines) leveraging `i4g.store.sql`, replacing static mock responses.
+  - **Frontend (Build)**: Resolved a critical build failure in `ui/apps/web` where a stale `.next` cache was serving legacy "Trafficking" taxonomy data, causing Zod schema validation errors.
+- **Performance & UX (Cold Starts)**:
+  - **Infrastructure**: Updated `infra/environments/app/dev/main.tf` to set `min_instances = 1` for `fastapi-gateway` and `i4g-console`. This prevents scale-to-zero latency (~15s) for the initial request.
+  - **UX**: Added `ui/apps/web/src/app/(console)/search/loading.tsx` to provide an immediate skeleton UI response while data fetches, fixing the "unresponsive click" perception during page transitions.
 
 ## 2026-01-05
 - **Performance Optimization (Classification Sweeper)**:

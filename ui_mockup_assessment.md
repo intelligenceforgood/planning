@@ -30,4 +30,3 @@ The following pages are **technically hooked up** but may *appear* as mockups be
 *   **Discovery**: Uses `buildMockResponse` in `route.ts` if API is unconnected.
 *   **Accounts**: Uses `MOCK_RUNS` in `account-list-service.ts` if API is unconnected.
 *   **Search**: Uses `MOCK_HISTORY` in `reviews-service.ts` if API is unconnected.
-*   **Analytics / Dashboard**: Call the backend, but the backend implementation (`core/src/i4g/api/analytics.py`) currently returns hardcoded static dictionaries. Hooking these up involves implementing real logic in the **backend Python code**, rather than connecting the frontend.
