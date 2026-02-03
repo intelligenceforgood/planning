@@ -4,6 +4,12 @@ Last updated: 02 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
 
+## 2026-02-03
+- **Case Workspace Implementation**:
+  - **Backend**: Implemented `GET /cases/{id}` endpoint in `core.api.cases` serving structured mock data (Phase 1).
+  - **Frontend**: Created `cases/[id]` detailed view with timeline, artifacts, and graph components.
+  - **Integration**: Connected Case List "Open Case" button to the new view; full end-to-end data flow verified.
+
 ## 2026-02-02
 - **Dashboard Backend & Build Stability**:
   - **Backend (Analytics)**: Implemented real analytics queries in `core` (Detection Rate, SLA, Trend lines) leveraging `i4g.store.sql`, replacing static mock responses.
