@@ -18,22 +18,29 @@ During the "Case Integration" phase, a standalone script (`seed_cases.py`) was c
     - Ensure it works with existing bootstrap bundles (e.g., standard demo data).
     - **Deleted**: `core/scripts/seed_cases.py`
 
-3.  **Fix Data Integrity**: [Completed - Local]
+3.  **Fix Data Integrity**: [Completed - Local, Implemented - Dev]
     - Ensure generated cases properly reference artifacts (documents, images) in the `StructuredStore` or `StorageService`.
-    - Added valid PDF/PNG fixtures to `core/fixtures/mock` to ensure properly rendering artifacts.
+    - Added valid PDF/PNG fixtures to `core/docker/fixtures/mock` to ensure properly rendering artifacts.
     - Updated Backend (`app.py`) to serve static artifacts from `/artifacts`.
     - Updated UI Proxy to route artifact requests correctly.
+    - **Dev**: Updated `fastapi.Dockerfile` to include fixtures in `/app/data/artifacts/mock` for serving.
+    - **Dev**: Updated `report-job.Dockerfile` to include fixtures for seeding script.
+    - **Dev**: Updated `admin/seed.py` to include static cases in `seed-reviews` command.
+    - **Dev**: Updated `dev.py` to support custom job commands.
 
 4.  **Verification**:
     - [x] Verify that running `i4g bootstrap local reset` (or equivalent) populates the Case Workspace correctly without needing a separate script.
     - [x] Verify UI loads Cases and details without Zod errors.
-    - [ ] Confirm parity between local dev and other environments (Next Step: Dev Bootstrap).
+    - [x] Verify ReviewStore unification (Local/Dev) including data persistence parity.
+    - [ ] Confirm parity between local dev and other environments (Next Step: Dev Bootstrap - Deploy & Verify).
 
 ## Next Steps
-- Apply bootstrap seeding logic to `dev` environment (`container-job` or `cloud-run-job` context).
-- Ensure fixture files are correctly handled in the cloud build process.
+- [x] Apply bootstrap seeding logic to `dev` environment (`container-job` or `cloud-run-job` context).
+- [x] Ensure fixture files are correctly handled in the cloud build process.
+- [ ] Build and Deploy updated images (`fastapi`, `report-job`).
+- [ ] Run `i4g bootstrap dev reset --skip-ingest ...` to verify seeding works in Cloud Run.
+  - **Note:** This task is required to clean up legacy data (status/priority mismatches) in the Dev environment.
 
 ## References
 - `core/scripts/seed_cases.py` (Source logic to be merged)
 - `core/src/i4g/services/bootstrap.py` (Likely target for integration)
-The 
