@@ -1,8 +1,30 @@
 # Planning Change Log (active items only)
 
-Last updated: 02 Feb 2026
+Last updated: 05 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2026-02-06
+- **Bootstrap Consolidation**:
+  - **Completed**: Unified bootstrap seeding logic, eliminating the standalone properties of `seed_cases.py`.
+  - **Enhancements**:
+    - Integrated seeding into `i4g bootstrap` for both `local` and `dev` environments.
+    - Updated `ingest-job` and `fastapi` Docker images to include mock fixtures for consistent artifact serving.
+    - Added `seed_reviews` support to `dev.py` and `admin/seed.py`.
+  - **Cleanup**: Deleted legacy `core/scripts/seed_cases.py`.
+  - **Verification**: Confirmed parity between local and dev seeding processes.
+
+## 2026-02-05
+- **Standardization: Review Queue Statuses**:
+  - **Decision**: Standardized status lifecycle across Backend, UI, and Docs to eliminate legacy/conflicting terms (active/blocked vs in_review/awaiting_input).
+  - **Status Set**: 
+    - `new` (Triage)
+    - `in_review` (Active investigation)
+    - `awaiting_input` (Blocked external)
+    - `accepted` (True Positive / Fraud)
+    - `rejected` (False Positive / Safe)
+    - `closed` (Admin/Duplicate)
+  - **Impact**: Database schema migration (`review_queue.status` default=`new`), API filters update (`dashboard.py` excludes all 3 terminal states), and UI badge colors/filters updated.
 
 ## 2026-02-03
 - **Case Workspace Implementation**:
