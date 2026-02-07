@@ -1,10 +1,30 @@
 # Planning Change Log (active items only)
 
-Last updated: 05 Feb 2026
+Last updated: 06 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
 
 ## 2026-02-06
+- **Account List Fixes (Dev Environment)**:
+  - **Config**: Renamed `REPORTS_BUCKET` to `REPORT_BUCKET` (singular) across codebase and Terraform to enforce naming conventions.
+  - **GCS Access**: Fixed 403 Forbidden errors by adding `roles/storage.objectAdmin` to Cloud Run SA. Implemented robust artifact link generation (Signed URL -> Authenticated Browser Link fallback) to handle missing credentials gracefully.
+  - **Reliability**: Configured explicit `gemini-2.0-flash` model for Vertex AI in `dev`. Removed silent mock fallbacks in `AccountEntityExtractor` to ensure hard failures on LLM errors.
+
+- **Discovery Integration & Mock Removal**:
+  - **Decision**: Eliminated all static mock fallbacks for Discovery.
+    - Frontend (`/api/discovery/search`) now returns a `503` if `I4G_API_URL` is missing, instead of fake data.
+    - Backend (`_local_discovery_search`) now raises explicit exceptions if `HybridSearchService` fails (e.g., missing artifacts), instead of returning a static mock.
+  - **Goal**: Ensure developers see real integration errors in critical path rather than masking them with "Mock hits".
+
+- **Analytics & Reporting Redesign**:
+  - **Status**: Completed.
+  - **Backend**: Verified `GET /analytics/overview` returns schema-compliant real data.
+  - **Frontend**: Full redesign of `ui/apps/web/src/app/(console)/analytics`. 
+    - Aligned visual style with Case Workspace (Shell, Typography). 
+    - Replaced custom icons with standard `@i4g/ui-kit` Badges.
+    - Added `force-dynamic` rendering and loading skeletons.
+  - **Integration**: Removed static mocks; page now relies on live API data (falling back only on explicit env config).
+
 - **Bootstrap Consolidation**:
   - **Completed**: Unified bootstrap seeding logic, eliminating the standalone properties of `seed_cases.py`.
   - **Enhancements**:
