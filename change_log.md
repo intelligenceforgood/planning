@@ -1,8 +1,22 @@
 # Planning Change Log (active items only)
 
-Last updated: 06 Feb 2026
+Last updated: 08 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2026-02-08
+- **Firestore Removal (Full Workspace Cleanup)**:
+  - **Assessment**: Confirmed zero Firestore client code exists anywhere in the codebase. The `google-cloud-firestore` pip dependency was completely unused. `StorageSettings.structured_backend` Literal was already `['sqlite', 'cloudsql']`.
+  - **Source** (`core/src/i4g/`): Removed orphaned `firestore_project` from `_apply_environment_overrides`, removed `_ingestion_bool("enable_firestore", ...)` block, updated CLI help text in `bootstrap/dev.py`, `bootstrap/local.py`, and `settings/manifest.py`.
+  - **Settings** (`core/config/`): Removed `firestore_project` and `enable_firestore` from `settings.local.toml`, `settings.default.toml`, `settings.dev_network_smoke.toml`, `settings.network_smoke.toml`.
+  - **Dependencies**: Removed `google-cloud-firestore` from `pyproject.toml` and regenerated `requirements.txt` via `pip-compile`.
+  - **Manifests**: Regenerated `settings_manifest.{json,yaml}` in both `core/docs/config/` and `docs/config/` via `i4g settings export-manifest --docs-repo ../docs`.
+  - **Tests**: Updated `test_ingestion_retry_store.py` and `test_ingest_job_retry_helpers.py` (`backend="firestore"` → `"cloudsql"`).
+  - **Docs** (`core/docs/`, `docs/`): Cleaned ~100+ references across architecture, compliance, TDD, dev guide, glossary, smoke tests, cookbooks, config README, IAM, drawio cookbook, runbooks, and fraud taxonomy docs. Replaced Firestore with Cloud SQL / PostgreSQL references.
+  - **Arch-viz**: Updated `system_topology.py`, `security_model.py`, `data_pipeline.py` to use `SQL` icon instead of `Firestore`.
+  - **Copilot instructions**: Updated all 7 repo-level `.github/copilot-instructions.md` files.
+  - **Migration scripts**: Marked `fix_and_run.sh` and `run_migration.sh` as deprecated with `exit 1`.
+  - **Intentionally untouched**: `dtp/` (legacy archive), `infra/environments/app/prod/main.tf` (Terraform state — separate deprecation task).
 
 ## 2026-02-06
 - **Account List Fixes (Dev Environment)**:

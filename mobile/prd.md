@@ -39,9 +39,9 @@ Deliver iOS and Android apps that let analysts and LEOs perform the core workflo
 - No PII exposure regressions (validated via security review/audit logs).
 
 ## Dependencies & Constraints
-- Backend/API: FastAPI + Firestore as defined in `core/docs/development/tdd.md`.
+- Backend/API: FastAPI + Cloud SQL as defined in `core/docs/development/tdd.md`.
 - Auth: Google OAuth2 with PKCE; enforced via IAP at the LB; group-based access (analyst/LEO).
-- Data: read-only Firestore paths exposed via existing APIs; no new public endpoints.
+- Data: read-only API paths exposed via existing APIs; no new public endpoints.
 - Device support: iOS 15+ (SwiftUI), Android 8+ (Kotlin/Jetpack Compose).
 - Network: handle intermittent connectivity; allow cached read-only views for already-fetched cases.
 

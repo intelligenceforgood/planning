@@ -60,8 +60,8 @@
 
 | Metric | Target | Measurement |
 |--------|--------|-------------|
-| Active Analysts | 3+ | Firestore /analysts collection |
-| Cases Processed | 50+ | Firestore /cases collection |
+| Active Analysts | 3+ | Cloud SQL `analysts` table |
+| Cases Processed | 50+ | Cloud SQL `cases` table |
 | False Positive Rate | <20% | Manual review |
 | Analyst NPS | ≥8/10 | Post-beta survey |
 | Mobile Readiness Checklist | Drafted | Architecture review |
@@ -71,7 +71,7 @@
 
 | Metric | Target | Measurement |
 |--------|--------|-------------|
-| Active Analysts | 12+ | Firestore |
+| Active Analysts | 12+ | Cloud SQL |
 | Cases Processed | 200+ | Analytics dashboard |
 | LEO Reports Generated | 10+ | PDF exports |
 | Funding Secured | $10K+ | Grant applications |
@@ -151,7 +151,7 @@
 **Acceptance Criteria**:
 - [ ] System detects PII using regex patterns (SSN, email, phone, credit card, address, DOB)
 - [ ] LLM-assisted PII extraction for contextual patterns (e.g., "my social security number is...")
-- [ ] PII encrypted with AES-256-GCM before storage in Firestore `/pii_vault` collection
+- [ ] PII encrypted with AES-256-GCM before storage in PII Vault database
 - [ ] Case data contains only tokens (e.g., `<PII:SSN:7a8f2e>`)
 - [ ] Analysts see masked PII (e.g., `███████`) in dashboard
 - [ ] LEO reports reconstruct real PII only with user consent
@@ -164,10 +164,10 @@ pii_detector = PIIDetector()
 tokens = pii_detector.tokenize(text)
 # Returns: {"ssn": "<PII:SSN:7a8f2e>"}
 
-# Stored in Firestore /cases
+# Stored in Cloud SQL cases table
 {"description": "My SSN is <PII:SSN:7a8f2e>"}
 
-# Stored in Firestore /pii_vault (encrypted)
+# Stored in PII Vault (encrypted)
 {"token": "7a8f2e", "value": "AES-256-GCM encrypted"}
 ```
 
@@ -183,7 +183,7 @@ tokens = pii_detector.tokenize(text)
 - [ ] "Sign in with Google" button on dashboard homepage
 - [ ] OAuth 2.0 flow using Google Identity Platform
 - [ ] JWT token stored in session (expires in 1 hour)
-- [ ] Firestore security rules enforce `/cases` access based on `assigned_to` field
+- [ ] Row-level security enforces `cases` access based on `assigned_to` field
 - [ ] Admin role can approve new analysts via `/api/analysts/{uid}/approve` endpoint
 
 **User Roles**:
@@ -196,7 +196,7 @@ tokens = pii_detector.tokenize(text)
 
 **Implementation Notes**:
 - Prefer OAuth PKCE flow and refresh tokens to support future mobile clients.
-- Store refresh tokens in Firestore with short TTL and rotation on every use.
+- Store refresh tokens in database with short TTL and rotation on every use.
 ```python
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
@@ -211,7 +211,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 ```
 
 **Dependencies**: FR-1 (PII vault must be isolated)
-**Effort**: 4 hours (Google OAuth + Firestore rules)
+**Effort**: 4 hours (Google OAuth + database RBAC)
 
 ---
 
@@ -356,7 +356,7 @@ tests/
 │   └── test_report_generation.py   # PDF export tests
 ├── integration/
 │   ├── test_case_workflow.py       # Upload → classify → approve
-│   └── test_firestore_operations.py
+│   └── test_db_operations.py
 └── e2e/
     └── test_dashboard_flow.py      # Login → review case → approve
 ```
@@ -473,7 +473,7 @@ Timestamp: 2025-10-30T12:00:00Z
 - [ ] Data retention policy: 90 days post-resolution (configurable)
 - [ ] Automated purge job (Cloud Scheduler runs daily)
 - [ ] GDPR-compliant data export (`/api/cases/{case_id}/export` returns JSON)
-- [ ] GDPR-compliant deletion (`DELETE /api/cases/{case_id}` hard deletes from Firestore + PII vault)
+- [ ] GDPR-compliant deletion (`DELETE /api/cases/{case_id}` hard deletes from Cloud SQL + PII vault)
 - [ ] Incident response plan documented (see COMPLIANCE.md)
 - [ ] FERPA training materials for university-affiliated analysts
 
@@ -551,13 +551,13 @@ async def purge_expired_cases():
 - **Encryption at Rest**: AES-256-GCM for PII vault
 - **Encryption in Transit**: TLS 1.3 for all API calls
 - **Authentication**: OAuth 2.0 (no password storage)
-- **Authorization**: Firestore security rules (role-based access)
+- **Authorization**: Database RBAC (row-level security)
 - **Audit Logging**: All `/pii_vault` access logged
 
 ### NFR-4: Reliability
 - **Uptime Target**: 95%+ (acceptable for non-profit)
 - **Recovery Time Objective (RTO)**: 4 hours (restore from daily backup)
-- **Recovery Point Objective (RPO)**: 24 hours (daily Firestore exports)
+- **Recovery Point Objective (RPO)**: 24 hours (daily Cloud SQL backups)
 
 ---
 
@@ -607,7 +607,7 @@ graph TB
     end
 
     subgraph "Data Layer"
-        firestore[(Firestore)]
+        cloudsql[(Cloud SQL)]
         gcs[(Cloud Storage)]
         chroma[(ChromaDB)]
     end
@@ -619,7 +619,7 @@ graph TB
     user -->|HTTPS| api
     analyst -->|HTTPS| dashboard
     dashboard -->|API calls| api
-    api --> firestore
+    api --> cloudsql
     api --> gcs
     api --> chroma
     api -->|LLM inference| ollama
@@ -631,7 +631,7 @@ graph TB
 |-----------|-----------|-----------|
 | **Backend** | FastAPI 0.104+ | Async, type hints, OpenAPI docs |
 | **Frontend** | Streamlit 1.28+ | Rapid prototyping, Python-native |
-| **Database** | Firestore | NoSQL, free tier, real-time updates |
+| **Database** | Cloud SQL | PostgreSQL, managed, relational |
 | **Vector DB** | ChromaDB | Local embeddings, no API costs |
 | **LLM** | Ollama (llama3.1) | Free, self-hosted, no API keys |
 | **Hosting** | Cloud Run | Serverless, auto-scaling, free tier |
@@ -649,7 +649,7 @@ graph TB
 | Service | Free Tier | Estimated Usage | Cost |
 |---------|-----------|-----------------|------|
 | Cloud Run | 2M requests/month | 100K requests/month | $0 |
-| Firestore | 50K reads/day | 1K reads/day | $0 |
+| Cloud SQL | Managed PostgreSQL | Lightweight instance | $0 |
 | Cloud Storage | 5 GB | 2 GB (evidence files) | $0 |
 | Cloud Logging | 50 GB/month | 10 GB/month | $0 |
 | Secret Manager | 6 active secrets | 3 secrets | $0 |
@@ -663,7 +663,7 @@ graph TB
 
 ---
 
-### Firestore Schema
+### Database Schema
 
 ```
 /cases (main case data)
@@ -707,7 +707,7 @@ graph TB
 | **Free tier exceeded** | Medium | High | Weekly quota monitoring + billing alerts |
 | **PII data breach** | Low | Critical | Security audits every 2 weeks + penetration testing |
 | **Ollama downtime** | Medium | Medium | Health checks + automatic retry logic |
-| **Firestore rate limits** | Low | Medium | Implement caching layer (Redis) if needed |
+| **Database connection limits** | Low | Medium | Implement caching layer (Redis) if needed |
 
 ### Operational Risks
 
@@ -775,7 +775,7 @@ graph TB
 4. ⚪ Set up GCP project (`i4g-prod`)
 5. ⚪ Implement PII tokenization module (FR-1)
 6. ⚪ Add OAuth 2.0 authentication (FR-2)
-7. ⚪ Create Firestore security rules
+7. ⚪ Set up database RBAC/RLS
 
 ### Week 3-4 (Deployment)
 8. ⚪ Dockerize FastAPI application (FR-3)

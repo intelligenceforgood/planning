@@ -46,7 +46,7 @@ We will structure the architecture documentation like a mapping application: sta
 
 We will create three new scripts in `arch-viz/src/views/`:
 
-1.  `data_pipeline.py`: Zoom in on the "Worker" and "AI & Processing" clusters. Show the flow: `Upload -> PubSub -> Worker -> Document AI -> PII Redaction -> Firestore -> Vertex AI`.
+1.  `data_pipeline.py`: Zoom in on the "Worker" and "AI & Processing" clusters. Show the flow: `Upload -> PubSub -> Worker -> Document AI -> PII Redaction -> Cloud SQL -> Vertex AI`.
 2.  `security_model.py`: Zoom in on Identity. Show `User -> Identity Platform -> Cloud Run (Invoker) -> Service Account -> Secret Manager`.
 
 ## 4. The "Architecture Guide" Doc

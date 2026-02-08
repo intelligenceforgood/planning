@@ -25,7 +25,7 @@ solidify.
 
 ## Immediate Follow-ups
 - [ ] **Performance Optimization**: Execute the [Case Classification Optimization Plan](tasks/perf_optimization_classification.md) to fix slow bootstrapping.
-- [ ] **Verify Attachment Retrieval**: Confirm that `source_url` in the `source_documents` SQL table correctly points to the original files in GCS/Local FS, ensuring the removal of Firestore didn't break the link between cases and their evidence.
+- [ ] **Verify Attachment Retrieval**: Confirm that `source_url` in the `source_documents` SQL table correctly points to the original files in GCS/Local FS, ensuring the migration to Cloud SQL preserved the link between cases and their evidence.
 
 ## When Work Resumes
 - Re-read PRDs (`prd_production.md`, `prd_prototype.md`) and the trimmed `change_log.md`.
