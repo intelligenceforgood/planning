@@ -5,6 +5,15 @@ Last updated: 08 Feb 2026
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
 
 ## 2026-02-08
+- **UI Mockup Sprint Closed**: All 9 console pages (Dashboard, Search, Cases, Taxonomy, Analytics, Reports/Dossiers, Accounts, Campaigns, Discovery) verified as fully connected to live backend endpoints. Zero `MOCK_` constants remain in production UI source. Deleted `planning/ui_mockup_assessment.md` — sprint complete.
+- **Mock Fallback Removal (Full UI Cleanup)**: Removed all runtime mock fallback paths from `ui/apps/web/src/`.
+  - **`i4g-client.ts`**: Deleted `getMockClient()`, `withMockFallback()`, and all `NEXT_PUBLIC_USE_MOCK_DATA` / `NEXT_PUBLIC_ENABLE_MOCK_FALLBACK` branching. `resolveClient()` now throws if no API URL is configured.
+  - **`platform-client.ts`**: Removed `createMockClient` import, the `{ ...mock, ...restClient }` spread pattern, and the mock catch-fallback in `searchIntelligence`.
+  - **`account-list-service.ts`**: Deleted `MOCK_RUNS` and `MOCK_RESULT` constants. `getAccountListRuns()` and `triggerAccountListRun()` now throw instead of silently returning fake data.
+  - **SDK (`@i4g/sdk`)**: `createMockClient()` retained but marked test-only via JSDoc. No production code imports it.
+  - **Env files**: Removed `NEXT_PUBLIC_USE_MOCK_DATA` from `.env.example` and `.env.local`.
+  - **Planning**: Updated `ui_mockup_assessment.md` with completed removal status.
+- **Search History Integration** (`ui/`): Removed static mock fallbacks (`MOCK_HISTORY`, `MOCK_SAVED_SEARCHES`) from `reviews-service.ts`. `getSearchHistory()` and `listSavedSearches()` now return empty arrays when the backend is unreachable instead of fake data. Backend `GET /reviews/search/history` verified working with real audit entries from `ReviewStore.get_recent_actions(action="search")`. Updated `ui_mockup_assessment.md` to mark task as completed.
 - **Firestore Removal (Full Workspace Cleanup)**:
   - **Assessment**: Confirmed zero Firestore client code exists anywhere in the codebase. The `google-cloud-firestore` pip dependency was completely unused. `StorageSettings.structured_backend` Literal was already `['sqlite', 'cloudsql']`.
   - **Source** (`core/src/i4g/`): Removed orphaned `firestore_project` from `_apply_environment_overrides`, removed `_ingestion_bool("enable_firestore", ...)` block, updated CLI help text in `bootstrap/dev.py`, `bootstrap/local.py`, and `settings/manifest.py`.
