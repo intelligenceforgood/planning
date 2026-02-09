@@ -1,10 +1,39 @@
 # Planning Change Log (active items only)
 
-Last updated: 08 Feb 2026
+Last updated: 09 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
 
+## 2026-02-09
+- **Phase 3 Remediation Complete**:
+  - **D21 (P0 BUG):** Fixed `_apply_environment_overrides` field name (`reports_bucket` → `report_bucket`).
+  - **D31:** Fixed 18 test failures + 1 error → 268 pass, 3 xfail. Root causes: ReviewStore API change, exporter mock typo, missing tokenization mock, stale dates, type coercion.
+  - **D23/D24:** Removed 9 unused deps, added 3 missing explicit deps (`sqlalchemy`, `jinja2`, `pyyaml`).
+  - **D25/D35:** Removed dead entry points (`run-dataflow`, `i4g-admin`).
+- **Phase 4 Complete — UI Frontend Review**:
+  - Full audit of SDK, 9 console pages, ui-kit, types, formatting, tests — 26 new debt items (D36-D61).
+  - Remediated 8 quick-win items: D43 (barrel drift), D44 (type exports), D50 (dead code), D52 (tsconfig pattern), D53 (color typo), D54 (duplicate tests), D56 (peer dep), D59 (dead app).
+  - Fixed runtime React duplicate key error on Accounts page (smoker test runs sharing `request_id: "unused"`).
+  - Verified: `pnpm format` clean, Vitest 26/26 passing, no TypeScript errors.
+- **Consolidation Sprint Status:** Phases 1-4 complete. 19 of 61 debt items resolved. Phases 5-6 remaining.
+
 ## 2026-02-08
+- **Consolidation Sprint Launched**: Created comprehensive 6-phase quality plan at `planning/tasks/consolidation_plan.md`.
+- **Phase 1 Complete — Streamlit Retirement**:
+  - Deleted `core/src/i4g/ui/` (~2,800 LOC), `core/docker/streamlit.Dockerfile`, `core/tests/adhoc/analyst_dashboard_demo.py`.
+  - Removed `streamlit>=1.51.0` from `pyproject.toml` and regenerated `requirements.txt`.
+  - Removed all Streamlit Terraform resources from both dev and prod (`module.run_streamlit`, `module.iap_streamlit`, variables, outputs, tfvars, IAP scripts).
+  - Updated 20+ doc files across `core/docs/`, `docs/book/`, `ui/docs/`, `infra/` READMEs. Zero Streamlit references remain outside `planning/`.
+  - Cleaned 3 residual Firestore references (drawio, cookbook, SVG diagram).
+  - **Decisions:** Ollama/ChromaDB kept as local-dev-only (laptop-first); `dtp/` left as-is.
+- **Phase 2 Complete — Design & Architecture Doc Alignment**:
+  - PRD updated to v2.0, architecture.md to v2.0 (14 fixes).
+  - `data_model.md` rewritten from 17-line stub to comprehensive 17-table schema reference.
+  - `iam.md` updated to disclose prototype API-key auth layer vs. IAP infrastructure.
+  - Fixed `storage.md`, `jobs.md`, `rag.md`, `fraud_taxonomy_tdd.md` against actual implementation.
+  - `arch-viz/` diagrams corrected (Firebase Auth → IAP, Chatbot → Intake Form).
+  - `roadmap.md` changed from "Paused" to "Active" with consolidation sprint progress.
+  - **Action items logged:** Replace API-key auth with IAP JWT verification; wire RAG pipeline to `settings.llm.provider`.
 - **UI Mockup Sprint Closed**: All 9 console pages (Dashboard, Search, Cases, Taxonomy, Analytics, Reports/Dossiers, Accounts, Campaigns, Discovery) verified as fully connected to live backend endpoints. Zero `MOCK_` constants remain in production UI source. Deleted `planning/ui_mockup_assessment.md` — sprint complete.
 - **Mock Fallback Removal (Full UI Cleanup)**: Removed all runtime mock fallback paths from `ui/apps/web/src/`.
   - **`i4g-client.ts`**: Deleted `getMockClient()`, `withMockFallback()`, and all `NEXT_PUBLIC_USE_MOCK_DATA` / `NEXT_PUBLIC_ENABLE_MOCK_FALLBACK` branching. `resolveClient()` now throws if no API URL is configured.

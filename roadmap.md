@@ -1,35 +1,50 @@
-# Roadmap (future-facing)
+# Roadmap
 
-**Status**: Paused pending team direction
-**Last updated**: December 14, 2025
+**Status**: Active
+**Last updated**: February 8, 2026
 
-The legacy migration is complete; active planning now focuses on what comes next. Remaining milestones depend on future
-product direction and team availability. This roadmap is intentionally short so we can pick up quickly when priorities
-solidify.
+## Current Sprint: CTO-Ready Consolidation (Feb 2026)
+
+A cross-repo quality sweep to bring documentation, code, and infrastructure into alignment
+for external review. Tracked in [tasks/consolidation_plan.md](tasks/consolidation_plan.md).
+
+### Completed (Phases 1-4)
+- [x] Phase 1: Retired Streamlit legacy code, Dockerfiles, and Terraform resources
+- [x] Phase 1: Removed Firestore residuals across docs and diagrams
+- [x] Phase 2: Updated PRD, architecture, data model, IAM, storage, jobs, RAG TDDs
+- [x] Phase 2: Updated arch-viz diagrams (IAP, intake form corrections)
+- [x] Phase 3: Full backend audit (24 debt items); remediated P0 bug, deps, tests, entry points
+- [x] Phase 4: Full frontend audit (26 debt items); remediated 8 quick-win items + runtime bug fix
+- **Debt inventory:** 19 of 61 items resolved; 42 deferred architectural refactors
+
+### Remaining Phases
+- **Phase 5**: End-user documentation (GitBook, runbooks, CONTRIBUTING)
+- **Phase 6**: Infrastructure & config consistency (Terraform, env vars, CI/CD)
+
+---
 
 ## Principles
-- Keep parity and security features stable (tokenization, dual-write ingestion, dossier flow) while we pause.
+- Keep parity and security features stable (tokenization, dual-write ingestion, dossier flow) while consolidating.
 - Make decisions reversible: favor feature toggles and configuration over code forks.
-- Timebox reactivation: when the team reconvenes, start with a 1–2 day planning refresh using the PRDs and `change_log.md`.
+- Timebox reactivation: when the team reconvenes, start with a 1-2 day planning refresh using the PRDs and `change_log.md`.
 
-## Next Milestones (deferred)
+## Next Milestones (post-consolidation)
 1) **Production Hardening v2**
-  - Enforce IAP/OAuth everywhere; remove temporary bypasses.
-  - Wire alerting for PII access, ingestion failures, and dossier verification.
-  - Capture baseline SLOs (perf/latency, queue depth) and size autoscaling limits.
+   - Replace prototype API-key auth with IAP JWT verification in FastAPI.
+   - Wire alerting for PII access, ingestion failures, and dossier verification.
+   - Capture baseline SLOs (perf/latency, queue depth) and size autoscaling limits.
 
 2) **Partner/LEA Integrations**
-  - Formalize report delivery and receipt flows (LEA portal or partner API).
-  - Add signing/attestation for reports where required; keep signature manifest the source of truth.
-  - Define data-sharing boundaries and redaction defaults per partner.
+   - Formalize report delivery and receipt flows (LEA portal or partner API).
+   - Add signing/attestation for reports where required; keep signature manifest the source of truth.
+   - Define data-sharing boundaries and redaction defaults per partner.
 
-## Immediate Follow-ups
+## Standing Follow-ups
 - [ ] **Performance Optimization**: Execute the [Case Classification Optimization Plan](tasks/perf_optimization_classification.md) to fix slow bootstrapping.
-- [ ] **Verify Attachment Retrieval**: Confirm that `source_url` in the `source_documents` SQL table correctly points to the original files in GCS/Local FS, ensuring the migration to Cloud SQL preserved the link between cases and their evidence.
+- [ ] **Verify Attachment Retrieval**: Confirm that `source_url` in the `source_documents` SQL table correctly points to the original files in GCS/Local FS.
+- [ ] **Wire RAG pipeline to settings.llm.provider**: `pipeline.py` hardcodes Ollama; needs the same provider switch as `classifier.py`.
 
 ## When Work Resumes
 - Re-read PRDs (`prd_production.md`, `prd_prototype.md`) and the trimmed `change_log.md`.
-- Rehydrate Copilot via `copilot_prompt/persistent_prompt.md` and update `copilot_prompt/COPILOT_SESSION.md` with the new
-	focus areas.
-- Draft a 4-week execution plan aligned to whichever milestone we pick first; push any new research spikes into
-	`planning/archive/` once resolved.
+- Rehydrate Copilot via `copilot_prompt/COPILOT_SESSION.md`.
+- Draft a 4-week execution plan aligned to whichever milestone we pick first; push any new research spikes into `planning/archive/` once resolved.

@@ -4,40 +4,42 @@
 
 # Product Requirements Document: i4g Production System
 
-> **Document Version**: 1.0
-> **Last Updated**: October 30, 2025
+> **Document Version**: 2.0
+> **Last Updated**: February 8, 2026
 > **Owner**: Jerry Soung
-> **Status**: Planning → MVP Development
+> **Status**: Production — Active
 
 ---
 
 ## Executive Summary
 
-**i4g (Intelligence for Good)** is transitioning from a functional prototype to a production-ready platform that helps scam users document fraud and generate law enforcement reports. This PRD outlines the requirements for a **zero-budget production deployment** using Google Cloud Platform's free tier, with a focus on **PII protection, volunteer scalability, partnership readiness, and forward compatibility with future mobile clients**.
+**i4g (Intelligence for Good)** is a production fraud-intelligence platform deployed on Google Cloud Platform that helps scam victims document fraud and generates law enforcement reports. The system is live with a **Next.js analyst console** (9 pages connected to a FastAPI backend with 13 API routers), **Vertex AI / Gemini** for LLM inference, **Vertex AI Search** for hybrid retrieval, **Cloud SQL PostgreSQL** for structured data, and an isolated **PII Vault** with KMS encryption. Six Cloud Run Jobs handle background processing (ingest, intake, report, dossier, account-list, classification sweeper).
 
-**Timeline**: 8 weeks @ 10 hours/week = 80 hours total
-**Deployment Target**: GCP Cloud Run (serverless, auto-scaling)
-**Success Metric**: 12 active volunteer analysts processing 200+ cases within 4 months
+**Deployment**: GCP Cloud Run (serverless, auto-scaling) — `i4g-dev` and `i4g-prod` projects
+**Authentication**: Identity-Aware Proxy (IAP) + API key auth
+**Success Metric**: Analyst console operational, dossier/LEO report pipeline live, fraud taxonomy with FTC categories
 
-**Dual-Frontend Note**: The project will maintain two first-party frontend surfaces: a production-facing **Next.js portal** (victims, volunteer analysts, and law enforcement) and an internal **Streamlit operations console** (developers and sys-admins). Both surfaces call the same FastAPI backend so authentication, audit logging, and PII protections remain centralized. Update onboarding, runbook, and stakeholder communications to reflect role-based access, deployment guidance, and operational responsibilities for each surface.
+**Frontend Note**: The **Next.js analyst console** is the sole production UI. The legacy Streamlit operations console was retired during the Phase 1 CTO-Ready consolidation sprint. All analyst workflows, case review, and report generation flow through the Next.js console backed by the FastAPI API.
 
 ---
 
 ## Problem Statement
 
-**Current State (Prototype)**:
-- ✅ Functional RAG pipeline with LangChain + Ollama
-- ✅ SQLite database with 69 passing unit tests
-- ✅ Streamlit dashboard for analyst review
-- ✅ Basic scam classification (romance, crypto, phishing)
+**Current State (Production — February 2026)**:
+- ✅ FastAPI backend with 13 API routers deployed on Cloud Run
+- ✅ Next.js analyst console (9 pages) connected to live backend
+- ✅ Cloud SQL PostgreSQL (production) + isolated PII Vault with KMS encryption
+- ✅ Vertex AI / Gemini for LLM inference; Vertex AI Search for hybrid retrieval
+- ✅ Six Cloud Run Jobs: ingest, intake, report, dossier, account-list, classification sweeper
+- ✅ Fraud taxonomy with FTC categories and campaign governance
+- ✅ Dossier / LEO report generation pipeline with digital signatures
+- ✅ IAP + API key authentication; row-level access control
+- ✅ Structured logging via Cloud Logging; Cloud Monitoring alerts
 
-**Gaps Preventing Production Use**:
-- ❌ **No PII protection**: Raw SSNs, bank accounts visible to analysts
-- ❌ **No authentication**: Anyone can access the dashboard
-- ❌ **Local-only**: Runs on Jerry's laptop (not accessible to volunteers)
-- ❌ **No monitoring**: Can't detect failures or track usage
-- ❌ **No compliance**: FERPA, GDPR requirements unmet
-- ❌ **No scalability**: SQLite doesn't support concurrent writes
+**Remaining Gaps (tracked for future sprints)**:
+- ⏳ **Compliance**: FERPA/GDPR data-retention automation partially implemented
+- ⏳ **Mobile clients**: API is mobile-ready (`/api/v1`), native apps not yet started
+- ⏳ **Advanced analytics dashboard**: Basic metrics only; richer BI planned
 
 ---
 
@@ -216,7 +218,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 ---
 
 ### FR-3: Cloud Run Deployment (P0 - Critical Path)
-**Requirement**: Deploy FastAPI backend and Streamlit dashboard to GCP Cloud Run for public access.
+**Requirement**: Deploy FastAPI backend and Cloud Run Jobs to GCP Cloud Run for production access.
 
 **Acceptance Criteria**:
 - [ ] Dockerfile builds successfully (`docker build -t i4g-api .`)
@@ -226,11 +228,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 - [ ] Environment variables (API keys, DB connection) stored in Secret Manager
 - [ ] Health check endpoint (`/api/health`) returns 200 OK
 
-**GCP Free Tier Limits**:
-- 2M requests/month
-- 360K vCPU-seconds/month
-- 180K GiB-seconds memory/month
-- **Cost**: $0 within free tier
+**GCP Cloud Run Configuration**:
+- Auto-scaling: 0 → 10 instances
+- HTTPS with custom domain
+- Secret Manager for environment variables
 
 **Implementation Notes**:
 ```dockerfile
@@ -294,16 +295,16 @@ gcloud run deploy i4g-api \
 ---
 
 ### FR-5: Analyst Dashboard (P1 - High Priority)
-**Requirement**: Streamlit UI for case review with PII masking.
+**Requirement**: Next.js analyst console for case review with PII masking.
 
 **Acceptance Criteria**:
-- [ ] OAuth login screen (Google Sign-In)
-- [ ] Case list view (sortable by date, status, scam type)
-- [ ] Case detail view with evidence thumbnails
-- [ ] PII masked as `███████` (tooltip shows token ID for debugging)
-- [ ] Notes section (markdown support)
-- [ ] Bulk operations: Assign multiple cases, export CSV
-- [ ] Mobile-responsive design (works on tablets)
+- [x] IAP-authenticated login (Identity-Aware Proxy)
+- [x] Case list view (sortable by date, status, scam type)
+- [x] Case detail view with evidence thumbnails
+- [x] PII masked as `███████` (tooltip shows token ID for debugging)
+- [x] Notes section (markdown support)
+- [x] Search with saved-search CRUD and search history
+- [x] Mobile-responsive design (works on tablets)
 
 **UI Mockup** (text-based):
 ```
@@ -331,8 +332,8 @@ gcloud run deploy i4g-api \
 └─────────────────────────────────────────┘
 ```
 
-**Dependencies**: FR-1 (PII tokenization), FR-2 (OAuth)
-**Effort**: 4 hours (Streamlit UI + PII masking logic)
+**Dependencies**: FR-1 (PII tokenization), FR-2 (OAuth/IAP)
+**Effort**: Delivered — Next.js console with 9 pages, Turborepo monorepo
 
 ---
 
@@ -411,7 +412,7 @@ VICTIM INFORMATION:
 SCAM CLASSIFICATION:
   Type: Romance Scam
   Confidence: 92%
-  AI Model: llama3.1 (Ollama)
+  AI Model: Vertex AI / Gemini
 
 FINANCIAL LOSS:
   Amount: $10,000 USD
@@ -543,9 +544,9 @@ async def purge_expired_cases():
 - **Concurrent Users**: Support 20 simultaneous analysts
 
 ### NFR-2: Scalability
-- **Free Tier Limits**: Stay under GCP free tier (2M requests/month)
-- **Cost Monitoring**: Alert when >80% of free tier quota used
+- **Cost Monitoring**: GCP billing alerts configured per project
 - **Horizontal Scaling**: Cloud Run auto-scales 0 → 10 instances
+- **Database**: Cloud SQL PostgreSQL with connection pooling via Auth Proxy
 
 ### NFR-3: Security
 - **Encryption at Rest**: AES-256-GCM for PII vault
@@ -602,98 +603,94 @@ graph TB
     end
 
     subgraph "GCP Cloud Run"
+        console[Next.js Console]
         api[FastAPI Backend]
-        dashboard[Streamlit Dashboard]
+        jobs[Cloud Run Jobs<br/>ingest / intake / report<br/>dossier / account / sweeper]
     end
 
     subgraph "Data Layer"
-        cloudsql[(Cloud SQL)]
+        cloudsql[(Cloud SQL<br/>PostgreSQL)]
+        piivault[(PII Vault<br/>Cloud SQL + KMS)]
         gcs[(Cloud Storage)]
-        chroma[(ChromaDB)]
+        vertexsearch[(Vertex AI Search)]
+        chroma[(ChromaDB<br/>local-dev only)]
     end
 
-    subgraph "External"
-        ollama[Ollama LLM<br/>Cloud Run GPU]
+    subgraph "AI Services"
+        vertexai[Vertex AI<br/>Gemini]
+    end
+
+    subgraph "Auth"
+        iap[Identity-Aware Proxy]
     end
 
     user -->|HTTPS| api
-    analyst -->|HTTPS| dashboard
-    dashboard -->|API calls| api
+    analyst --> iap
+    iap --> console
+    console -->|API calls| api
     api --> cloudsql
+    api --> piivault
     api --> gcs
-    api --> chroma
-    api -->|LLM inference| ollama
+    api --> vertexsearch
+    api -->|LLM inference| vertexai
+    jobs --> cloudsql
+    jobs --> vertexai
 ```
 
 ### Technology Stack
 
 | Component | Technology | Rationale |
 |-----------|-----------|-----------|
-| **Backend** | FastAPI 0.104+ | Async, type hints, OpenAPI docs |
-| **Frontend** | Streamlit 1.28+ | Rapid prototyping, Python-native |
-| **Database** | Cloud SQL | PostgreSQL, managed, relational |
-| **Vector DB** | ChromaDB | Local embeddings, no API costs |
-| **LLM** | Ollama (llama3.1) | Free, self-hosted, no API keys |
-| **Hosting** | Cloud Run | Serverless, auto-scaling, free tier |
-| **Auth** | Google OAuth 2.0 | Trusted provider, free |
-| **Monitoring** | Cloud Logging + Monitoring | Native GCP integration, free tier |
-| **CI/CD** | GitHub Actions | Free for public repos |
+| **Backend** | FastAPI 0.104+ (13 routers) | Async, type hints, OpenAPI docs |
+| **Frontend** | Next.js 14+ (React, TypeScript) | Production React UI, Turborepo monorepo |
+| **Database** | Cloud SQL PostgreSQL | Managed, relational, Cloud SQL Auth Proxy |
+| **PII Vault** | Cloud SQL PostgreSQL (isolated) | KMS-encrypted, separate instance |
+| **Vector DB** | Vertex AI Search (cloud) / ChromaDB (local) | Hybrid search with SQL dual-write |
+| **LLM** | Vertex AI Gemini (cloud) / Ollama (local) | Managed, scalable; Ollama for laptop dev |
+| **Hosting** | Cloud Run (services + jobs) | Serverless, auto-scaling |
+| **Auth** | IAP + API key auth | Identity-Aware Proxy for console; API keys for services |
+| **Monitoring** | Cloud Logging + Monitoring | Native GCP integration |
+| **CI/CD** | GitHub Actions | Automated build, test, deploy |
 
 ---
 
 ## Deployment Architecture
 
-### GCP Free Tier Strategy
+### GCP Deployment Services
 
-**Services Used**:
-| Service | Free Tier | Estimated Usage | Cost |
-|---------|-----------|-----------------|------|
-| Cloud Run | 2M requests/month | 100K requests/month | $0 |
-| Cloud SQL | Managed PostgreSQL | Lightweight instance | $0 |
-| Cloud Storage | 5 GB | 2 GB (evidence files) | $0 |
-| Cloud Logging | 50 GB/month | 10 GB/month | $0 |
-| Secret Manager | 6 active secrets | 3 secrets | $0 |
-
-**Total Cost**: **$0** (within free tier limits)
-
-**Scaling Trigger**: If usage exceeds free tier, apply for:
-1. Google for Nonprofits ($10K/year credits)
-2. AWS Activate ($5K credits)
-3. NSF SBIR grant ($50K)
+**Services Used (i4g-dev / i4g-prod)**:
+| Service | Purpose | Notes |
+|---------|---------|-------|
+| Cloud Run (services) | FastAPI backend, Next.js console | Auto-scaling, HTTPS |
+| Cloud Run (jobs) | ingest, intake, report, dossier, account-list, classification sweeper | Scheduled + on-demand |
+| Cloud SQL PostgreSQL | Primary database | Cloud SQL Auth Proxy |
+| Cloud SQL PostgreSQL (PII Vault) | Isolated PII storage | KMS encryption, separate instance |
+| Vertex AI | Gemini LLM inference | Pay-per-use |
+| Vertex AI Search | Hybrid vector retrieval | Managed search |
+| Cloud Storage | Evidence files, report PDFs | Standard storage |
+| Secret Manager | API keys, DB credentials | Versioned secrets |
+| Cloud Logging + Monitoring | Observability, alerting | Structured JSON logs |
+| Artifact Registry | Container images | Docker image hosting |
+| Identity-Aware Proxy | Console authentication | Google-managed auth |
 
 ---
 
 ### Database Schema
 
-```
-/cases (main case data)
-  └─ {case_id}
-      ├─ created_at: timestamp
-      ├─ user_email: string
-      ├─ title: string
-      ├─ description: string (with PII tokens: <PII:SSN:7a8f2e>)
-      ├─ classification: {type, confidence}
-      ├─ status: "pending_review" | "in_progress" | "resolved"
-      ├─ assigned_to: analyst_uid
-      ├─ evidence_files: [gs://urls]
-      └─ notes: [{author, text, timestamp}]
+```sql
+-- Cloud SQL PostgreSQL (primary database)
+cases              -- case_id, created_at, user_email, title, description (PII-tokenized),
+                   -- classification, confidence, status, assigned_to, evidence_files
+case_notes         -- note_id, case_id, author, text, created_at
+reviews            -- review_id, case_id, reviewer, decision, created_at
+saved_searches     -- id, user_id, name, query_json, created_at
+search_history     -- id, user_id, query_text, executed_at
+audit_log          -- id, user_id, action, resource, metadata, created_at
+campaigns          -- campaign_id, name, taxonomy_code, ftc_category, status
+accounts           -- account_id, email, role, approved, last_login
 
-/pii_vault (encrypted PII)
-  └─ {token_id}
-      ├─ case_id: string
-      ├─ pii_type: "ssn" | "email" | "phone" | "credit_card"
-      ├─ encrypted_value: bytes (AES-256-GCM)
-      ├─ encryption_key_version: string
-      └─ created_at: timestamp
-
-/analysts (user accounts)
-  └─ {uid}
-      ├─ email: string
-      ├─ full_name: string
-      ├─ role: "analyst" | "admin"
-      ├─ approved: boolean
-      ├─ ferpa_certified: boolean
-      └─ last_login: timestamp
+-- Cloud SQL PostgreSQL (PII Vault — isolated instance, KMS-encrypted)
+pii_tokens         -- token_id, case_id, pii_type, encrypted_value, key_version, created_at
 ```
 
 ---
@@ -766,34 +763,36 @@ graph TB
 
 ## Recommended Next Steps
 
-### Immediate (This Week)
+### Completed (as of February 2026)
 1. ✅ Create production PRD (this document)
 2. ✅ Create Technical Design Document (TDD)
-3. ✅ Update ROADMAP.md with 8-week task breakdown
+3. ✅ Update ROADMAP.md with task breakdown
+4. ✅ Set up GCP projects (`i4g-dev`, `i4g-prod`)
+5. ✅ Implement PII tokenization module (FR-1) — PII Vault with KMS
+6. ✅ Add authentication (FR-2) — IAP + API key auth
+7. ✅ Set up database RBAC/RLS — Cloud SQL PostgreSQL
+8. ✅ Dockerize FastAPI application (FR-3) — multi-image builds via `scripts/build_image.sh`
+9. ✅ Deploy to Cloud Run (FR-3) — services + 6 Cloud Run Jobs
+10. ✅ Set up CI/CD pipeline (GitHub Actions)
+11. ✅ Configure monitoring & alerts (FR-4) — Cloud Logging + Monitoring
+12. ✅ Build Next.js analyst console (FR-5) — 9 pages, Turborepo monorepo
+13. ✅ Write unit + integration tests (FR-6)
+14. ✅ LEO report generation pipeline (FR-7) — digital signatures, dossier generation
+15. ✅ Fraud taxonomy with FTC categories + campaign governance
+16. ✅ Hybrid search — SQL + Vertex AI Search dual-write
+17. ✅ Retire Streamlit console (CTO-Ready consolidation sprint Phase 1)
+18. ✅ Deploy to production
 
-### Week 1-2 (MVP Foundation)
-4. ⚪ Set up GCP project (`i4g-prod`)
-5. ⚪ Implement PII tokenization module (FR-1)
-6. ⚪ Add OAuth 2.0 authentication (FR-2)
-7. ⚪ Set up database RBAC/RLS
+### Current Sprint (CTO-Ready Consolidation)
+19. ⏳ Documentation consolidation and accuracy pass
+20. ⏳ Dead-code removal and repo hygiene
+21. ⏳ Settings/env-var audit and test coverage
 
-### Week 3-4 (Deployment)
-8. ⚪ Dockerize FastAPI application (FR-3)
-9. ⚪ Deploy to Cloud Run (staging environment)
-10. ⚪ Set up CI/CD pipeline (GitHub Actions)
-11. ⚪ Configure monitoring & alerts (FR-4)
-
-### Week 5-6 (Beta Testing)
-12. ⚪ Update Streamlit dashboard with OAuth (FR-5)
-13. ⚪ Write integration tests (FR-6)
-14. ⚪ Beta testing with 3 analysts
-15. ⚪ Collect feedback + iterate
-
-### Week 7-8 (Launch)
-16. ⚪ Implement data retention policy (FR-9)
-17. ⚪ Final security review
-18. ⚪ Deploy to production
-19. ⚪ Launch announcement (blog post + social media)
+### Next (Production Hardening v2)
+22. ⚪ Data retention automation (FR-9) — scheduled purge jobs
+23. ⚪ Advanced analytics dashboard
+24. ⚪ Partner integrations (university, AARP)
+25. ⚪ Mobile SDK scaffolding (FR-8)
 
 ---
 
@@ -820,8 +819,9 @@ graph TB
 
 **Document Version History**:
 - **v1.0** (2025-10-30): Initial production PRD created by Jerry Soung
+- **v2.0** (2026-02-08): Updated to reflect production state — Next.js console, Vertex AI, Cloud SQL, PII Vault, 6 Cloud Run Jobs, IAP auth, fraud taxonomy. Retired Streamlit references.
 
-**Next Review**: 2025-11-30 (monthly review cadence)
+**Next Review**: 2026-03-08 (monthly review cadence)
 
 ---
 
