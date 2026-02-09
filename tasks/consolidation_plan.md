@@ -6,7 +6,7 @@
 >
 > **Created:** 2026-02-08  
 > **Last Updated:** 2026-02-09  
-> **Overall Status:** Phases 1-4 COMPLETE — Phases 5-6 remaining
+> **Overall Status:** ALL PHASES COMPLETE
 
 ---
 
@@ -29,8 +29,8 @@
 | 2 | Design & Architecture Doc Alignment | 2–3 | DONE |
 | 3 | Core Backend Review | 3–5 | DONE (audit + remediation) |
 | 4 | UI Frontend Review | 2–3 | DONE (audit + remediation) |
-| 5 | End-User Documentation | 2–3 | NOT STARTED |
-| 6 | Infrastructure & Config Consistency | 1–2 | NOT STARTED |
+| 5 | End-User Documentation | 2–3 | DONE |
+| 6 | Infrastructure & Config Consistency | 1–2 | DONE |
 
 ---
 
@@ -148,13 +148,13 @@
 
 > Bring the GitBook docs at `docs/book/` to publication quality.
 
-- [ ] **5.1** Audit `docs/book/SUMMARY.md` — every entry has a real page, no dead links
-- [ ] **5.2** Platform Overview — update personas (remove Streamlit), refresh use cases
-- [ ] **5.3** Analyst Guide — search, discovery, dossiers, campaigns guides match live UI
-- [ ] **5.4** Architecture section — update system topology SVG, refresh data pipeline and security diagrams
-- [ ] **5.5** Configuration reference — sync `settings.md` with `config.py` Pydantic model and `settings_manifest.yaml`
-- [ ] **5.6** API Guide — verify auth docs, sample workflows, taxonomy reference
-- [ ] **5.7** Contributing guide — update dev-loop instructions (Next.js, not Streamlit)
+- [x] **5.1** Audit `docs/book/SUMMARY.md` — every entry has a real page, no dead links
+- [x] **5.2** Platform Overview — update personas (remove Streamlit), refresh use cases
+- [x] **5.3** Analyst Guide — search, discovery, dossiers, campaigns guides match live UI
+- [x] **5.4** Architecture section — update system topology SVG, refresh data pipeline and security diagrams
+- [x] **5.5** Configuration reference — sync `settings.md` with `config.py` Pydantic model and `settings_manifest.yaml`
+- [x] **5.6** API Guide — verify auth docs, sample workflows, taxonomy reference
+- [x] **5.7** Contributing guide — update dev-loop instructions (Next.js, not Streamlit)
 
 ---
 
@@ -162,11 +162,28 @@
 
 > Ensure infra matches deployed reality, remove leftovers.
 
-- [ ] **6.1** Terraform audit — remove Streamlit resources, verify module references match deployed services
-- [ ] **6.2** Docker audit — all Dockerfiles build cleanly post-cleanup; consistent base images
-- [ ] **6.3** CI/CD alignment — GitHub Actions match current build/deploy workflow
-- [ ] **6.4** Env vars contract — cross-check Cloud Run job env vars in Terraform against `settings_manifest.yaml`
-- [ ] **6.5** Secrets audit — Secret Manager entries match what the code expects
+- [x] **6.1** Terraform audit — remove Streamlit resources, verify module references match deployed services
+  - Zero Streamlit or Firestore resources remain
+  - 11 modules in dev, 14 in prod — all reference valid `infra/modules/` paths
+  - 2 Cloud Run services (FastAPI + Console), 6 Cloud Run jobs in dev, 4 in prod
+  - Found: 3 stale Azure secrets, vestigial `roles/datastore.*` IAM bindings, dev Vertex AI Search has placeholder values
+- [x] **6.2** Docker audit — all Dockerfiles build cleanly post-cleanup; consistent base images
+  - All 7 Dockerfiles (6 core + 1 UI) present and aligned with Terraform image names
+  - Consistent `python:3.11-slim` base across all core images; `node:20-bullseye-slim` for UI
+  - Fixed: duplicate COPY in `fastapi.Dockerfile`, stale hardcoded GCS path in `ingest-job.Dockerfile`
+- [x] **6.3** CI/CD alignment — GitHub Actions match current build/deploy workflow
+  - 5 workflows across 3 repos — all clean, no stale references
+  - Fixed: upgraded `actions/setup-python@v4` → `@v5` in 2 workflows
+  - Noted: no CI for UI repo, no prod Terraform workflow, Docker build/push is manual
+- [x] **6.4** Env vars contract — cross-check Cloud Run job env vars in Terraform against `settings_manifest.yaml`
+  - Settings manifest covers all Python Settings model fields
+  - Found: `I4G_INGEST__ENABLE_TOKENIZATION` is dead (4 Terraform locations, zero Python readers)
+  - Found: 6 `I4G_ACCOUNT_JOB__*` + `I4G_RUNTIME__FALLBACK_DIR` + `I4G_INTAKE__API_BASE` bypass Settings model
+  - Found: Prod FastAPI missing `I4G_VECTOR__BACKEND`, `I4G_LLM__PROVIDER`, `I4G_LLM__CHAT_MODEL`
+- [x] **6.5** Secrets audit — Secret Manager entries match what the code expects
+  - PII secrets (`pepper`, `pii_key`) properly injected into FastAPI + ingest job (dev)
+  - Cloud SQL uses IAM auth (no password secrets needed)
+  - Found: 3 stale Azure secrets, API key in plain-text (not Secret Manager), secret injection inconsistent across jobs
 
 ---
 
@@ -235,6 +252,23 @@
 | D59 | Dead `iam-helper` app (no source, no package.json — only `.next/` cache) | LOW | 4 | **DONE** |
 | D60 | `CaseSummary.status` enum stricter than backend (Zod will throw on unknown status) | LOW | 4 | FOUND |
 | D61 | Search field name camelCase→snake_case translation implicit and undocumented | LOW | 4 | FOUND |
+| D62 | 3 stale Azure secrets in Terraform (`azure-sql-*`, `azure-storage-*`, `azure-search-*`) — never consumed by Python | MED | 6 | FOUND |
+| D63 | `roles/datastore.user`/`roles/datastore.viewer` IAM bindings likely vestigial (no Firestore/Datastore usage) | MED | 6 | FOUND |
+| D64 | `I4G_INGEST__ENABLE_TOKENIZATION` dead env var — set in 4 Terraform locations, zero Python readers | MED | 6 | FOUND |
+| D65 | Prod FastAPI missing `I4G_VECTOR__BACKEND`, `I4G_LLM__PROVIDER`, `I4G_LLM__CHAT_MODEL` (would default to local-only) | HIGH | 6 | FOUND |
+| D66 | 6 `I4G_ACCOUNT_JOB__*` env vars bypass Settings model (read via raw `os.getenv()`) | MED | 6 | FOUND |
+| D67 | `I4G_RUNTIME__FALLBACK_DIR` and `I4G_INTAKE__API_BASE` bypass Settings model | MED | 6 | FOUND |
+| D68 | Secret injection inconsistent — only FastAPI + ingest (dev) get PII secrets; other jobs do not | MED | 6 | FOUND |
+| D69 | API key (`I4G_API__KEY`) stored as plain-text in Terraform tfvars, not Secret Manager | LOW | 6 | FOUND |
+| D70 | Dev Vertex AI Search tfvars has `REPLACE_WITH_*` placeholder values | LOW | 6 | FOUND |
+| D71 | No CI workflow for UI repo (no build/test/deploy automation) | MED | 6 | FOUND |
+| D72 | No prod Terraform workflow (only dev has `terraform-dev.yml`) | MED | 6 | FOUND |
+| D73 | Docker build/push is fully manual (no CI pipeline) | MED | 6 | FOUND |
+| D74 | Duplicate COPY in `fastapi.Dockerfile` (mock fixtures copied twice) | LOW | 6 | **DONE** |
+| D75 | Hardcoded stale GCS path in `ingest-job.Dockerfile` | LOW | 6 | **DONE** |
+| D76 | `actions/setup-python@v4` in 2 workflows (should be `@v5`) | LOW | 6 | **DONE** |
+| D77 | Prod missing `sweeper` and `account_list` job definitions in Terraform | LOW | 6 | FOUND |
+| D78 | IAP `oauth_client` module is a no-op stub (deprecated API) | LOW | 6 | FOUND |
 
 ---
 
@@ -344,3 +378,62 @@
 - **Verified:** `pnpm format` clean, Vitest 26/26 passing, no TypeScript errors.
 - **Remaining Phase 4 debt (deferred):** D36-D42, D45-D49, D51, D55, D57-D58, D60-D61 (architectural refactors requiring design decisions).
 - **Next step:** Phase 5 — End-User Documentation.
+
+### 2026-02-09 — Phase 5 Complete
+
+- **Completed all 7 Phase 5 tasks** across 24 GitBook pages in `docs/book/`.
+- **5.1 — SUMMARY.md audit:**
+  - All 24 referenced files exist (zero dead links).
+  - Fixed 3 broken internal cross-references: `guides/README.md` linked `user.md`→`user-guide.md` and `analyst.md`→`analyst/index.md`; `contributing.md` linked non-existent `roadmap/open-questions.md`→`../../planning/roadmap.md`.
+  - Added orphaned `guides/developer-setup.md` to SUMMARY.md under Admin Guide.
+  - Removed orphaned duplicate `guides/victim.md` (superseded by `user-guide.md`).
+  - Zero Streamlit/Firestore references remain in docs.
+- **5.2 — Platform Overview:** Removed 2 stale "chatbot" references from `personas.md` and `use-cases.md` (chatbot replaced by guided intake form).
+- **5.3 — Analyst Guide (5 pages rewritten):**
+  - `analyst/index.md` — Added console pages table (9 pages), fixed daily workflow (Dashboard not Queue), corrected actions (Close/Share not Approve/Reject/Needs-more-info), replaced simple tags with multi-axis taxonomy, removed non-existent "Link Cases" dialog and "Screenshots to add" section.
+  - `analyst/search.md` — Fixed filter descriptions (badges not chips, 7 filter categories), removed non-existent "Save as copy", "diagnostics panel", and "Open in Discovery" features, added search history.
+  - `analyst/discovery.md` — Corrected from "semantic-only subset" to "Vertex AI Discovery integration", removed non-existent "Promote to Search" button, added advanced options (filter expression, boost spec, overrides), documented PII redaction.
+  - `analyst/dossiers.md` — Changed nav path from "Reports → Dossiers tab" to "Evidence Dossiers page", added "Manifest payloads" toggle, documented dual verification (server-side + client-side SHA-256), added downloads panel and LEA handoff banner.
+  - `analyst/campaign_governance.md` — Updated campaign creation flow: documented card grid view, noted governance taxonomy selector is currently disabled pending multi-axis taxonomy UI update.
+- **5.4 — Architecture diagrams:** All 3 SVGs (`system_topology`, `data_pipeline`, `security_model`) already in sync between `arch-viz/output/` and `docs/book/assets/architecture/`. Page content verified accurate. No changes needed.
+- **5.5 — Configuration reference:** All 17 settings sections present in auto-generated manifest. Replaced 7 local machine paths (`/Users/jerry/...`) with `<project_root>/...` placeholders for publication quality.
+- **5.6 — API Guide (2 pages rewritten, 1 verified):**
+  - `authentication.md` — Replaced fictional JWT/Bearer model with actual two-layer auth (IAP + X-API-KEY). Documented auth coverage table (4/13 routers protected), actual roles (analyst/admin), API key configuration, and planned JWT migration.
+  - `sample-requests.md` — Replaced 3 inaccurate endpoint examples with 5 accurate ones: intake (multipart, correct schema), search (hybrid query), decision (review_id, correct schema), dossier download (plan_id-based), signature verification.
+  - `taxonomy_reference.md` — Verified all codes, labels, descriptions match `definitions.yaml` exactly. No changes needed.
+- **5.7 — Contributing guide:** Updated dev-loop instructions to include all 3 repos (docs/npm, core/conda+pytest, ui/pnpm), added link to Developer Setup Guide.
+- **Next step:** Phase 6 — Infrastructure & Config Consistency.
+
+### 2026-02-09 — Phase 6 Complete (ALL PHASES DONE)
+
+- **Completed all 5 Phase 6 tasks** across `infra/`, `core/docker/`, `core/.github/workflows/`, and Terraform config.
+- **6.1 — Terraform audit:**
+  - Zero Streamlit or Firestore resource definitions remain (confirmed via workspace-wide grep).
+  - 11 modules in dev, 14 in prod — all reference valid module paths under `infra/modules/`.
+  - 2 Cloud Run services (FastAPI Gateway + i4g Console), 6 jobs in dev, 4 in prod.
+  - Found: 3 stale Azure secrets (`azure-sql-connection-string`, `azure-storage-connection-string`, `azure-search-admin-key`) — created but never consumed by Python code.
+  - Found: `roles/datastore.user`/`roles/datastore.viewer` IAM bindings likely vestigial — no Firestore/Datastore usage in any Python code.
+  - Found: Dev Vertex AI Search tfvars has `REPLACE_WITH_*` placeholder values.
+  - Dev/prod structural divergence noted (global LB vs per-service IAP) — intentional by design.
+- **6.2 — Docker audit:**
+  - All 7 Dockerfiles (6 core `python:3.11-slim` + 1 UI `node:20-bullseye-slim`) present and consistent.
+  - Image names in Terraform tfvars match Dockerfile naming convention perfectly.
+  - **FIXED (D74):** Removed duplicate `COPY docker/fixtures/mock` in `fastapi.Dockerfile` (L34 and L39 copied identical data).
+  - **FIXED (D75):** Replaced hardcoded stale GCS path (`gs://i4g-dev-data-bundles/2025-12-17/...`) with empty string in `ingest-job.Dockerfile` — path must be provided at runtime via env override.
+- **6.3 — CI/CD alignment:**
+  - 5 workflows across 3 repos audited: `nightly-smoke-dossiers.yml`, `dev-reprime.yaml`, `docs-snippet-check.yml` (core), `terraform-dev.yml` (infra), `design-tokens-ci.yml` (mobile). All clean — zero stale references.
+  - **FIXED (D76):** Upgraded `actions/setup-python@v4` → `@v5` in `nightly-smoke-dossiers.yml` and `docs-snippet-check.yml`.
+  - Noted: No CI for UI repo (D71), no prod Terraform workflow (D72), Docker build/push is manual (D73).
+- **6.4 — Env vars contract:**
+  - Settings manifest covers all 14 Python Settings sections + 3 top-level fields.
+  - `I4G_INGEST__ENABLE_TOKENIZATION` confirmed dead — set in 4 Terraform locations, zero Python readers (D64).
+  - 6 `I4G_ACCOUNT_JOB__*` env vars + `I4G_RUNTIME__FALLBACK_DIR` + `I4G_INTAKE__API_BASE` bypass the Settings model via raw `os.getenv()` (D66, D67).
+  - **Critical prod gap (D65):** Prod FastAPI tfvars missing `I4G_VECTOR__BACKEND` (defaults to `chroma`), `I4G_LLM__PROVIDER` (defaults to `ollama`), `I4G_LLM__CHAT_MODEL` (defaults to `llama3`) — prod would fall back to local-only backends unless overridden in TOML baked into Docker image.
+- **6.5 — Secrets audit:**
+  - PII secrets (`tokenization-pepper`, `pii-tokenization-key`) properly injected into FastAPI + ingest job (dev) via Secret Manager cross-project references.
+  - Cloud SQL uses IAM auth in both envs — password fields unused, no secret injection needed.
+  - 3 Azure secrets are stale legacy (D62) — not consumed by any Python code.
+  - API key (`I4G_API__KEY`) stored as plain-text in tfvars (D69) — mitigated by IAP but not ideal.
+  - Secret injection is inconsistent across jobs (D68) — only FastAPI + ingest (dev) get PII secrets; report, sweeper, intake, dossier_queue jobs do not.
+- **Total new debt items found: 17** (D62-D78), including 3 quick-fix items resolved (D74-D76).
+- **Consolidation sprint COMPLETE.** All 6 phases finished. 78 total debt items tracked (22 resolved, 56 documented for future sprints).
