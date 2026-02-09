@@ -3,6 +3,7 @@
 This folder tracks status summaries for the DT-IFG → i4g migration. Updates are written every 2–3 weeks and stored as individual markdown files named by date (`YYYY-MM-DD.md`).
 
 ## Updates
+- [2026-02-09 Status Update](2026-02-09.md)
 - [2026-01-05 Status Update](2026-01-05.md)
 - [2025-12-08 Status Update](2025-12-08.md)
 - [2025-11-23 Status Update](2025-11-23.md)
