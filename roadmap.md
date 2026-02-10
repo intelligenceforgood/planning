@@ -46,5 +46,5 @@ for external review. Tracked in [tasks/consolidation_plan.md](tasks/consolidatio
 
 ## When Work Resumes
 - Re-read PRDs (`prd_production.md`, `prd_prototype.md`) and the trimmed `change_log.md`.
-- Rehydrate Copilot via `copilot_prompt/COPILOT_SESSION.md`.
+- Rehydrate from `change_log.md`, the active task plan in `tasks/`, and `.entire/`/`.claud/` context.
 - Draft a 4-week execution plan aligned to whichever milestone we pick first; push any new research spikes into `planning/archive/` once resolved.

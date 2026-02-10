@@ -1,8 +1,16 @@
 # Planning Change Log (active items only)
 
-Last updated: 09 Feb 2026
+Last updated: 10 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2026-02-10
+
+- **WS-2 merged and verified.** All 9 items complete, basic dev deployment confirmed.
+- **Classification Zod fix:** Backend now omits `classification` key when `None` (instead of sending `null`). Compatible with both old and new SDK. SDK schema updated with `.nullable().optional()` and `.passthrough()`.
+- **Entire tool integration:** Added item #16 to all 8 `copilot-instructions.md` files. Rehydration step (#1) now references `.entire/` and `.claud/` for conversation context per commit. Folders are managed by Entire tool — do not modify.
+- **Coding standards refresh:** `general-coding.instructions.md` expanded with comprehensive per-language conventions. All 8 copilot instructions item #3 updated with repo-specific highlights.
+- **D79 added to WS-7:** "API JSON uses inconsistent casing — need Pydantic `alias_generator` + SDK cleanup" (HIGH severity).
 
 ## 2026-02-09 (WS-2 Session)
 

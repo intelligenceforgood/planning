@@ -10,11 +10,10 @@ decisions with confidence, and keep execution aligned.
 ## What Stays Here
 - **PRDs** and **roadmap** for future development.
 - **Current change log** (trimmed) that captures decisions still relevant to upcoming work.
-- **Copilot prompts** under `copilot_prompt/`; these must be read and used efficiently before starting tasks.
+- **Task plans** under `tasks/` — e.g., `debt_remediation_plan.md` for the current sprint.
 
 ## How We Work
-- Copilot is a first-class collaborator. Keep prompts up to date, rehydrate sessions via `copilot_prompt/persistent_prompt.md`,
-	and record state in `copilot_prompt/COPILOT_SESSION.md` when pausing work.
+- AI assistants rehydrate from `change_log.md`, the active task plan, and `.entire/`/`.claud/` per-commit context (managed by the Entire tool).
 - When plans change, update the PRDs/roadmap and add a concise entry to `change_log.md` so future contributors inherit
 	the latest intent without digging through archives.
 - Anything no longer actionable lives in `planning/archive/` to keep the active surface small and trustworthy.
