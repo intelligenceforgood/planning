@@ -1,12 +1,15 @@
 # Consolidation & Quality Plan — "CTO-Ready" Sprint
 
+> **⚠️ SUPERSEDED** — This plan is complete. The 50 open debt items are now
+> tracked in [`debt_remediation_plan.md`](debt_remediation_plan.md).
+
 > **Goal:** Comprehensive walk-through of all repos to solidify design,
 > implementation, and documentation so the project is presentable to external
 > CTOs and institutional partners for Intelligence for Good.
 >
-> **Created:** 2026-02-08  
-> **Last Updated:** 2026-02-09  
-> **Overall Status:** ALL PHASES COMPLETE
+> **Created:** 2026-02-08
+> **Last Updated:** 2026-02-09
+> **Overall Status:** ALL PHASES COMPLETE (28 items resolved, 50 open → successor plan)
 
 ---
 
