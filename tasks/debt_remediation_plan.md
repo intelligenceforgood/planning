@@ -26,18 +26,18 @@
 
 ## Summary
 
-| # | Work Stream | Items | HIGH | MED | LOW | Est. Days | Status |
-|---|-------------|-------|------|-----|-----|-----------|--------|
-| WS-1 | Security & Auth Hardening | 6 | 3 | 1 | 1+1 | 3–5 | DONE |
-| WS-2 | API Quality & Contract Alignment | 9 | 4 | 3 | 2 | 3–5 | NOT STARTED |
-| WS-3 | Store Consolidation & Factory Discipline | 4 | 3 | 1 | 0 | 3–5 | NOT STARTED |
-| WS-4 | Service & Worker Cleanup | 5 | 2 | 2 | 1 | 2–3 | NOT STARTED |
-| WS-5 | CLI Refactor | 2 | 1 | 1 | 0 | 2–3 | NOT STARTED |
-| WS-6 | UI Resilience & UX Quality | 8 | 3 | 4 | 1 | 3–5 | NOT STARTED |
-| WS-7 | Type Unification & Test Coverage | 3 | 0 | 2 | 1 | 1–2 | NOT STARTED |
-| WS-8 | Dead Code & Hygiene | 8 | 0 | 4 | 4 | 1–2 | NOT STARTED |
-| WS-9 | CI/CD & Infrastructure | 5 | 0 | 5 | 0 | 2–3 | NOT STARTED |
-| | **Totals** | **50** | **16** | **23** | **11** | **20–33** | |
+| #    | Work Stream                              | Items  | HIGH   | MED    | LOW    | Est. Days | Status      |
+| ---- | ---------------------------------------- | ------ | ------ | ------ | ------ | --------- | ----------- |
+| WS-1 | Security & Auth Hardening                | 6      | 3      | 1      | 1+1    | 3–5       | DONE        |
+| WS-2 | API Quality & Contract Alignment         | 9      | 4      | 3      | 2      | 3–5       | DONE        |
+| WS-3 | Store Consolidation & Factory Discipline | 4      | 3      | 1      | 0      | 3–5       | NOT STARTED |
+| WS-4 | Service & Worker Cleanup                 | 5      | 2      | 2      | 1      | 2–3       | NOT STARTED |
+| WS-5 | CLI Refactor                             | 2      | 1      | 1      | 0      | 2–3       | NOT STARTED |
+| WS-6 | UI Resilience & UX Quality               | 8      | 3      | 4      | 1      | 3–5       | NOT STARTED |
+| WS-7 | Type Unification & Test Coverage         | 4      | 1      | 2      | 1      | 2–3       | NOT STARTED |
+| WS-8 | Dead Code & Hygiene                      | 8      | 0      | 4      | 4      | 1–2       | NOT STARTED |
+| WS-9 | CI/CD & Infrastructure                   | 5      | 0      | 5      | 0      | 2–3       | NOT STARTED |
+|      | **Totals**                               | **51** | **17** | **23** | **11** | **21–34** |             |
 
 ---
 
@@ -51,14 +51,14 @@
 
 ### Items
 
-| # | Finding | Severity | Status |
-|---|---------|----------|--------|
-| D12 | 7/13 API routers have NO authentication | HIGH | [x] |
-| D14 | `reports.py` has no path-traversal protection on `plan_id` | HIGH | [x] |
-| D41 | No user authentication guard in console (no middleware/session check) | HIGH | [x] |
-| D65 | Prod FastAPI missing `I4G_VECTOR__BACKEND`, `I4G_LLM__PROVIDER`, `I4G_LLM__CHAT_MODEL` | HIGH | [x] |
-| D68 | Secret injection inconsistent — only FastAPI + ingest (dev) get PII secrets | MED | [x] |
-| D69 | API key (`I4G_API__KEY`) stored as plain-text in Terraform tfvars | LOW | [x] |
+| #   | Finding                                                                                | Severity | Status |
+| --- | -------------------------------------------------------------------------------------- | -------- | ------ |
+| D12 | 7/13 API routers have NO authentication                                                | HIGH     | [x]    |
+| D14 | `reports.py` has no path-traversal protection on `plan_id`                             | HIGH     | [x]    |
+| D41 | No user authentication guard in console (no middleware/session check)                  | HIGH     | [x]    |
+| D65 | Prod FastAPI missing `I4G_VECTOR__BACKEND`, `I4G_LLM__PROVIDER`, `I4G_LLM__CHAT_MODEL` | HIGH     | [x]    |
+| D68 | Secret injection inconsistent — only FastAPI + ingest (dev) get PII secrets            | MED      | [x]    |
+| D69 | API key (`I4G_API__KEY`) stored as plain-text in Terraform tfvars                      | LOW      | [x]    |
 
 ### Design Decisions Required
 
@@ -92,8 +92,8 @@
 - [x] `plan_id` parameter validated against safe pattern; malicious paths return 400.
 - [x] Console pages redirect or show error for unauthenticated users in local dev.
 - [x] Prod Terraform tfvars include `I4G_VECTOR__BACKEND=vertex`,
-  `I4G_LLM__PROVIDER=vertex`, `I4G_LLM__CHAT_MODEL=gemini-2.5-flash`
-  (or current model).
+      `I4G_LLM__PROVIDER=vertex`, `I4G_LLM__CHAT_MODEL=gemini-2.5-flash`
+      (or current model).
 - [x] PII secrets injected into all jobs that perform tokenization operations.
 - [x] API key moved from tfvars to Secret Manager reference.
 - [x] `pytest tests/unit` passes (268+ tests, 0 failures).
@@ -110,17 +110,17 @@
 
 ### Items
 
-| # | Finding | Severity | Status |
-|---|---------|----------|--------|
-| D13 | `review.py` is 953 lines — needs splitting into sub-routers | HIGH | [ ] |
-| D15 | No logging in 11/13 API routers | HIGH | [ ] |
-| D36 | SDK `searchIntelligence` targets non-existent `/search` endpoint | HIGH | [ ] |
-| D37 | `indicatorTypes`/`lossBuckets` search filters silently dropped | HIGH | [ ] |
-| D32 | No `response_model` on most API endpoints (broken OpenAPI) | MED | [ ] |
-| D38 | `CaseSummary.classification` type never returned by backend | MED | [ ] |
-| D46 | SDK covers only 9 of ~40+ backend endpoints | MED | [ ] |
-| D60 | `CaseSummary.status` enum stricter than backend (Zod will throw on unknown) | LOW | [ ] |
-| D61 | Search field name camelCase→snake_case translation implicit/undocumented | LOW | [ ] |
+| #   | Finding                                                                     | Severity | Status |
+| --- | --------------------------------------------------------------------------- | -------- | ------ |
+| D13 | `review.py` is 953 lines — needs splitting into sub-routers                 | HIGH     | [x]    |
+| D15 | No logging in 11/13 API routers                                             | HIGH     | [x]    |
+| D36 | SDK `searchIntelligence` targets non-existent `/search` endpoint            | HIGH     | [x]    |
+| D37 | `indicatorTypes`/`lossBuckets` search filters silently dropped              | HIGH     | [x]    |
+| D32 | No `response_model` on most API endpoints (broken OpenAPI)                  | MED      | [x]    |
+| D38 | `CaseSummary.classification` type never returned by backend                 | MED      | [x]    |
+| D46 | SDK covers only 9 of ~40+ backend endpoints                                 | MED      | [x]    |
+| D60 | `CaseSummary.status` enum stricter than backend (Zod will throw on unknown) | LOW      | [x]    |
+| D61 | Search field name camelCase→snake_case translation implicit/undocumented    | LOW      | [x]    |
 
 ### Design Decisions Required
 
@@ -128,7 +128,7 @@
   - `review_search.py` — search + history + saved searches
   - `review_queue.py` — queue actions (assign, decide, escalate)
   - `review_detail.py` — single-review CRUD + evidence
-  Keep the `/reviews` prefix; use `APIRouter(prefix="/reviews", tags=[...])`.
+    Keep the `/reviews` prefix; use `APIRouter(prefix="/reviews", tags=[...])`.
 - **D36/D37:** Fix SDK default `baseUrl` or remove dead `searchIntelligence`
   from SDK (platform-client already overrides correctly). Decide: fix SDK or
   document that SDK is not used directly for search.
@@ -146,17 +146,17 @@
 
 ### Acceptance Criteria
 
-- [ ] `review.py` split into 3+ sub-routers, each ≤300 lines.
-- [ ] All 13 routers use `logger = logging.getLogger(__name__)` with
-  request-level logging for errors and key actions.
-- [ ] SDK `searchIntelligence` either fixed or removed; search filters
-  (`indicatorTypes`, `lossBuckets`) properly mapped to backend query params.
-- [ ] `CaseSummary` Zod schema matches actual backend response (no extra or
-  missing fields).
-- [ ] ≥80% of API endpoints have `response_model` defined.
-- [ ] OpenAPI spec (`/docs`) renders correctly with typed responses.
-- [ ] Field name translation (camelCase↔snake_case) documented in
-  `docs/book/api/` or SDK README.
+- [x] `review.py` split into 3+ sub-routers, each ≤300 lines.
+- [x] All 13 routers use `logger = logging.getLogger(__name__)` with
+      request-level logging for errors and key actions.
+- [x] SDK `searchIntelligence` either fixed or removed; search filters
+      (`indicatorTypes`, `lossBuckets`) properly mapped to backend query params.
+- [x] `CaseSummary` Zod schema matches actual backend response (no extra or
+      missing fields).
+- [x] ≥80% of API endpoints have `response_model` defined.
+- [x] OpenAPI spec (`/docs`) renders correctly with typed responses.
+- [x] Field name translation (camelCase↔snake_case) documented in
+      `docs/book/api/` or SDK README.
 
 ---
 
@@ -170,12 +170,12 @@
 
 ### Items
 
-| # | Finding | Severity | Status |
-|---|---------|----------|--------|
-| D16 | SQLite/SQLAlchemy dual implementations (~800 LOC duplication) | HIGH | [ ] |
-| D17 | `scam_records` dual-write with normalized schema (consistency risk) | HIGH | [ ] |
-| D18 | 8 prod-code locations bypass `factories.py` for store creation | HIGH | [ ] |
-| D29 | Module-level `get_settings()` in 6+ store/service files | MED | [ ] |
+| #   | Finding                                                             | Severity | Status |
+| --- | ------------------------------------------------------------------- | -------- | ------ |
+| D16 | SQLite/SQLAlchemy dual implementations (~800 LOC duplication)       | HIGH     | [ ]    |
+| D17 | `scam_records` dual-write with normalized schema (consistency risk) | HIGH     | [ ]    |
+| D18 | 8 prod-code locations bypass `factories.py` for store creation      | HIGH     | [ ]    |
+| D29 | Module-level `get_settings()` in 6+ store/service files             | MED      | [ ]    |
 
 ### Design Decisions Required
 
@@ -206,13 +206,13 @@
 ### Acceptance Criteria
 
 - [ ] Single data access path: all store operations go through SQLAlchemy
-  session factories.
+      session factories.
 - [ ] `sql.py` (raw `sqlite3` module) deleted or reduced to a thin migration-only
-  utility.
+      utility.
 - [ ] `scam_records` write path consolidated (no dual-write).
 - [ ] Zero prod-code locations instantiate stores outside `factories.py`.
 - [ ] No module-level `get_settings()` calls in store/service files (settings
-  passed via constructor or dependency injection).
+      passed via constructor or dependency injection).
 - [ ] `pytest tests/unit` passes with same or better coverage.
 
 ---
@@ -227,13 +227,13 @@
 
 ### Items
 
-| # | Finding | Severity | Status |
-|---|---------|----------|--------|
-| D19 | Duplicate LLM factory logic in `classifier.py` + `llm_extractor.py` | HIGH | [ ] |
-| D20 | `pii_backfill.py` — private attribute access, no error handling, no CLI harness | HIGH | [ ] |
-| D26 | Only 1/8 worker jobs uses TASK_STATUS progress reporting | MED | [ ] |
-| D30 | `_coerce_bool` / `_parse_datetime` duplicated across 5+ files | MED | [ ] |
-| D33 | `datetime.utcnow()` usage in 4+ files (deprecated Python 3.12+) | LOW | [ ] |
+| #   | Finding                                                                         | Severity | Status |
+| --- | ------------------------------------------------------------------------------- | -------- | ------ |
+| D19 | Duplicate LLM factory logic in `classifier.py` + `llm_extractor.py`             | HIGH     | [ ]    |
+| D20 | `pii_backfill.py` — private attribute access, no error handling, no CLI harness | HIGH     | [ ]    |
+| D26 | Only 1/8 worker jobs uses TASK_STATUS progress reporting                        | MED      | [ ]    |
+| D30 | `_coerce_bool` / `_parse_datetime` duplicated across 5+ files                   | MED      | [ ]    |
+| D33 | `datetime.utcnow()` usage in 4+ files (deprecated Python 3.12+)                 | LOW      | [ ]    |
 
 ### Design Decisions Required
 
@@ -254,14 +254,14 @@
 ### Acceptance Criteria
 
 - [ ] Single LLM client factory in `factories.py`; `classifier.py` and
-  `llm_extractor.py` use it.
+      `llm_extractor.py` use it.
 - [ ] `pii_backfill.py` either deleted or rewritten with: public store APIs,
-  structured error handling, CLI harness, unit tests.
+      structured error handling, CLI harness, unit tests.
 - [ ] ≥4/8 worker jobs emit TASK_STATUS progress (at minimum: start, %, done).
 - [ ] `_coerce_bool` and `_parse_datetime` extracted to a shared
-  `core/src/i4g/utils/` module; all callers updated.
+      `core/src/i4g/utils/` module; all callers updated.
 - [ ] Zero `datetime.utcnow()` calls — replaced with
-  `datetime.now(datetime.UTC)`.
+      `datetime.now(datetime.UTC)`.
 
 ---
 
@@ -276,10 +276,10 @@
 
 ### Items
 
-| # | Finding | Severity | Status |
-|---|---------|----------|--------|
-| D22 | `bootstrap/dev.py` is 2064 lines — needs decomposition | HIGH | [ ] |
-| D27 | `SimpleNamespace` proxy antipattern in 8/12 CLI subcommands (~400 LOC) | MED | [ ] |
+| #   | Finding                                                                | Severity | Status |
+| --- | ---------------------------------------------------------------------- | -------- | ------ |
+| D22 | `bootstrap/dev.py` is 2064 lines — needs decomposition                 | HIGH     | [ ]    |
+| D27 | `SimpleNamespace` proxy antipattern in 8/12 CLI subcommands (~400 LOC) | MED      | [ ]    |
 
 ### Design Decisions Required
 
@@ -302,8 +302,8 @@
 - [ ] `bootstrap/dev.py` split into ≥3 modules; no single file exceeds 500 lines.
 - [ ] `SimpleNamespace` usage removed from all CLI subcommands.
 - [ ] CLI commands produce identical output before and after refactor (behavioral
-  equivalence verified by running `i4g bootstrap local reset` against fresh
-  `data/` directory).
+      equivalence verified by running `i4g bootstrap local reset` against fresh
+      `data/` directory).
 - [ ] All existing CLI tests pass.
 
 ---
@@ -319,16 +319,16 @@
 
 ### Items
 
-| # | Finding | Severity | Status |
-|---|---------|----------|--------|
-| D39 | 0/9 console pages have error boundaries (`error.tsx`) | HIGH | [ ] |
-| D40 | 7/9 console pages have no loading state (`loading.tsx`) | HIGH | [ ] |
-| D42 | Zero Storybook configuration or stories for `@i4g/ui-kit` | HIGH | [ ] |
-| D45 | 3 separate auth patterns with duplicated boilerplate across server services | MED | [ ] |
-| D48 | `search-experience.tsx` (1324 LOC) + `dossier-list.tsx` (998 LOC) decomposition | MED | [ ] |
-| D49 | Campaign form uses raw HTML inputs instead of ui-kit components | MED | [ ] |
-| D51 | Console layout entirely `"use client"` (prevents server-side nav optimization) | MED | [ ] |
-| D58 | Non-functional placeholder buttons on dashboard and cases pages | LOW | [ ] |
+| #   | Finding                                                                         | Severity | Status |
+| --- | ------------------------------------------------------------------------------- | -------- | ------ |
+| D39 | 0/9 console pages have error boundaries (`error.tsx`)                           | HIGH     | [ ]    |
+| D40 | 7/9 console pages have no loading state (`loading.tsx`)                         | HIGH     | [ ]    |
+| D42 | Zero Storybook configuration or stories for `@i4g/ui-kit`                       | HIGH     | [ ]    |
+| D45 | 3 separate auth patterns with duplicated boilerplate across server services     | MED      | [ ]    |
+| D48 | `search-experience.tsx` (1324 LOC) + `dossier-list.tsx` (998 LOC) decomposition | MED      | [ ]    |
+| D49 | Campaign form uses raw HTML inputs instead of ui-kit components                 | MED      | [ ]    |
+| D51 | Console layout entirely `"use client"` (prevents server-side nav optimization)  | MED      | [ ]    |
+| D58 | Non-functional placeholder buttons on dashboard and cases pages                 | LOW      | [ ]    |
 
 ### Design Decisions Required
 
@@ -359,10 +359,10 @@
 - [ ] All 9 console pages have an `error.tsx` boundary.
 - [ ] All 9 console pages have a `loading.tsx` skeleton.
 - [ ] Storybook runs locally (`pnpm storybook`) with stories for all ui-kit
-  components (Badge, Button, Card, Input).
+      components (Badge, Button, Card, Input).
 - [ ] Server services use a single shared auth helper (no boilerplate duplication).
 - [ ] `search-experience.tsx` and `dossier-list.tsx` each reduced to ≤400 LOC
-  via extracted sub-components.
+      via extracted sub-components.
 - [ ] Campaign form uses ui-kit `Input` and `Button` components.
 - [ ] Placeholder buttons either wired to real actions or removed.
 - [ ] `pnpm format` clean, Vitest 26+ tests passing.
@@ -379,14 +379,25 @@
 
 ### Items
 
-| # | Finding | Severity | Status |
-|---|---------|----------|--------|
-| D47 | `TaxonomyItem`/`TaxonomyAxis` defined in 3 separate places | MED | [ ] |
-| D55 | 5 shared packages have zero test files | MED | [ ] |
-| D57 | No coverage thresholds enforced in Vitest config | LOW | [ ] |
+| #   | Finding                                                                           | Severity | Status |
+| --- | --------------------------------------------------------------------------------- | -------- | ------ |
+| D79 | API JSON uses inconsistent casing — need Pydantic `alias_generator` + SDK cleanup | HIGH     | [ ]    |
+| D47 | `TaxonomyItem`/`TaxonomyAxis` defined in 3 separate places                        | MED      | [ ]    |
+| D55 | 5 shared packages have zero test files                                            | MED      | [ ]    |
+| D57 | No coverage thresholds enforced in Vitest config                                  | LOW      | [ ]    |
 
 ### Design Decisions Required
 
+- **D79:** ⚠️ Standardize API JSON on camelCase. Approach:
+  (a) Add a `CamelModel` base class with `alias_generator = to_camel` and
+  `model_config = {"populate_by_name": True, "by_alias": True}`.
+  (b) Migrate all `response_models.py` + `cases.py` + other Pydantic models to
+  inherit from `CamelModel`. Backend Python stays snake_case internally.
+  (c) Delete SDK `normalize*` functions (~100 LOC), platform-client request
+  mapping (~15 LOC), and helpers dual-key patterns (~30 LOC).
+  (d) Fix any remaining mixed-casing fields in backend models (e.g.,
+  `CaseDetail` has `updatedAt` + `graph_nodes` in the same model).
+  Ref: `docs/book/api/field_name_translation.md` catalogs all 14 sites.
 - **D47:** ⚠️ Single source of truth for taxonomy types. Options:
   (a) `@i4g/types` package is canonical — SDK Zod schemas and page-local
   types import from it;
@@ -405,11 +416,15 @@
 
 ### Acceptance Criteria
 
+- [ ] All Pydantic response models inherit from a `CamelModel` base that
+      serves camelCase JSON via `alias_generator`. Python code stays snake_case.
+- [ ] SDK `normalize*` functions deleted (no manual field renaming).
+- [ ] Platform-client and helpers have zero manual casing translation.
 - [ ] `TaxonomyItem` and `TaxonomyAxis` defined in exactly 1 package; all
-  other locations import from that source.
+      other locations import from that source.
 - [ ] `@i4g/sdk` has ≥5 unit tests covering core client methods.
 - [ ] Vitest config enforces minimum coverage thresholds (e.g., 60% statements
-  for `@i4g/sdk`).
+      for `@i4g/sdk`).
 
 ---
 
@@ -423,16 +438,16 @@
 
 ### Items
 
-| # | Finding | Severity | Status |
-|---|---------|----------|--------|
-| D28 | 3 dead/legacy report files (~285 LOC) from M5.1 prototype | MED | [ ] |
-| D34 | `docs/config/settings_manifest.yaml` 67 days stale | MED | [ ] |
-| D62 | 3 stale Azure secrets in Terraform | MED | [ ] |
-| D63 | Vestigial `roles/datastore.*` IAM bindings | MED | [ ] |
-| D64 | `I4G_INGEST__ENABLE_TOKENIZATION` dead env var (4 Terraform, 0 Python) | LOW | [ ] |
-| D70 | Dev Vertex AI Search tfvars has `REPLACE_WITH_*` placeholders | LOW | [ ] |
-| D77 | Prod missing `sweeper` and `account_list` job definitions | LOW | [ ] |
-| D78 | IAP `oauth_client` module is a no-op stub | LOW | [ ] |
+| #   | Finding                                                                | Severity | Status |
+| --- | ---------------------------------------------------------------------- | -------- | ------ |
+| D28 | 3 dead/legacy report files (~285 LOC) from M5.1 prototype              | MED      | [ ]    |
+| D34 | `docs/config/settings_manifest.yaml` 67 days stale                     | MED      | [ ]    |
+| D62 | 3 stale Azure secrets in Terraform                                     | MED      | [ ]    |
+| D63 | Vestigial `roles/datastore.*` IAM bindings                             | MED      | [ ]    |
+| D64 | `I4G_INGEST__ENABLE_TOKENIZATION` dead env var (4 Terraform, 0 Python) | LOW      | [ ]    |
+| D70 | Dev Vertex AI Search tfvars has `REPLACE_WITH_*` placeholders          | LOW      | [ ]    |
+| D77 | Prod missing `sweeper` and `account_list` job definitions              | LOW      | [ ]    |
+| D78 | IAP `oauth_client` module is a no-op stub                              | LOW      | [ ]    |
 
 ### Design Decisions Required
 
@@ -453,16 +468,16 @@
 ### Acceptance Criteria
 
 - [ ] Dead report files (`gdoc_exporter.py`, `template_engine.py`,
-  `generator.py`) deleted.
+      `generator.py`) deleted.
 - [ ] `settings_manifest.yaml` regenerated and matches current Pydantic model.
 - [ ] Stale Azure secrets removed from Terraform (after confirmation).
 - [ ] Vestigial Datastore IAM bindings removed (after confirmation).
 - [ ] Dead `I4G_INGEST__ENABLE_TOKENIZATION` removed from all 4 Terraform
-  locations.
+      locations.
 - [ ] Vertex AI Search tfvars has real values or is clearly marked as
-  requires-manual-setup.
+      requires-manual-setup.
 - [ ] Prod Terraform updated with sweeper/account_list jobs (if confirmed
-  needed) or documented as dev-only.
+      needed) or documented as dev-only.
 
 ---
 
@@ -476,13 +491,13 @@
 
 ### Items
 
-| # | Finding | Severity | Status |
-|---|---------|----------|--------|
-| D66 | 6 `I4G_ACCOUNT_JOB__*` env vars bypass Settings model (`os.getenv()`) | MED | [ ] |
-| D67 | `I4G_RUNTIME__FALLBACK_DIR` + `I4G_INTAKE__API_BASE` bypass Settings model | MED | [ ] |
-| D71 | No CI workflow for UI repo | MED | [ ] |
-| D72 | No prod Terraform workflow (only dev has `terraform-dev.yml`) | MED | [ ] |
-| D73 | Docker build/push is fully manual (no CI pipeline) | MED | [ ] |
+| #   | Finding                                                                    | Severity | Status |
+| --- | -------------------------------------------------------------------------- | -------- | ------ |
+| D66 | 6 `I4G_ACCOUNT_JOB__*` env vars bypass Settings model (`os.getenv()`)      | MED      | [ ]    |
+| D67 | `I4G_RUNTIME__FALLBACK_DIR` + `I4G_INTAKE__API_BASE` bypass Settings model | MED      | [ ]    |
+| D71 | No CI workflow for UI repo                                                 | MED      | [ ]    |
+| D72 | No prod Terraform workflow (only dev has `terraform-dev.yml`)              | MED      | [ ]    |
+| D73 | Docker build/push is fully manual (no CI pipeline)                         | MED      | [ ]    |
 
 ### Design Decisions Required
 
@@ -506,14 +521,14 @@
 ### Acceptance Criteria
 
 - [ ] All `I4G_ACCOUNT_JOB__*`, `I4G_RUNTIME__FALLBACK_DIR`, and
-  `I4G_INTAKE__API_BASE` env vars either added to Settings model or documented
-  in `settings_manifest.yaml` with rationale for bypass.
+      `I4G_INTAKE__API_BASE` env vars either added to Settings model or documented
+      in `settings_manifest.yaml` with rationale for bypass.
 - [ ] UI repo has a GitHub Actions CI workflow that runs on PR (lint, type-check,
-  test).
+      test).
 - [ ] Prod Terraform has at minimum a plan-on-PR workflow.
 - [ ] Docker build/push is automated (manual trigger at minimum).
 - [ ] `docs/config/settings_manifest.yaml` updated to reflect any new Settings
-  sections.
+      sections.
 
 ---
 
@@ -540,17 +555,17 @@ WS-8 (dead code) can be interleaved with any sprint as low-risk filler.
 
 For traceability back to the consolidation audit:
 
-| Work Stream | Debt IDs |
-|-------------|----------|
-| WS-1 | D12, D14, D41, D65, D68, D69 |
-| WS-2 | D13, D15, D32, D36, D37, D38, D46, D60, D61 |
-| WS-3 | D16, D17, D18, D29 |
-| WS-4 | D19, D20, D26, D30, D33 |
-| WS-5 | D22, D27 |
-| WS-6 | D39, D40, D42, D45, D48, D49, D51, D58 |
-| WS-7 | D47, D55, D57 |
-| WS-8 | D28, D34, D62, D63, D64, D70, D77, D78 |
-| WS-9 | D66, D67, D71, D72, D73 |
+| Work Stream | Debt IDs                                    |
+| ----------- | ------------------------------------------- |
+| WS-1        | D12, D14, D41, D65, D68, D69                |
+| WS-2        | D13, D15, D32, D36, D37, D38, D46, D60, D61 |
+| WS-3        | D16, D17, D18, D29                          |
+| WS-4        | D19, D20, D26, D30, D33                     |
+| WS-5        | D22, D27                                    |
+| WS-6        | D39, D40, D42, D45, D48, D49, D51, D58      |
+| WS-7        | D47, D55, D57, D79                          |
+| WS-8        | D28, D34, D62, D63, D64, D70, D77, D78      |
+| WS-9        | D66, D67, D71, D72, D73                     |
 
 ---
 
@@ -601,3 +616,49 @@ For traceability back to the consolidation audit:
 - **Infra note:** Before applying Terraform changes, create the Secret Manager
   secret `api-key` in both `i4g-dev` and `i4g-prod` projects with the
   appropriate token values.
+
+### WS-2 Session — API Quality & Contract Alignment
+
+**All 9 items completed.**
+
+- **D13 — Split review.py:** Original 953-line file split into 4 modules:
+  `review_deps.py` (shared dependency factories, 72 LOC),
+  `review_search.py` (13 search routes + helpers, 770 LOC),
+  `review_queue.py` (6 queue/action routes, 190 LOC),
+  `review_detail.py` (3 detail routes, 55 LOC).
+  Original `review.py` rewritten as 55-line thin orchestrator with backward-
+  compatible re-exports. Function identity preserved for
+  `app.dependency_overrides` in tests.
+- **D15 — Logging:** Added `logger = logging.getLogger(__name__)` to all 9
+  routers that were missing it. Added request-level log statements to intake,
+  tokenization, campaigns, and reports routers.
+- **D36 — SDK search fix:** Default SDK `searchIntelligence` now throws a
+  clear error directing callers to use `createPlatformClient()` instead of
+  silently calling the non-existent `POST /search` endpoint.
+- **D37 — Search filter forwarding:** Platform client now forwards
+  `lossBuckets` to the backend as `loss_buckets` (was silently dropped).
+  `indicatorTypes` confirmed as schema metadata only, not a query filter.
+- **D32 — Response models:** Created `api/response_models.py` with 40+ typed
+  Pydantic response models. Added `response_model=` to 43/50 applicable
+  endpoints (86% coverage, exceeding the 80% target). Remaining 7 endpoints
+  return dynamic/arbitrary dicts from store lookups.
+- **D38 — Classification alignment:** Added `classification` field to
+  `CaseDetail` Pydantic model. Surfaced `classification_result` from
+  `review_queue` table in both `get_extended_case()` and
+  `get_dashboard_summary()`. JSON-parses the stored value when it is a string.
+- **D60 — Status/priority enums:** Changed `CaseDetail.status` from `str` to
+  `Literal["new", "in_review", "awaiting_input", "closed", "accepted",
+"rejected"]` and `priority` to `Literal["critical", "high", "medium", "low"]`
+  matching the SDK Zod enums.
+- **D46 — SDK coverage doc:** Created `docs/book/api/sdk_endpoint_coverage.md`
+  documenting 9 covered SDK methods vs ~40+ uncovered endpoints, with guidance
+  on extending coverage.
+- **D61 — Field translation doc:** Created
+  `docs/book/api/field_name_translation.md` cataloguing all 14 manual
+  camelCase/snake_case translation points across 4 files with complete field
+  mapping tables.
+- **Tests:** 268 passed, 3 xfailed, 0 failures.
+- **Design decisions:** SDK `searchIntelligence` kept as a throw (not removed)
+  to preserve the type interface while guiding callers to the correct client.
+  `campaigns.py PATCH` endpoint now returns `{"updated": True, "campaign_id":
+...}` instead of implicit `None`.

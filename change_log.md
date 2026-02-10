@@ -4,7 +4,22 @@ Last updated: 09 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
 
+## 2026-02-09 (WS-2 Session)
+
+- **WS-2: API Quality & Contract Alignment — DONE (9/9 items)**
+  - **D13:** Split `review.py` (953 LOC) into 4 sub-modules + orchestrator. Backward-compatible re-exports preserved.
+  - **D15:** All 13 API routers now have structured logging.
+  - **D36:** SDK `searchIntelligence` now throws clear error (was calling non-existent `POST /search`).
+  - **D37:** Platform client now forwards `lossBuckets` to backend. `indicatorTypes` confirmed schema-only.
+  - **D32:** Added `response_model` to 43/50 endpoints (86% coverage). New `api/response_models.py` with 40+ models.
+  - **D38:** Surfaced `classification_result` in `CaseDetail` and dashboard summary.
+  - **D60:** `CaseDetail.status` and `priority` now use `Literal` types matching SDK Zod enums.
+  - **D46:** SDK endpoint coverage doc at `docs/book/api/sdk_endpoint_coverage.md`.
+  - **D61:** Field name translation reference at `docs/book/api/field_name_translation.md`.
+  - Tests: 268 passed, 3 xfailed, 0 failures.
+
 ## 2026-02-09
+
 - **Phase 3 Remediation Complete**:
   - **D21 (P0 BUG):** Fixed `_apply_environment_overrides` field name (`reports_bucket` → `report_bucket`).
   - **D31:** Fixed 18 test failures + 1 error → 268 pass, 3 xfail. Root causes: ReviewStore API change, exporter mock typo, missing tokenization mock, stale dates, type coercion.
@@ -18,6 +33,7 @@ This log keeps only decisions that affect future development. Older history live
 - **Consolidation Sprint Status:** Phases 1-4 complete. 19 of 61 debt items resolved. Phases 5-6 remaining.
 
 ## 2026-02-08
+
 - **Consolidation Sprint Launched**: Created comprehensive 6-phase quality plan at `planning/tasks/consolidation_plan.md`.
 - **Phase 1 Complete — Streamlit Retirement**:
   - Deleted `core/src/i4g/ui/` (~2,800 LOC), `core/docker/streamlit.Dockerfile`, `core/tests/adhoc/analyst_dashboard_demo.py`.
@@ -57,6 +73,7 @@ This log keeps only decisions that affect future development. Older history live
   - **Intentionally untouched**: `dtp/` (legacy archive), `infra/environments/app/prod/main.tf` (Terraform state — separate deprecation task).
 
 ## 2026-02-06
+
 - **Account List Fixes (Dev Environment)**:
   - **Config**: Renamed `REPORTS_BUCKET` to `REPORT_BUCKET` (singular) across codebase and Terraform to enforce naming conventions.
   - **GCS Access**: Fixed 403 Forbidden errors by adding `roles/storage.objectAdmin` to Cloud Run SA. Implemented robust artifact link generation (Signed URL -> Authenticated Browser Link fallback) to handle missing credentials gracefully.
@@ -71,8 +88,8 @@ This log keeps only decisions that affect future development. Older history live
 - **Analytics & Reporting Redesign**:
   - **Status**: Completed.
   - **Backend**: Verified `GET /analytics/overview` returns schema-compliant real data.
-  - **Frontend**: Full redesign of `ui/apps/web/src/app/(console)/analytics`. 
-    - Aligned visual style with Case Workspace (Shell, Typography). 
+  - **Frontend**: Full redesign of `ui/apps/web/src/app/(console)/analytics`.
+    - Aligned visual style with Case Workspace (Shell, Typography).
     - Replaced custom icons with standard `@i4g/ui-kit` Badges.
     - Added `force-dynamic` rendering and loading skeletons.
   - **Integration**: Removed static mocks; page now relies on live API data (falling back only on explicit env config).
@@ -87,9 +104,10 @@ This log keeps only decisions that affect future development. Older history live
   - **Verification**: Confirmed parity between local and dev seeding processes.
 
 ## 2026-02-05
+
 - **Standardization: Review Queue Statuses**:
   - **Decision**: Standardized status lifecycle across Backend, UI, and Docs to eliminate legacy/conflicting terms (active/blocked vs in_review/awaiting_input).
-  - **Status Set**: 
+  - **Status Set**:
     - `new` (Triage)
     - `in_review` (Active investigation)
     - `awaiting_input` (Blocked external)
@@ -99,12 +117,14 @@ This log keeps only decisions that affect future development. Older history live
   - **Impact**: Database schema migration (`review_queue.status` default=`new`), API filters update (`dashboard.py` excludes all 3 terminal states), and UI badge colors/filters updated.
 
 ## 2026-02-03
+
 - **Case Workspace Implementation**:
   - **Backend**: Implemented `GET /cases/{id}` endpoint in `core.api.cases` serving structured mock data (Phase 1).
   - **Frontend**: Created `cases/[id]` detailed view with timeline, artifacts, and graph components.
   - **Integration**: Connected Case List "Open Case" button to the new view; full end-to-end data flow verified.
 
 ## 2026-02-02
+
 - **Dashboard Backend & Build Stability**:
   - **Backend (Analytics)**: Implemented real analytics queries in `core` (Detection Rate, SLA, Trend lines) leveraging `i4g.store.sql`, replacing static mock responses.
   - **Frontend (Build)**: Resolved a critical build failure in `ui/apps/web` where a stale `.next` cache was serving legacy "Trafficking" taxonomy data, causing Zod schema validation errors.
@@ -113,6 +133,7 @@ This log keeps only decisions that affect future development. Older history live
   - **UX**: Added `ui/apps/web/src/app/(console)/search/loading.tsx` to provide an immediate skeleton UI response while data fetches, fixing the "unresponsive click" perception during page transitions.
 
 ## 2026-01-05
+
 - **Performance Optimization (Classification Sweeper)**:
   - **Job Architecture**: Implemented asynchronous `classification-sweeper` Cloud Run Job to decouple ingestion from LLM latency.
   - **Stability Fixes**:
@@ -122,12 +143,14 @@ This log keeps only decisions that affect future development. Older history live
   - **Result**: Reduced classification error rate from ~35% (synchronous) to <0.2% (asynchronous/batched).
 
 ## 2026-01-04
+
 - **Fraud Taxonomy (Phase 5)**:
   - **Database Schema**: Added `campaigns` table and updated `cases` table to store structured `FraudClassificationResult` (JSON) and link to campaigns.
   - **Campaign Logic**: Implemented `CampaignService` to map classification results (intents, actions, etc.) to campaigns based on taxonomy criteria.
   - **Integration**: Completed backend integration for persisting classification results and linking them to campaigns.
 
 ## 2026-01-02
+
 - **Dev Environment Stabilization**:
   - **IAM**: Granted `roles/serviceusage.serviceUsageConsumer` to `sa-report` to fix 403 errors during report generation.
   - **Configuration Cleanup**: Removed all legacy `STORAGE__CLOUDSQL` variables from code and documentation. Standardized on `APP__CLOUDSQL` and `PII__CLOUDSQL`.
@@ -135,12 +158,14 @@ This log keeps only decisions that affect future development. Older history live
   - **Local Verification**: Updated `settings.local.toml` to use the developer's active account (`jerry@...`) for Cloud SQL verification, aligning with local ADC credentials.
 
 ## 2025-12-31
+
 - **Search & Infrastructure Fixes**: Resolved multiple "500 Internal Server Error" issues in `fastapi-gateway`.
   - **Backend (Vertex AI)**: Updated `VertexVectorStore` to robustly handle `struct_data` from Vertex AI Search. Implemented `MessageToDict` with a fallback for `MapComposite` objects (which lack `DESCRIPTOR`) to prevent `AttributeError` and JSON serialization crashes.
   - **Backend (ReviewStore)**: Added missing `ensure_placeholder_review` method to `SqlAlchemyReviewStore` to fix crashes in the search audit logging flow.
   - **Infrastructure**: Verified that `TOKENIZATION` environment variables were correctly renamed to `PII` in Terraform (`infra/environments/app/dev/main.tf`), resolving Cloud SQL connection failures.
 
 ## 2025-12-28
+
 - **PII Vault Implementation**:
   - **Schema Isolation**: Separated PII Vault schema from main application schema. Created `VAULT_METADATA` in `sql.py` and a dedicated Alembic environment (`migrations_vault/`, `alembic_vault.ini`) to manage the `pii_tokens` table independently.
   - **Infrastructure**: Provisioned Cloud SQL instance `i4g-vault-dev-db` and KMS key ring `pii-vault-keyring` via Terraform.
@@ -152,6 +177,7 @@ This log keeps only decisions that affect future development. Older history live
   - Added `--ingest-dry-run` flag to `i4g bootstrap dev` to allow testing extraction logic without DB writes.
 
 ## 2025-12-26
+
 - **Search & Save Fixes**: Resolved "401 Unauthorized" and "500 Internal Server Error" issues in Search and Saved Search flows.
   - **Backend**: Updated `VertexVectorStore` to robustly handle `struct_data` vs `json_data` from Vertex AI Search. Renamed `save_search` to `upsert_saved_search` in `ReviewStore` to match API calls and fix FK constraints.
   - **Frontend**: Patched Next.js API routes (`reviews/saved`, `intakes`) to inject IAP OIDC tokens (`Authorization: Bearer ...`) alongside App API keys (`X-API-KEY`).
@@ -159,6 +185,7 @@ This log keeps only decisions that affect future development. Older history live
   - **Deployment**: Rebuilt and redeployed both `fastapi-gateway` and `i4g-console` to `dev`.
 
 ## 2025-12-24
+
 - **Infrastructure**: Added Cloud SQL (PostgreSQL 15) provisioning to Terraform (`infra/environments/app/dev/database.tf`) including database and user management.
 - **Security & Auth**: Addressed "403 Forbidden" errors in `i4g-console` by fixing OIDC token generation in `auth-helpers.ts`.
   - Identified that `google-auth-library` requires explicit `audience` parameter in `getRequestHeaders` to generate tokens.
@@ -167,6 +194,7 @@ This log keeps only decisions that affect future development. Older history live
 - **Documentation**: Added `docs/cookbooks/cloud_sql_primer.md` and updated `docs/cookbooks/bootstrap_environments.md`.
 
 ## 2025-12-22 (Session 2)
+
 - **Security & Auth**: Fixed "401 Unauthorized" errors in `i4g-console` by implementing IAP-aware authentication for server-side API calls.
   - Injected `I4G_IAP_CLIENT_ID` into `i4g-console` Cloud Run service via Terraform.
   - Updated `platform-client.ts`, `account-list-service.ts`, and `reviews-service.ts` to generate OIDC tokens using `google-auth-library`.
@@ -175,32 +203,39 @@ This log keeps only decisions that affect future development. Older history live
   - Confirmed `sa-app` service account has `roles/iap.httpsResourceAccessor` on the API backend.
 
 ## 2025-12-22
+
 - **Bootstrap Fixes**: Resolved Cloud Run job failures in `dev_bootstrap` by fixing Docker entrypoints (switched `CMD` to `ENTRYPOINT`) and updating ingestion logic to support GCS directory paths (prefixes) for bundles.
 - **Report Directory Refactor**: Standardized report output directories to `data/reports/bootstrap_dev` and `data/reports/bootstrap_local` (renamed from `dev_bootstrap`/`local_bootstrap`). Updated all CLI tools and documentation to reflect this change.
 - **Documentation**: Updated `docs/cookbooks/bootstrap_environments.md` with correct job names, verification commands, and bundle URI formats.
 
 ## 2025-12-19
+
 - Fixed Cloud Run job authentication: `process-intakes` now generates OIDC tokens for service-to-service calls to the API gateway.
 - Updated `i4g bootstrap dev verify` to support IAP-protected environments by injecting local identity tokens.
 - Refined bootstrap documentation: separated bundle preparation into [core/docs/cookbooks/prepare_bootstrap_bundles.md](../core/docs/cookbooks/prepare_bootstrap_bundles.md) and clarified smoke test expectations.
 
 ## 2025-12-11
+
 - Repo rename to `core/` is complete. Flip any remaining `proto` references and use `I4G_API_KIND=core` going forward.
 
 ## 2025-12-16
+
 - Data reset/bootstrap plan established for local + dev environments. Canonical bundles live in GCS with manifests; CLI flows will support wipe/import/verify across all storages. See [data_reset_bootstrap_plan.md](data_reset_bootstrap_plan.md).
 - Local bootstrap verification now emits a bundle manifest hash and ingestion-run summary to catch stale datasets early.
 - Optional dossier signature smoke added to local bootstrap (`--smoke-dossiers`) for end-to-end verification when API is up.
 - Archived the data reset/bootstrap sprint plan to [planning/archive/data_reset_bootstrap_plan.md](../planning/archive/data_reset_bootstrap_plan.md) after completing all checklist items.
 
 ## 2025-12-10
+
 - PII vault finalized: deterministic `AAA-XXXXXXXX` tokens, sharded GCS layout, and cross-project Secret Manager/KMS bindings
   captured in [core/docs/design/pii_vault.md](../core/docs/design/pii_vault.md). Cloud Run must read pepper/key via env vars.
 
 ## 2025-12-06
+
 - LEA dossier flow: portal download + verification parity (API proxy + Web Crypto); nightly smoke covers `/reports/dossiers`.
   Use the signature manifest contract in [core/docs/design/architecture.md](../core/docs/design/architecture.md) for any new report work.
 
 ## 2025-12-02
+
 - Hybrid search + structured filters are baseline: Vertex AI Search + SQL dual-write with retry queue. See ingestion settings in
   `config/settings.*.toml` and the retrieval contracts in [core/docs/design/architecture.md](../core/docs/design/architecture.md).
