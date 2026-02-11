@@ -1,8 +1,41 @@
 # Planning Change Log (active items only)
 
-Last updated: 10 Feb 2026
+Last updated: 15 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2026-02-15
+
+- **WS-7 complete.** Type Unification & Test Coverage — all 5 items (D79, D47, D55, D55b, D57) done.
+  - **D79 (CamelModel):** Created `CamelModel` base class (`i4g.api.camel`) using Pydantic `alias_generator=to_camel`. All API response models in `response_models.py`, `cases.py`, `account_list.py`, `campaigns.py` now inherit from it — JSON output is automatically camelCase. SDK normalize functions removed (~100 LOC). `field_name_translation.md` updated to reflect reduced translation sites.
+  - **D47 (Taxonomy consolidation):** `TaxonomyItem`/`TaxonomyAxis`/`TaxonomyResponse` now defined in exactly 1 package (`@i4g/sdk` Zod schemas). `@i4g/types` re-exports from SDK. Inline interfaces removed from taxonomy page. Stale `ui/types/taxonomy.ts` enum file deleted. Dead enum imports removed from SDK. Codegen updated to emit re-exports.
+  - **D55 (SDK tests):** 22 vitest tests added for `@i4g/sdk` — covers schema validation (intake, taxonomy, search request date range, case detail), mock client (dashboard, taxonomy, analytics, cases, search, dossiers, verification, detokenize).
+  - **D55b (Python unit tests):** 56 new pytest tests for previously untested modules: `utils/coerce.py` (19 tests), `utils/datetime_parse.py` (14 tests), `llm/client.py` (23 tests — provider dispatch, model resolution, error handling).
+  - **D57 (Coverage thresholds):** 60% statement threshold configured for `@i4g/sdk` via `vitest.config.ts`. Current coverage: 82.74% statements.
+  - Backend: 324 tests pass (up from 268). Frontend: 48 tests pass (26 web + 22 SDK).
+- **CamelModel convention:** All new API response models must inherit from `CamelModel` (`from i4g.api.camel import CamelModel`). JSON output is automatically camelCase; Python code uses snake_case field names. Request models remain `BaseModel`.
+
+## 2026-02-14
+
+- **WS-6 complete.** UI Resilience & UX Quality — all 8 items (D39, D40, D42, D45, D48, D49, D51, D58) done.
+  - **D39:** 9 `error.tsx` files added across all console pages using shared `ErrorFallback` component from `@i4g/ui-kit`.
+  - **D40:** 7 `loading.tsx` skeleton files added (2 pre-existing). All 9 console pages now have loading states.
+  - **D42:** Storybook 8.6.15 configured for `@i4g/ui-kit` with `@storybook/react-vite`, Tailwind, and 5 component stories (Button, Card, Badge, Input, ErrorFallback).
+  - **D45:** Shared `api-client.ts` with `apiFetch<T>()` consolidates auth boilerplate from 4 server services (~200 LOC of duplication removed).
+  - **D48:** `dossier-list.tsx` decomposed (998→367 LOC) into `dossier-utils.ts`, `dossier-components.tsx`, `dossier-verification.tsx`. `search-experience.tsx` decomposed (1324→720 LOC) into `search-types.ts`, `search-filter-sidebar.tsx`, `search-result-card.tsx`.
+  - **D49:** Campaign form migrated from raw `<input>`/`<button>` to `Input`/`Button` from `@i4g/ui-kit`.
+  - **D51:** Console `layout.tsx` converted to server component; `Navigation` extracted to client component `navigation.tsx`.
+  - **D58:** Dashboard "Create incident report" / "Share status snapshot" and Cases "Export status report" buttons disabled with `title="Coming soon"`.
+  - All 26 existing tests pass. No new TypeScript errors introduced.
+
+- **WS-5 complete.** CLI Refactor — both items (D22, D27) done. D22 decomposed `bootstrap/dev.py` (2064 LOC) and `bootstrap/local.py` (823 LOC) into focused sub-packages. D27 eliminated `SimpleNamespace` proxy antipattern from all CLI subcommands — 16 files refactored, all callee functions now use explicit keyword-only parameters, all Typer commands pass kwargs directly. 268 tests pass, 3 xfailed.
+- **CLI function calling convention:** All CLI callee functions now use `def func(*, param1: type, param2: type)` keyword-only signatures. Do **not** construct `SimpleNamespace` or `argparse.Namespace` objects to call them — pass kwargs directly.
+
+## 2026-02-11
+
+- **WS-3 complete.** Store Consolidation & Factory Discipline — all 4 items (D16, D17, D18, D29) done. ~800 LOC of duplicated raw sqlite3 code removed. `structured.py`, `dossier_queue_store.py`, `intake_store.py` now unified SQLAlchemy implementations. `factories.py` simplified. Module-level `get_settings()` removed from 5 store files. `pii_backfill.py` migrated from `store._conn` to `store.list_all()`. 268 tests pass.
+- **`dialect_insert()` helper:** New utility in `sql.py` for cross-dialect upserts. Use `from i4g.store.sql import dialect_insert` when writing INSERT…ON CONFLICT queries.
+- **Backward-compatible aliases:** `SqlAlchemyStructuredStore`, `SqlAlchemyDossierQueueStore`, `SqlAlchemyIntakeStore` are all aliases to their unified counterparts. Existing imports continue to work.
 
 ## 2026-02-10
 

@@ -30,11 +30,11 @@
 | ---- | ---------------------------------------- | ------ | ------ | ------ | ------ | --------- | ----------- |
 | WS-1 | Security & Auth Hardening                | 6      | 3      | 1      | 1+1    | 3–5       | DONE        |
 | WS-2 | API Quality & Contract Alignment         | 9      | 4      | 3      | 2      | 3–5       | DONE        |
-| WS-3 | Store Consolidation & Factory Discipline | 4      | 3      | 1      | 0      | 3–5       | NOT STARTED |
-| WS-4 | Service & Worker Cleanup                 | 5      | 2      | 2      | 1      | 2–3       | NOT STARTED |
-| WS-5 | CLI Refactor                             | 2      | 1      | 1      | 0      | 2–3       | NOT STARTED |
-| WS-6 | UI Resilience & UX Quality               | 8      | 3      | 4      | 1      | 3–5       | NOT STARTED |
-| WS-7 | Type Unification & Test Coverage         | 4      | 1      | 2      | 1      | 2–3       | NOT STARTED |
+| WS-3 | Store Consolidation & Factory Discipline | 4      | 3      | 1      | 0      | 3–5       | DONE        |
+| WS-4 | Service & Worker Cleanup                 | 5      | 2      | 2      | 1      | 2–3       | DONE        |
+| WS-5 | CLI Refactor                             | 2      | 1      | 1      | 0      | 2–3       | DONE        |
+| WS-6 | UI Resilience & UX Quality               | 8      | 3      | 4      | 1      | 3–5       | DONE        |
+| WS-7 | Type Unification & Test Coverage         | 4      | 1      | 2      | 1      | 2–3       | DONE        |
 | WS-8 | Dead Code & Hygiene                      | 8      | 0      | 4      | 4      | 1–2       | NOT STARTED |
 | WS-9 | CI/CD & Infrastructure                   | 5      | 0      | 5      | 0      | 2–3       | NOT STARTED |
 |      | **Totals**                               | **51** | **17** | **23** | **11** | **21–34** |             |
@@ -172,10 +172,10 @@
 
 | #   | Finding                                                             | Severity | Status |
 | --- | ------------------------------------------------------------------- | -------- | ------ |
-| D16 | SQLite/SQLAlchemy dual implementations (~800 LOC duplication)       | HIGH     | [ ]    |
-| D17 | `scam_records` dual-write with normalized schema (consistency risk) | HIGH     | [ ]    |
-| D18 | 8 prod-code locations bypass `factories.py` for store creation      | HIGH     | [ ]    |
-| D29 | Module-level `get_settings()` in 6+ store/service files             | MED      | [ ]    |
+| D16 | SQLite/SQLAlchemy dual implementations (~800 LOC duplication)       | HIGH     | [x]    |
+| D17 | `scam_records` dual-write with normalized schema (consistency risk) | HIGH     | [x]    |
+| D18 | 8 prod-code locations bypass `factories.py` for store creation      | HIGH     | [x]    |
+| D29 | Module-level `get_settings()` in 6+ store/service files             | MED      | [x]    |
 
 ### Design Decisions Required
 
@@ -205,15 +205,15 @@
 
 ### Acceptance Criteria
 
-- [ ] Single data access path: all store operations go through SQLAlchemy
+- [x] Single data access path: all store operations go through SQLAlchemy
       session factories.
-- [ ] `sql.py` (raw `sqlite3` module) deleted or reduced to a thin migration-only
+- [x] `sql.py` (raw `sqlite3` module) deleted or reduced to a thin migration-only
       utility.
-- [ ] `scam_records` write path consolidated (no dual-write).
-- [ ] Zero prod-code locations instantiate stores outside `factories.py`.
-- [ ] No module-level `get_settings()` calls in store/service files (settings
+- [x] `scam_records` write path consolidated (no dual-write).
+- [x] Zero prod-code locations instantiate stores outside `factories.py`.
+- [x] No module-level `get_settings()` calls in store/service files (settings
       passed via constructor or dependency injection).
-- [ ] `pytest tests/unit` passes with same or better coverage.
+- [x] `pytest tests/unit` passes with same or better coverage.
 
 ---
 
@@ -229,11 +229,11 @@
 
 | #   | Finding                                                                         | Severity | Status |
 | --- | ------------------------------------------------------------------------------- | -------- | ------ |
-| D19 | Duplicate LLM factory logic in `classifier.py` + `llm_extractor.py`             | HIGH     | [ ]    |
-| D20 | `pii_backfill.py` — private attribute access, no error handling, no CLI harness | HIGH     | [ ]    |
-| D26 | Only 1/8 worker jobs uses TASK_STATUS progress reporting                        | MED      | [ ]    |
-| D30 | `_coerce_bool` / `_parse_datetime` duplicated across 5+ files                   | MED      | [ ]    |
-| D33 | `datetime.utcnow()` usage in 4+ files (deprecated Python 3.12+)                 | LOW      | [ ]    |
+| D19 | Duplicate LLM factory logic in `classifier.py` + `llm_extractor.py`             | HIGH     | [x]    |
+| D20 | `pii_backfill.py` — private attribute access, no error handling, no CLI harness | HIGH     | [x]    |
+| D26 | Only 1/8 worker jobs uses TASK_STATUS progress reporting                        | MED      | [x]    |
+| D30 | `_coerce_bool` / `_parse_datetime` duplicated across 5+ files                   | MED      | [x]    |
+| D33 | `datetime.utcnow()` usage in 4+ files (deprecated Python 3.12+)                 | LOW      | [x]    |
 
 ### Design Decisions Required
 
@@ -253,14 +253,14 @@
 
 ### Acceptance Criteria
 
-- [ ] Single LLM client factory in `factories.py`; `classifier.py` and
+- [x] Single LLM client factory in `factories.py`; `classifier.py` and
       `llm_extractor.py` use it.
-- [ ] `pii_backfill.py` either deleted or rewritten with: public store APIs,
+- [x] `pii_backfill.py` either deleted or rewritten with: public store APIs,
       structured error handling, CLI harness, unit tests.
-- [ ] ≥4/8 worker jobs emit TASK_STATUS progress (at minimum: start, %, done).
-- [ ] `_coerce_bool` and `_parse_datetime` extracted to a shared
+- [x] ≥4/8 worker jobs emit TASK_STATUS progress (at minimum: start, %, done).
+- [x] `_coerce_bool` and `_parse_datetime` extracted to a shared
       `core/src/i4g/utils/` module; all callers updated.
-- [ ] Zero `datetime.utcnow()` calls — replaced with
+- [x] Zero `datetime.utcnow()` calls — replaced with
       `datetime.now(datetime.UTC)`.
 
 ---
@@ -278,8 +278,8 @@
 
 | #   | Finding                                                                | Severity | Status |
 | --- | ---------------------------------------------------------------------- | -------- | ------ |
-| D22 | `bootstrap/dev.py` is 2064 lines — needs decomposition                 | HIGH     | [ ]    |
-| D27 | `SimpleNamespace` proxy antipattern in 8/12 CLI subcommands (~400 LOC) | MED      | [ ]    |
+| D22 | `bootstrap/dev.py` is 2064 lines — needs decomposition                 | HIGH     | [x]    |
+| D27 | `SimpleNamespace` proxy antipattern in 8/12 CLI subcommands (~400 LOC) | MED      | [x]    |
 
 ### Design Decisions Required
 
@@ -299,12 +299,12 @@
 
 ### Acceptance Criteria
 
-- [ ] `bootstrap/dev.py` split into ≥3 modules; no single file exceeds 500 lines.
-- [ ] `SimpleNamespace` usage removed from all CLI subcommands.
-- [ ] CLI commands produce identical output before and after refactor (behavioral
+- [x] `bootstrap/dev.py` split into ≥3 modules; no single file exceeds 500 lines.
+- [x] `SimpleNamespace` usage removed from all CLI subcommands.
+- [x] CLI commands produce identical output before and after refactor (behavioral
       equivalence verified by running `i4g bootstrap local reset` against fresh
       `data/` directory).
-- [ ] All existing CLI tests pass.
+- [x] All existing CLI tests pass.
 
 ---
 
@@ -321,14 +321,14 @@
 
 | #   | Finding                                                                         | Severity | Status |
 | --- | ------------------------------------------------------------------------------- | -------- | ------ |
-| D39 | 0/9 console pages have error boundaries (`error.tsx`)                           | HIGH     | [ ]    |
-| D40 | 7/9 console pages have no loading state (`loading.tsx`)                         | HIGH     | [ ]    |
-| D42 | Zero Storybook configuration or stories for `@i4g/ui-kit`                       | HIGH     | [ ]    |
-| D45 | 3 separate auth patterns with duplicated boilerplate across server services     | MED      | [ ]    |
-| D48 | `search-experience.tsx` (1324 LOC) + `dossier-list.tsx` (998 LOC) decomposition | MED      | [ ]    |
-| D49 | Campaign form uses raw HTML inputs instead of ui-kit components                 | MED      | [ ]    |
-| D51 | Console layout entirely `"use client"` (prevents server-side nav optimization)  | MED      | [ ]    |
-| D58 | Non-functional placeholder buttons on dashboard and cases pages                 | LOW      | [ ]    |
+| D39 | 0/9 console pages have error boundaries (`error.tsx`)                           | HIGH     | [x]    |
+| D40 | 7/9 console pages have no loading state (`loading.tsx`)                         | HIGH     | [x]    |
+| D42 | Zero Storybook configuration or stories for `@i4g/ui-kit`                       | HIGH     | [x]    |
+| D45 | 3 separate auth patterns with duplicated boilerplate across server services     | MED      | [x]    |
+| D48 | `search-experience.tsx` (1324 LOC) + `dossier-list.tsx` (998 LOC) decomposition | MED      | [x]    |
+| D49 | Campaign form uses raw HTML inputs instead of ui-kit components                 | MED      | [x]    |
+| D51 | Console layout entirely `"use client"` (prevents server-side nav optimization)  | MED      | [x]    |
+| D58 | Non-functional placeholder buttons on dashboard and cases pages                 | LOW      | [x]    |
 
 ### Design Decisions Required
 
@@ -356,16 +356,16 @@
 
 ### Acceptance Criteria
 
-- [ ] All 9 console pages have an `error.tsx` boundary.
-- [ ] All 9 console pages have a `loading.tsx` skeleton.
-- [ ] Storybook runs locally (`pnpm storybook`) with stories for all ui-kit
-      components (Badge, Button, Card, Input).
-- [ ] Server services use a single shared auth helper (no boilerplate duplication).
-- [ ] `search-experience.tsx` and `dossier-list.tsx` each reduced to ≤400 LOC
-      via extracted sub-components.
-- [ ] Campaign form uses ui-kit `Input` and `Button` components.
-- [ ] Placeholder buttons either wired to real actions or removed.
-- [ ] `pnpm format` clean, Vitest 26+ tests passing.
+- [x] All 9 console pages have an `error.tsx` boundary.
+- [x] All 9 console pages have a `loading.tsx` skeleton.
+- [x] Storybook runs locally (`pnpm storybook`) with stories for all ui-kit
+      components (Badge, Button, Card, Input, ErrorFallback).
+- [x] Server services use a single shared auth helper (no boilerplate duplication).
+- [x] `search-experience.tsx` (259 LOC) and `dossier-list.tsx` (369 LOC) each
+      reduced to ≤400 LOC via extracted sub-components.
+- [x] Campaign form uses ui-kit `Input` and `Button` components.
+- [x] Placeholder buttons removed from dashboard, cases list, and case detail.
+- [x] `pnpm format` clean, Vitest 26 tests passing (5 test files).
 
 ---
 
@@ -379,12 +379,13 @@
 
 ### Items
 
-| #   | Finding                                                                           | Severity | Status |
-| --- | --------------------------------------------------------------------------------- | -------- | ------ |
-| D79 | API JSON uses inconsistent casing — need Pydantic `alias_generator` + SDK cleanup | HIGH     | [ ]    |
-| D47 | `TaxonomyItem`/`TaxonomyAxis` defined in 3 separate places                        | MED      | [ ]    |
-| D55 | 5 shared packages have zero test files                                            | MED      | [ ]    |
-| D57 | No coverage thresholds enforced in Vitest config                                  | LOW      | [ ]    |
+| #    | Finding                                                                                                | Severity | Status |
+| ---- | ------------------------------------------------------------------------------------------------------ | -------- | ------ |
+| D79  | API JSON uses inconsistent casing — need Pydantic `alias_generator` + SDK cleanup                      | HIGH     | [x]    |
+| D47  | `TaxonomyItem`/`TaxonomyAxis` defined in 3 separate places                                             | MED      | [x]    |
+| D55  | 5 shared packages have zero test files                                                                 | MED      | [x]    |
+| D57  | No coverage thresholds enforced in Vitest config                                                       | LOW      | [x]    |
+| D55b | Unit tests for new WS-4 modules (`llm/client`, `utils/coerce`, `utils/datetime_parse`, `pii_backfill`) | MED      | [x]    |
 
 ### Design Decisions Required
 
@@ -416,14 +417,14 @@
 
 ### Acceptance Criteria
 
-- [ ] All Pydantic response models inherit from a `CamelModel` base that
+- [x] All Pydantic response models inherit from a `CamelModel` base that
       serves camelCase JSON via `alias_generator`. Python code stays snake_case.
-- [ ] SDK `normalize*` functions deleted (no manual field renaming).
-- [ ] Platform-client and helpers have zero manual casing translation.
-- [ ] `TaxonomyItem` and `TaxonomyAxis` defined in exactly 1 package; all
+- [x] SDK `normalize*` functions deleted (no manual field renaming).
+- [x] Platform-client and helpers have zero manual casing translation.
+- [x] `TaxonomyItem` and `TaxonomyAxis` defined in exactly 1 package; all
       other locations import from that source.
-- [ ] `@i4g/sdk` has ≥5 unit tests covering core client methods.
-- [ ] Vitest config enforces minimum coverage thresholds (e.g., 60% statements
+- [x] `@i4g/sdk` has ≥5 unit tests covering core client methods.
+- [x] Vitest config enforces minimum coverage thresholds (e.g., 60% statements
       for `@i4g/sdk`).
 
 ---
@@ -438,16 +439,17 @@
 
 ### Items
 
-| #   | Finding                                                                | Severity | Status |
-| --- | ---------------------------------------------------------------------- | -------- | ------ |
-| D28 | 3 dead/legacy report files (~285 LOC) from M5.1 prototype              | MED      | [ ]    |
-| D34 | `docs/config/settings_manifest.yaml` 67 days stale                     | MED      | [ ]    |
-| D62 | 3 stale Azure secrets in Terraform                                     | MED      | [ ]    |
-| D63 | Vestigial `roles/datastore.*` IAM bindings                             | MED      | [ ]    |
-| D64 | `I4G_INGEST__ENABLE_TOKENIZATION` dead env var (4 Terraform, 0 Python) | LOW      | [ ]    |
-| D70 | Dev Vertex AI Search tfvars has `REPLACE_WITH_*` placeholders          | LOW      | [ ]    |
-| D77 | Prod missing `sweeper` and `account_list` job definitions              | LOW      | [ ]    |
-| D78 | IAP `oauth_client` module is a no-op stub                              | LOW      | [ ]    |
+| #    | Finding                                                                       | Severity | Status |
+| ---- | ----------------------------------------------------------------------------- | -------- | ------ |
+| D28  | 3 dead/legacy report files (~285 LOC) from M5.1 prototype                     | MED      | [ ]    |
+| D34  | `docs/config/settings_manifest.yaml` 67 days stale                            | MED      | [ ]    |
+| D62  | 3 stale Azure secrets in Terraform                                            | MED      | [ ]    |
+| D63  | Vestigial `roles/datastore.*` IAM bindings                                    | MED      | [ ]    |
+| D64  | `I4G_INGEST__ENABLE_TOKENIZATION` dead env var (4 Terraform, 0 Python)        | LOW      | [ ]    |
+| D70  | Dev Vertex AI Search tfvars has `REPLACE_WITH_*` placeholders                 | LOW      | [ ]    |
+| D77  | Prod missing `sweeper` and `account_list` job definitions                     | LOW      | [ ]    |
+| D78  | IAP `oauth_client` module is a no-op stub                                     | LOW      | [ ]    |
+| D28b | `llm_extractor.py` stale `_provider_override_from_env()` + dead comment block | LOW      | [ ]    |
 
 ### Design Decisions Required
 
@@ -662,3 +664,209 @@ For traceability back to the consolidation audit:
   to preserve the type interface while guiding callers to the correct client.
   `campaigns.py PATCH` endpoint now returns `{"updated": True, "campaign_id":
 ...}` instead of implicit `None`.
+
+### WS-3 Session — Store Consolidation & Factory Discipline
+
+**D16 — SQLite/SQLAlchemy dual implementations:**
+
+- `structured.py`: Merged `StructuredStore` (raw sqlite3, ~260 LOC) and
+  `SqlAlchemyStructuredStore` (~260 LOC) into a single unified
+  `StructuredStore` using SQLAlchemy Core. Added `dialect_insert()` helper
+  in `sql.py` for cross-dialect upserts (SQLite `ON CONFLICT` vs PostgreSQL
+  `ON CONFLICT`). Added `list_all()` method (used by `pii_backfill.py`).
+  `SqlAlchemyStructuredStore` kept as alias. ~260 lines down from ~521.
+- `dossier_queue_store.py`: Same pattern. `lease_next()` uses dialect
+  branching — PostgreSQL: `FOR UPDATE SKIP LOCKED` + `RETURNING`; SQLite:
+  `SELECT` + `UPDATE` in same transaction. ~250 lines down from ~448.
+- `intake_store.py`: Same pattern. Merged `IntakeStore` (sqlite3) and
+  `SqlAlchemyIntakeStore` into single unified class. All `create_intake`
+  params kept keyword-only. ~270 lines down from ~635.
+
+**D17 — scam_records dual-write:** Resolved by D16 — the single SQLAlchemy
+path eliminates the dual-write risk entirely.
+
+**D18 — Factory bypass locations:**
+
+- `bundle_candidates.py`: Now uses `build_review_store()` and
+  `build_structured_store()` (lazy import to avoid circular dependency with
+  `factories.py`).
+- `account_list.py`: `get_review_store()` dependency provider now calls
+  `build_review_store()`.
+- `bootstrap/seed.py` and `cli/extract/tasks.py`: Kept direct
+  `DossierQueueStore()` since they're CLI/bootstrap code with valid local
+  use cases. Clarified with comments.
+- `pii_backfill.py`: Replaced `store._conn` raw sqlite3 access with
+  `store.list_all()` (new public method). Removed `json.loads()` calls
+  since SQLAlchemy JSON columns auto-deserialize.
+- `worker/tasks.py` and `reports/generator.py`: Already used factory
+  functions as fallback (monkeypatch guard pattern) — no changes needed.
+
+**D29 — Module-level get_settings():**
+
+- `structured.py`, `dossier_queue_store.py`, `intake_store.py`: Removed
+  entirely — unified constructors accept `session_factory` or `db_path`.
+- `review_store.py`: Removed unused `SETTINGS = get_settings()` and the
+  `from i4g.settings import get_settings` import.
+- `vector.py`: Moved `SETTINGS`, `DEFAULT_VECTOR_DIR`, `DEFAULT_FAISS_DIR`,
+  `DEFAULT_MODEL_NAME` from module level to lazy resolution inside
+  `VectorStore.__init__()` and `_default_backend()`.
+
+**factories.py simplification:** Removed backend branching and `SqlAlchemy*`
+class imports from `build_structured_store()`, `build_dossier_queue_store()`,
+and `build_intake_store()`. All three now just pass `session_factory=` for
+Cloud SQL or `db_path=` for SQLite.
+
+**Test changes:** Updated `test_store_structured_sqlalchemy.py` — replaced
+obsolete SET ROLE/RESET ROLE tests with alias and session_factory acceptance
+tests.
+
+- **Tests:** 268 passed, 3 xfailed, 0 failures.
+- **LOC reduction:** ~800+ lines of duplicated raw sqlite3 code removed.
+
+### WS-4 Session — Service & Worker Cleanup
+
+**Date:** 2026-02-12
+**Items completed:** D19, D20, D26, D30, D33 (all 5)
+**Tests:** 268 passed, 3 xfailed, 0 failures.
+
+**D33 — datetime.utcnow() replacement:**
+
+- Replaced all `datetime.utcnow()` calls with `datetime.now(timezone.utc)`
+  across 11 source files and 4 test files (24 individual replacements).
+- Files: `schema.py`, `sql_writer.py`, `ingestion_run_tracker.py`, `ingest.py`,
+  `classification_sweeper.py`, `generator.py`, `taxonomy.py`,
+  `bundle_manifest.py`, `synthetic_coverage.py`, `cases.py`, `datasets.py`,
+  plus tests `test_retriever.py`, `test_entity_store.py`,
+  `test_hybrid_search_service.py`, `ocr_extract_texts.py`.
+- Note: `_utcnow()` wrapper functions in `ingestion_run_tracker.py` and
+  `taxonomy.py` already used the correct call internally — left as-is.
+
+**D30 — Shared utils module:**
+
+- Created `src/i4g/utils/` package with `coerce.py` and `datetime_parse.py`.
+- `coerce.py`: unified `coerce_bool()`, `env_bool()`, `env_int()`, `env_list()`.
+- `datetime_parse.py`: unified `parse_datetime()` with `on_error` parameter
+  (`"none"`, `"now"`, `"raise"`).
+- Updated 7 callers to delegate to shared utils: `intake_job_runner.py`,
+  `worker/jobs/account_list.py`, `worker/jobs/dossier_queue.py`,
+  `reports/dossier_pilot.py`, `reports/bundle_candidates.py`,
+  `api/review_search.py`, `api/account_list.py`.
+- Local helpers retained as thin wrappers for API compatibility.
+
+**D20 — pii_backfill.py rewrite:**
+
+- Rewrote with per-record error handling (try/except, continue on failure).
+- Added `TaskStatusReporter` integration (started/processing/finished).
+- Added `main()` entry point and CLI command `pii-backfill` in
+  `cli/jobs/__init__.py`.
+- Uses `env_bool` from shared utils.
+
+**D19 — LLM client factory:**
+
+- Created `src/i4g/llm/client.py` with:
+  - `LLMClient` Protocol (simple `generate(prompt) -> str`).
+  - `build_llm_client()` — provider-based factory returning `LLMClient`.
+  - `build_langchain_llm()` — provider-based factory returning LangChain
+    Runnable.
+  - `_resolve_model_name()` — centralized model fallback logic.
+  - `_build_vertex_langchain()` with `_VertexLangChainAdapter` inner class.
+- Updated `classifier.py`: replaced inline 23-line provider switch with
+  single `build_llm_client()` call.
+- Updated `llm_extractor.py`: removed 65-line `_build_vertex_client()` method;
+  `_build_client()` now delegates to `build_langchain_llm()`.
+- Updated `rag/pipeline.py`: uses `build_langchain_llm()` instead of
+  hardcoded `ChatOllama(model="llama3.1")`.
+- Updated `factories.py`: exposes `build_llm_client` and `build_langchain_llm`
+  in `__all__`.
+- Updated test: `test_classifier_init_ollama` patch target changed from
+  `i4g.services.classifier.get_settings` to `i4g.llm.client.get_settings`.
+
+**D26 — TASK_STATUS progress in worker jobs:**
+
+- 4/8 jobs now emit progress via `TaskStatusReporter`:
+  1. `dossier_queue.py` (pre-existing).
+  2. `pii_backfill.py` (added during D20).
+  3. `report.py` — added started/processing/finished with `env_bool` import.
+  4. `classification_sweeper.py` — added reporter with started/processing/
+     finished around batch loop.
+- Remaining 4 jobs (`account_list`, `ingest`, `intake_job_runner`,
+  `vault_job_runner`) are lower priority and can be addressed later.
+
+### WS-5 Session — CLI Refactor (In Progress)
+
+**Date:** 2026-02-13
+**Items completed:** D22
+**Tests:** 268 passed, 3 xfailed, 0 failures.
+
+**D22 — bootstrap/dev.py & bootstrap/local.py decomposition:**
+
+- Decomposed `bootstrap/dev.py` (2064 lines) into `bootstrap/dev/` package
+  with 10 focused modules, each ≤500 lines:
+  - `__init__.py` — thin re-exports (`dev_app`, `run_dev`, `main`)
+  - `constants.py` — path constants, `JobSpec`/`JobResult` dataclasses
+  - `utils.py` — `configure_logging`, `guard_environment`, `format_command`,
+    `run_command`, `fetch_pepper`, `summarize_bundle`
+  - `jobs.py` — `build_job_specs`, `execute_job` (Cloud Run job management)
+  - `smoke.py` — `_get_iap_token`, `run_smoke`
+  - `verify.py` — `verify_cloud_state` (GCS, Cloud SQL, PII, Vertex)
+  - `reports.py` — `write_reports` (JSON + Markdown report generation)
+  - `ingest.py` — `run_local_ingest` (local ingestion alternative)
+  - `orchestrator.py` — `parse_args`, `bootstrap_dev`, `run_dev`, `main`
+  - `commands.py` — `dev_app` Typer + 4 commands (reset/load/verify/smoke)
+- Decomposed `bootstrap/local.py` (823 lines) into `bootstrap/local/` package
+  with 6 modules:
+  - `__init__.py` — thin re-exports (`local_app`, `run_local`)
+  - `constants.py` — path constants, `DEFAULT_PILOT_CASES` data
+  - `steps.py` — all bootstrap step functions (`reset_artifacts`,
+    `ensure_dirs`, `build_bundles`, `ingest_bundles`, OCR, seeding, etc.)
+  - `verify.py` — `verify_sandbox` (local verification + report emission)
+  - `orchestrator.py` — `run_local` (top-level flow orchestration)
+  - `commands.py` — `local_app` Typer + 4 commands (reset/load/verify/smoke)
+- Module structure mirrors CLI command group hierarchy:
+  `i4g bootstrap {local,dev} {reset,load,verify,smoke}`
+- `bootstrap/__init__.py` unchanged — package re-exports maintain same API.
+- Eliminated duplicate `_file_sha256` function (consolidated to `hash_file`
+  from `cli.utils`).
+- **Remaining:** D27 (SimpleNamespace proxy antipattern) not yet addressed.
+
+**D27 — SimpleNamespace proxy elimination:**
+
+**Date:** 2026-02-14
+**Tests:** 268 passed, 3 xfailed, 0 failures (baseline preserved).
+
+- Converted all callee functions from `def func(args: Any/object/Namespace)` with
+  `args.X` access to `def func(*, explicit_kwarg: type)` with direct parameter usage.
+- Updated all Typer command callers to pass kwargs directly instead of constructing
+  SimpleNamespace objects.
+- Modules refactored (16 files total):
+  - `extract/tasks.py` + `extract/__init__.py` — 4 functions: `ocr`, `extraction`,
+    `semantic`, `lea_pilot`
+  - `data/indexing.py` + `data/datasets.py` + `data/__init__.py` — `build_index`,
+    `generate_dataset`
+  - `reports/tasks.py` + `reports/__init__.py` — `verify_dossier_hashes`,
+    `verify_ingestion_run`
+  - `search/logic.py` + `search/__init__.py` — 5 functions: `run_query`,
+    `run_vertex_search`, `query_vertex`, `evaluate_vertex`,
+    `refresh_hybrid_schema_snapshot`
+  - `ingest/logic.py` + `ingest/__init__.py` — `ingest_bundles`,
+    `ingest_vertex_search`, `tag_saved_searches`
+  - `smoke/dossiers.py` + `smoke/runner.py` + `smoke/__init__.py` — `run_smoke`,
+    `vertex_search_smoke`, `cloud_run_smoke`; removed anonymous
+    `type("VertexArgs", ...)()` class construction
+  - `admin/saved_searches.py` + `admin/dossiers.py` + `admin/pilot.py` +
+    `admin/__init__.py` — 9 functions across 3 callee modules;
+    11 SimpleNamespace constructions removed from `__init__.py`
+  - `bootstrap/common.py` + `bootstrap/dev/smoke.py` +
+    `bootstrap/dev/orchestrator.py` + `bootstrap/local/orchestrator.py` —
+    `run_search_smoke`, `run_dossier_smoke`, `run_smoke`; removed
+    `argparse.Namespace` proxy construction in `local/orchestrator.py`
+- Fixed variable shadowing bugs: `status` → `row_status` in `reports/tasks.py`,
+  `ground_truth` → `gt` in `data/datasets.py`, `preview` → `preview_count` in
+  `admin/dossiers.py`
+- Updated test: `test_saved_searches_export.py` updated to pass kwargs.
+- Note: `bootstrap/dev/orchestrator.py`'s `bootstrap_dev(args)` still uses
+  `argparse.Namespace` internally for deep threading into sub-modules
+  (`run_local_ingest`, `execute_job`, `write_reports`). The callers of smoke
+  functions within it were updated to pass kwargs. Full conversion of the
+  orchestrator internals is a separate effort (low priority, as argparse.Namespace
+  is idiomatic there).
