@@ -4,6 +4,41 @@ Last updated: 12 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
 
+## 2026-02-12 — WS-10 Documentation & Planning Alignment (COMPLETE)
+
+- **E67 (Roadmap):** Updated `roadmap.md` — removed stale "Phases 5-6 remaining", added full history of completed consolidation, debt remediation (Round 1), and quality elevation (Round 2) work streams. Marked IAP JWT auth milestone as done.
+- **E68 (Broken link):** Fixed two dead links to `data_reset_bootstrap_plan.md` in `change_log.md` — file was completed and removed without being archived.
+- **E69 (PubSub):** Replaced PubSub "Task Queue" with Cloud Run Jobs + Cloud Scheduler in `system_topology.py` and `data_pipeline.py`. PubSub was never used; actual async work is Cloud Run Jobs triggered by Scheduler.
+- **E70 (Azure SQL):** Removed "Legacy / External" Azure SQL cluster and sync edge from `system_topology.py`. All historical Azure data captured in an import bundle; Azure functionality fully retired.
+- **E71 (Placeholder text):** Removed "(Replace the placeholder...)" editorial instructions from `system-topology.md`, `security-model.md`, `data-pipeline.md`. Cleaned placeholder instructions from `architecture/README.md`.
+- **E72 (Duplicate book.json):** Deleted redundant outer `docs/book.json`. HonKit uses `docs/book/book.json` (confirmed via `.gitbook.yaml` root + `package.json` scripts).
+- **E73 (require_role):** Verified `require_role("admin")` exists in `core/src/i4g/api/auth.py`. Doc reference is accurate — no change needed.
+- **E74 (Empty dir):** Removed empty `arch-viz/src/shared/` directory.
+- **Quality Elevation Plan Round 2: ALL 10 WORK STREAMS COMPLETE (74 items).**
+
+## 2026-02-12 — WS-7 UI Code Quality & Deduplication (COMPLETE)
+
+- **E43 (SDK mock data):** Extracted ~580 lines of mock data and `createMockClient()` from `packages/sdk/src/index.ts` into `packages/sdk/src/__fixtures__/index.ts`. SDK now ~715 lines.
+- **E44 (resolveApi helpers):** Already consolidated in `lib/server/api-client.ts` — no changes needed.
+- **E45 (formatDate):** Consolidated 5 duplicate `formatDate()` definitions into `apps/web/src/lib/format.ts`.
+- **E46 (getTaxonomyDescription):** Consolidated into `apps/web/src/lib/taxonomy.ts`, re-exported from `search-types.ts`.
+- **E47 (ClassificationBadges):** Extracted duplicated classification badge blocks into `apps/web/src/components/classification-badges.tsx`.
+- **E48 (SectionLabel):** Created `<SectionLabel>` component in `@i4g/ui-kit`, replaced 13 inline instances in case-intake-form and cases page.
+- **E49 (@i4g/config):** Deleted unused `packages/config/` directory.
+- **E50 (@i4g/types):** Added `packages/types/src/domain.ts` re-exporting all major SDK types (Dashboard, Search, Cases, Classification, Dossiers, Analytics, Intake, Client).
+- **E51 (z.any()):** Replaced all 5 `z.any()` occurrences with `z.unknown()` in SDK schemas and `account-list-service.ts`.
+- **E52 (Native inputs):** Created `<Textarea>` component in `@i4g/ui-kit`. Replaced native date/number inputs with `<Input>` in account-list-console and dossiers page. Replaced native textareas with `<Textarea>` in case-intake-form, discovery-search-form, and campaign-form.
+- All SDK tests (22) and web app tests (26) pass. `pnpm format` clean.
+
+## 2026-02-12 — WS-6 UI Performance & Bundle Optimization (COMPLETE)
+
+- **E38 (Recharts):** `AnalyticsCharts` loaded via `next/dynamic` (import renamed to `nextDynamic` to avoid collision with route segment `export const dynamic`). `ssr: false` removed since the page is a Server Component; Recharts still lazy-loads via dynamic import.
+- **E39 (React.memo):** Wrapped 6 list-item / sub-components in `React.memo`: `SearchResultCard`, `SearchHistoryList`, `SavedSearchesList`, `SearchFilterSidebar`, `DiscoveryResultCard`, `DiscoverySearchForm`.
+- **E40 (Dynamic imports):** 6 heavy client components now loaded via `next/dynamic` with loading skeletons: `AnalyticsCharts`, `DiscoveryPanel`, `AccountListConsole`, `CaseIntakeForm`, `SearchHistoryList`, `SavedSearchesList`.
+- **E41 (DiscoveryPanel):** Decomposed from 733→290 lines by extracting `discovery-types.ts` (135 lines), `discovery-search-form.tsx` (267 lines), `discovery-result-card.tsx` (145 lines).
+- **E42 (use-search-state):** Split into 3 files: `use-entity-filters.ts` (90 lines), `use-saved-search.ts` (96 lines), with the main hook composing them. Entity filter state owned by parent hook, actions delegated to sub-hook.
+- `pnpm build` passes cleanly.
+
 ## 2026-02-12 — WS-1 Security Hardening II (COMPLETE)
 
 - **E1 (CORS):** CORS origins now configurable via `settings.api.cors_origins` (default `["*"]`). Cloud envs override via `I4G_API__CORS_ORIGINS`.
@@ -14,6 +49,42 @@ This log keeps only decisions that affect future development. Older history live
 - **E6 (Cloud SQL):** Standardized prod fastapi user to truncated `.iam` suffix (matching all other services).
 - **E7 (Proxy logs):** Removed `console.log` URL leaks; sanitized error logging.
 - All 330 unit tests pass (3 xfail unchanged).
+
+## 2026-02-12 — WS-5 Core Code Organization (COMPLETE)
+
+- Completed E31.
+  - Split `src/i4g/settings/config.py` into section modules under
+    `src/i4g/settings/sections/` (`basic.py`, `ml.py`, `jobs.py`) plus
+    shared root detection in `sections/_paths.py`.
+  - Moved validator-heavy logic into `src/i4g/settings/runtime_overrides.py`.
+  - `config.py` now focuses on source loading + top-level `Settings`
+    orchestration and dropped from 1,500 lines to 359 lines.
+  - Preserved compatibility for tests that import private helpers by keeping
+    `_detect_project_root()` / `_env_project_root()` wrappers in `config.py`.
+  - Validation: `pytest tests/unit/settings` (27 passed) and
+    `pytest tests/unit` (332 passed, 1 warning).
+- Completed E32, E33, E36, and E37.
+  - Extracted review-search coercion/parsing helpers to `i4g.api.review_search_utils`.
+  - Added missing package initializers: `src/i4g/reports/__init__.py`,
+    `src/i4g/worker/__init__.py`, and `src/i4g/llm/prompts/__init__.py`.
+  - Removed legacy `_coerce_bool` re-export adapter from `intake_job_runner.py`.
+  - Eliminated deferred circular import in `task_status.py` by introducing
+    shared in-memory store module `i4g.task_status_store` used by both API and worker code.
+- Completed E34 and E35:
+  - Used `pyupgrade --py311-plus` to modernize all 187 production files to
+    builtin generics (`dict`, `list`, `tuple`, `set`, `X | None`, `X | Y`)
+    and `collections.abc` for ABCs (`Iterable`, `Sequence`, `Iterator`,
+    `Mapping`, `MutableMapping`, `Callable`). Used `autoflake` to strip
+    now-unused typing imports.
+  - Result: **100% of production files use builtin generics**, zero legacy
+    `Dict`/`List`/`Optional`/`Tuple`/`Set` remain.
+  - Reduced `# type: ignore` from 29 → 17. Removed 12 via explicit typed
+    locals (store/sql.py), value narrowing (reports/dossier_uploads.py,
+    api/reports.py), and assert guards (services/account_list/exporters.py).
+    Remaining 17 are legitimate (optional imports, protobuf \_pb, monkey-
+    patching, Pydantic introspection, Alembic).
+- **All WS-5 items complete (E31–E37). All acceptance criteria met.**
+- Validation: `pytest tests/unit` → 332 passed, 1 warning.
 
 ## 2026-02-15 (session 4)
 
@@ -310,10 +381,10 @@ This log keeps only decisions that affect future development. Older history live
 
 ## 2025-12-16
 
-- Data reset/bootstrap plan established for local + dev environments. Canonical bundles live in GCS with manifests; CLI flows will support wipe/import/verify across all storages. See [data_reset_bootstrap_plan.md](data_reset_bootstrap_plan.md).
+- Data reset/bootstrap plan established for local + dev environments. Canonical bundles live in GCS with manifests; CLI flows support wipe/import/verify across all storages. Plan completed and removed.
 - Local bootstrap verification now emits a bundle manifest hash and ingestion-run summary to catch stale datasets early.
 - Optional dossier signature smoke added to local bootstrap (`--smoke-dossiers`) for end-to-end verification when API is up.
-- Archived the data reset/bootstrap sprint plan to [planning/archive/data_reset_bootstrap_plan.md](../planning/archive/data_reset_bootstrap_plan.md) after completing all checklist items.
+- Completed the data reset/bootstrap sprint plan; all checklist items done.
 
 ## 2025-12-10
 
