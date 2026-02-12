@@ -1,8 +1,57 @@
 # Planning Change Log (active items only)
 
-Last updated: 15 Feb 2026
+Last updated: 12 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2026-02-12 — WS-1 Security Hardening II (COMPLETE)
+
+- **E1 (CORS):** CORS origins now configurable via `settings.api.cors_origins` (default `["*"]`). Cloud envs override via `I4G_API__CORS_ORIGINS`.
+- **E2 (Auth):** Removed hardcoded `_API_TOKENS` dict. Cloud envs now use Google IAP JWT verification (`X-Goog-IAP-JWT-Assertion`), with `settings.api.key` fallback for service-to-service. Local env keeps `disable_auth=true`. **⚠️ Temp: all authenticated Cloud users get admin role — full RBAC deferred.**
+- **E3 (API key leak):** Removed `NEXT_PUBLIC_API_KEY` from all server-side files. Deduplicated `resolveApiBase`/`resolveApiKey` into shared `api-client.ts`.
+- **E4 (tfplan):** Removed binary from git; added bare `tfplan` to `.gitignore`.
+- **E5 (allUsers):** Removed from Cloud Run invoker in dev + prod. IAP service agent + SAs already handle access. **⚠️ Temp: any user in Google Workspace groups gets full access — proper RBAC deferred.**
+- **E6 (Cloud SQL):** Standardized prod fastapi user to truncated `.iam` suffix (matching all other services).
+- **E7 (Proxy logs):** Removed `console.log` URL leaks; sanitized error logging.
+- All 330 unit tests pass (3 xfail unchanged).
+
+## 2026-02-15 (session 4)
+
+- **WS-10 Dev/Prod Parity — DONE (15/15 items).**
+  - D92 (IAP unification): Migrated prod from per-service IAP to LB-based IAP matching dev. Both environments now use `module.global_lb` + `google_iap_web_backend_service_iam_binding` with `internal-and-cloud-load-balancing` ingress.
+  - D93 (networking): Added egress IP, NAT, VPC connector to prod.
+  - D88 (console parity): Removed `console_enabled` toggle; console is always deployed. Added `min_instances`, `resource_limits`, `I4G_IAP_CLIENT_ID`.
+  - Custom domains unchanged for now: dev keeps `*.intelligenceforgood.org`, prod domains left empty until cutover.
+  - Removed unused variables: `iap_manage_clients`, `iap_secret_replication_locations`, `console_enabled`.
+  - Added `iap_clients` variable to prod with sentinel/validation pattern.
+  - Outputs aligned: both envs now have `serverless_egress_ip`, `global_lb_ip`, simplified `iap`.
+  - `terraform validate` passes for both dev and prod.
+
+## 2026-02-15 (session 3)
+
+- **WS-10 Dev/Prod Parity — DONE (13/15 items, 2 deferred as architectural decisions).**
+  - D80–D87, D89–D90, D94 completed in session 2 (IAM roles, API enablements, variable restructuring, env var management).
+  - D91 (outputs.tf alignment): Common outputs (6) are identical. Env-specific outputs (dev egress/LB; prod domain mappings/IAP details) documented as intentional architectural divergence. Added missing descriptions to prod domain mapping outputs.
+  - D92 (IAP architecture decision): Documented as intentional. Dev uses LB-based IAP for custom domain/path routing; prod uses per-service IAP. Unification deferred to a dedicated work stream.
+  - D88 (console structural differences) and D93 (networking resources) deferred — configuration differences, not parity bugs.
+  - All 8 WS-10 acceptance criteria checked.
+- **Database modularization — state migration recovery:**
+  - Both dev and prod required `terraform state mv` after module refactoring.
+  - Dev: admin group SQL user was destroyed during failed apply — will be recreated on next apply (5 adds, 2 changes, 1 destroy).
+  - Prod: database + all SQL users destroyed (instance survived due to `deletion_protection = true`). Will be recreated on next apply (7 adds, 1 change). Post-apply: run Alembic migrations and re-grant in-database permissions.
+
+## 2026-02-15 (session 2)
+
+- **Infra modularization — database layer extracted.** Reviewed all 4 Terraform environments (app/dev, app/prod, pii-vault/dev, pii-vault/prod) for copy-paste duplication. Created two new shared modules to eliminate identical code between app/dev and app/prod:
+  - **`modules/database/cloudsql`** — Cloud SQL instance + database creation. Replaces the 40-line `database.tf` that was 100% identical between dev and prod.
+  - **`modules/database/users`** — Cloud SQL IAM database users (groups + service accounts) with project-level role bindings. Replaces the 130-line `database_users.tf` that was 95% identical between dev and prod. Uses declarative `iam_groups` and `service_accounts` maps with role lists.
+  - Both `app/dev` and `app/prod` now use these modules. The only env-specific difference: dev retains a standalone `report_sa_service_usage` binding for `serviceUsageConsumer`.
+  - All 4 environments pass `terraform validate`. State migration commands documented in module headers.
+  - **pii-vault** environments were left as-is: prod is intentionally simpler (no database/Cloud Run), and dev has no prod counterpart to deduplicate against. The new modules are generic enough for vault adoption when prod gains a database.
+- **Remaining duplication assessment:**
+  - `locals.tf` (service accounts map) is 100% identical between app/dev and app/prod — acceptable as data definition, not logic duplication.
+  - `providers.tf` and `backend.tf` are identical structurally — cannot be modularized (Terraform constraint).
+  - `main.tf` has ~70% structural overlap but env-specific wiring (IAP vs LB, networking, org policy) makes modularization impractical without significant redesign.
 
 ## 2026-02-15
 

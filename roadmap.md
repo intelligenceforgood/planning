@@ -6,7 +6,8 @@
 ## Current Sprint: CTO-Ready Consolidation (Feb 2026)
 
 A cross-repo quality sweep to bring documentation, code, and infrastructure into alignment
-for external review. Tracked in [tasks/consolidation_plan.md](tasks/consolidation_plan.md).
+for external review. Tracked in [archive/consolidation_plan.md](archive/consolidation_plan.md) (completed)
+and [archive/debt_remediation_plan.md](archive/debt_remediation_plan.md) (completed).
 
 ### Completed (Phases 1-4)
 
