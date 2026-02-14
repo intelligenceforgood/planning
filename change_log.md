@@ -1,8 +1,32 @@
 # Planning Change Log (active items only)
 
-Last updated: 12 Feb 2026
+Last updated: 14 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2026-02-14 — WS-5 RBAC & Role Enforcement (COMPLETE)
+
+- **F30 (Role checking):** Created `Role` enum (user/analyst/admin/leo) in `roles.py` with `has_role()` hierarchy check. `require_role()` now checks actual role from `accounts` table instead of granting admin to all.
+- **F31 (Role wiring):** Option (a) — `_resolve_role()` in `auth.py` looks up `accounts.role` on every request via `AccountStore`. Auto-provisions new users with default role `analyst`. Deactivated accounts get 403.
+- **F32 (Route-level auth):** Applied `require_role("admin")` to campaigns create/update, task update. Applied `require_role("analyst")` to detokenize. List endpoints remain authenticated-only.
+- **F33 (UI role-aware):** Created `AuthProvider` + `useAuth()` hook with `hasRole()` and `isAdmin`. Navigation filters items by `minRole`; Campaigns and User Management are admin-only. User identity badge shown in sidebar.
+- **F34 (Role management API):** `GET /accounts/me`, `GET /accounts` (admin), `PUT /accounts/{email}/role` (admin, blocks self-demotion), `PUT /accounts/{email}/deactivate` (admin, blocks self-deactivation).
+- **F35 (Audit logging):** Role changes and account deactivation write audit entries to `review_actions` table with action types `role_change` and `account_deactivated`.
+- **F36 (Row-level security):** "Team visibility" model — all authenticated users can view cases; `_enforce_assignment()` restricts annotate/feedback/decision actions to the assigned analyst or admins.
+- **New table:** `accounts` (email PK, role, display_name, is_active, created_at, updated_at) added to `sql.py`.
+- **Feature Completeness Sprint WS-5: ALL 7 ITEMS COMPLETE. 69 new tests, 635 total passing.**
+
+## 2026-02-14 — WS-3 Classification & Risk Scoring (COMPLETE)
+
+- **F15 (Risk Scoring):** Added `risk_weight` field to all items in `definitions.yaml` (intents 5-10, techniques 4-9, actions 6-9). Added dedicated `risk_score` Numeric(5,1) column + `taxonomy_version` Text column to `cases` table with index `idx_cases_risk_score`. Fixed `classifier.py` to key risk_weights by taxonomy code (e.g. `INTENT.IMPOSTER`) instead of label text. Risk scores now compute correctly via formula `sum(confidence × weight) × 2.5`, capped at 100.
+- **F16 (Feedback Endpoint):** Enhanced `POST /reviews/{id}/feedback` to apply corrected classification to both `review_queue` and `cases` tables. Added `apply_feedback_classification()` and `get_case_text()` methods to `ReviewStore`.
+- **F17 (Golden Dataset Pipeline):** Feedback writes to `golden_candidates.json` for curator review (manual promotion, not automatic). Decision: curator reviews candidates before they enter `golden_examples.json`.
+- **F18 (Regression Tests):** Expanded `golden_examples.json` from 1 to 12 examples covering all 9 intent types. Created `test_classification_regression.py` with 15 tests validating dataset health, taxonomy weights, risk scoring formula, and model round-trips.
+- **F19 (UI Classification Display):** Added Classification card with risk score badge and `ClassificationBadges` component to case detail page (`cases/[id]/page.tsx`). Fetches taxonomy data in parallel with case data.
+- **F20 (Taxonomy Version Header):** Added `X-Taxonomy-Version` response header to `GET /taxonomy` endpoint. Exposed header via CORS `expose_headers`.
+- **F21 (Sweeper Metrics):** Added `SweeperMetrics` dataclass tracking classified/error counts, intent distribution, and batch timing. Metrics reported to `TaskStatusReporter` and structured logging.
+- **Bug fixes:** Fixed Pydantic v2 migration issue — sweeper used `result.dict()` instead of `result.model_dump()`. Re-enabled risk_score assertion in existing test (was disabled due to missing weights).
+- **Feature Completeness Sprint WS-3: ALL 7 ITEMS COMPLETE. 566 unit tests passing.**
 
 ## 2026-02-12 — WS-10 Documentation & Planning Alignment (COMPLETE)
 

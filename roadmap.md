@@ -3,14 +3,25 @@
 **Status**: Active
 **Last updated**: February 12, 2026
 
-## Current Sprint: Quality Elevation Round 2 (Feb 2026)
+## Current Sprint: Feature Completeness (Feb–Mar 2026)
 
-A second-pass systematic improvement of the codebase, building on the completed
-[Consolidation Sprint](archive/consolidation_plan.md) and
-[Debt Remediation Sprint](archive/debt_remediation_plan.md). Tracked in
-[tasks/quality_elevation_plan.md](tasks/quality_elevation_plan.md).
+Close functional gaps between PRD/TDD specifications and the current
+implementation. Prior sprints focused on design coherency and implementation
+quality; this sprint focuses on **missing or weak functionality**. Tracked in
+[tasks/feature_completeness_plan.md](tasks/feature_completeness_plan.md).
 
-### Completed
+### Work Streams (8 WS, 53 items)
+
+- [ ] **WS-1:** PII Tokenization Verification & Hardening (8 items)
+- [ ] **WS-2:** RAG Pipeline Completeness (6 items)
+- [ ] **WS-3:** Classification & Risk Scoring (7 items)
+- [ ] **WS-4:** Context-Sensitive Help System (8 items)
+- [ ] **WS-5:** RBAC & Role Enforcement (7 items)
+- [ ] **WS-6:** Data Retention & Compliance Automation (6 items)
+- [ ] **WS-7:** Evidence & Attachment Integrity (5 items)
+- [ ] **WS-8:** Observability & Alerting (6 items)
+
+### Previously Completed
 
 - [x] Phase 1: Retired Streamlit legacy code, Dockerfiles, and Terraform resources
 - [x] Phase 1: Removed Firestore residuals across docs and diagrams
@@ -21,7 +32,7 @@ A second-pass systematic improvement of the codebase, building on the completed
 - [x] Phase 5: End-user documentation (GitBook, runbooks, CONTRIBUTING)
 - [x] Phase 6: Infrastructure & config consistency (Terraform, env vars, CI/CD)
 - [x] Debt Remediation Round 1: 68 debt items across 10 work streams — ALL COMPLETE
-- [x] Quality Elevation Round 2: WS-1 through WS-9 complete (66 items); WS-10 in progress
+- [x] Quality Elevation Round 2: ALL 10 work streams complete (74 items)
   - **WS-1:** Security hardening (CORS, auth, API key leak, allUsers removal)
   - **WS-2:** Config discipline & API quality
   - **WS-3:** Store consolidation & factory discipline
@@ -31,7 +42,7 @@ A second-pass systematic improvement of the codebase, building on the completed
   - **WS-7:** UI code quality & deduplication
   - **WS-8:** Test coverage expansion
   - **WS-9:** Infrastructure quality (dev/prod parity, Terraform modularization)
-  - **WS-10:** Documentation & planning alignment (in progress)
+  - **WS-10:** Documentation & planning alignment
 
 ---
 
@@ -45,8 +56,8 @@ A second-pass systematic improvement of the codebase, building on the completed
 
 1. **Production Hardening v2**
    - ~~Replace prototype API-key auth with IAP JWT verification in FastAPI.~~ _(Done — WS-1/E2)_
-   - Implement full RBAC (currently all authenticated Cloud users get admin role).
-   - Wire alerting for PII access, ingestion failures, and dossier verification.
+   - ~~Implement full RBAC~~ _(Now tracked — Feature Completeness WS-5)_
+   - ~~Wire alerting for PII access, ingestion failures, and dossier verification.~~ _(Now tracked — Feature Completeness WS-8)_
    - Capture baseline SLOs (perf/latency, queue depth) and size autoscaling limits.
 
 2. **Partner/LEA Integrations**
@@ -57,8 +68,6 @@ A second-pass systematic improvement of the codebase, building on the completed
 ## Standing Follow-ups
 
 - [ ] **Performance Optimization**: Execute the [Case Classification Optimization Plan](tasks/perf_optimization_classification.md) to fix slow bootstrapping.
-- [ ] **Verify Attachment Retrieval**: Confirm that `source_url` in the `source_documents` SQL table correctly points to the original files in GCS/Local FS.
-- [ ] **Wire RAG pipeline to settings.llm.provider**: `pipeline.py` hardcodes Ollama; needs the same provider switch as `classifier.py`.
 
 ## When Work Resumes
 
