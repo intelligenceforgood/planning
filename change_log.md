@@ -4,6 +4,16 @@ Last updated: 14 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
 
+## 2026-02-14 — Fix: IAP user identity not forwarded to API (BUG)
+
+- **Root cause:** The console SSR calls the API through the IAP load balancer (`api.intelligenceforgood.org`). IAP authenticates the console's Cloud Run SA (not the browser user), so the API sees the SA's identity. The API-key fallback path hard-codes `username: "service"`, creating a phantom account. Forwarding `X-Goog-IAP-JWT-Assertion` doesn't work because the second IAP hop strips/replaces it.
+- **Fix (UI):** `auth-helpers.ts` — `getIapHeaders()` now decodes the incoming IAP JWT assertion from the browser request (already verified by IAP at the LB), extracts the user's email, and sends it as `X-I4G-Forwarded-User` alongside the service-to-service Bearer token.
+- **Fix (API):** `auth.py` — Added `_maybe_resolve_forwarded_user()` helper. When a request is authenticated via Bearer token, IAP JWT, or API key, and `X-I4G-Forwarded-User` is present, the API uses the forwarded email as the principal (resolving role from the accounts table). The override only applies when the authenticated identity is a service account, not an end-user hitting the API directly.
+- **Fix (API):** `_verify_iap_jwt()` now accepts `is_iap_assertion=True` to use the IAP-specific signing-key endpoint (`_IAP_CERTS_URL`) instead of the default OIDC certs.
+- **Terraform:** Added `I4G_IDENTITY__AUDIENCE = try(var.iap_clients["api"].client_id, "")` to the FastAPI Cloud Run env vars in both `dev` and `prod` environments.
+- **Files changed:** `ui/apps/web/src/lib/server/auth-helpers.ts`, `core/src/i4g/api/auth.py`, `infra/environments/app/dev/main.tf`, `infra/environments/app/prod/main.tf`.
+- **Deploy required:** Both `i4g-console` and `fastapi-gateway` images must be rebuilt and deployed for this to take effect.
+
 ## 2026-02-14 — WS-5 RBAC & Role Enforcement (COMPLETE)
 
 - **F30 (Role checking):** Created `Role` enum (user/analyst/admin/leo) in `roles.py` with `has_role()` hierarchy check. `require_role()` now checks actual role from `accounts` table instead of granting admin to all.
