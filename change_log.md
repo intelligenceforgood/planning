@@ -1,8 +1,21 @@
 # Planning Change Log (active items only)
 
-Last updated: 14 Feb 2026
+Last updated: 18 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2026-02-18 — SSI: GCP Deployment, Gemini Integration, Web UI & PDF Reports
+
+- **LLM Provider Abstraction:** Created pluggable LLM layer at `ssi/src/ssi/llm/` with `LLMProvider` ABC, `OllamaProvider`, and `GeminiProvider` implementations, plus a `create_llm_provider()` factory. Both `browser/llm_client.py` and `classification/classifier.py` refactored to use the abstraction instead of direct Ollama HTTP calls.
+- **Gemini Integration:** `GeminiProvider` uses `google-cloud-aiplatform` (Vertex AI) with system instruction support, `response_mime_type="application/json"` for JSON mode, and token usage tracking. Configured via `SSI_LLM__PROVIDER=gemini`, `SSI_LLM__GCP_PROJECT`, `SSI_LLM__GCP_LOCATION` env vars.
+- **PDF Reports:** Added `ssi/src/ssi/reports/pdf.py` using markdown→HTML→WeasyPrint pipeline with professional CSS styling (A4, page numbers, risk-colored headers, styled tables). Orchestrator generates PDF alongside markdown when `report_format` is `"pdf"` or `"both"`. Added `pdf_report_path` field to `InvestigationResult`.
+- **Web UI:** Created built-in web UI at `ssi/src/ssi/api/web.py` with Jinja2 templates (`index.html`, `status.html`). Provides URL submission form, auto-refreshing status page, risk score display, and PDF download button. Served by the same FastAPI instance.
+- **Docker & Build:** Created `ssi/scripts/build_image.sh` following core's pattern for building/pushing to Artifact Registry. Added `push-api` and `push-job` Makefile targets. Updated both Dockerfiles with WeasyPrint system dependencies.
+- **Terraform:** Added SSI resources to `infra/environments/app/dev/`: service account `sa-ssi` with Vertex AI/Storage/Logging roles, Cloud Run service `ssi-api`, Cloud Run job `ssi-investigate`, GCS bucket `i4g-dev-ssi-evidence` (180-day lifecycle). SSI API uses `allUsers` invoker for initial dev access. Mirrored to `infra/environments/app/prod/` with production patterns: `ssi_api_enabled` toggle (default `false`), jobs disabled, `i4g-prod-ssi-evidence` bucket (365-day lifecycle, no force-destroy). Shared modules (`modules/run/service`, `modules/run/job`) are already generic — no module changes required.
+- **Settings:** Added `config/settings.dev.toml` for GCP environment. Updated `settings.default.toml` with `gcp_project` and `gcp_location` fields.
+- **Deps:** Added `markdown` and `weasyprint` to `pyproject.toml`.
+- **Files created:** `ssi/src/ssi/llm/{__init__,base,factory,gemini_provider,ollama_provider}.py`, `ssi/src/ssi/reports/pdf.py`, `ssi/src/ssi/api/web.py`, `ssi/src/ssi/api/web_templates/{index,status}.html`, `ssi/config/settings.dev.toml`, `ssi/scripts/build_image.sh`.
+- **Files modified:** `ssi/src/ssi/{browser/llm_client,classification/classifier,investigator/orchestrator,models/investigation,api/app,settings/config}.py`, `ssi/{pyproject.toml,Makefile,config/settings.default.toml}`, `ssi/docker/{ssi-api,ssi-job}.Dockerfile`, `infra/environments/app/{dev,prod}/{locals,main,variables,terraform}.tf{,vars}`.
 
 ## 2026-02-14 — Fix: IAP user identity not forwarded to API (BUG)
 
