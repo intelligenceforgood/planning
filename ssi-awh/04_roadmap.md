@@ -114,29 +114,29 @@ Extend core's database schema and wire SSI to store results in the unified data 
 
 ### 3A: Schema Design & Migration
 
-- [ ] Design `site_scans` table (scan metadata, passive/active results, cost)
-- [ ] Design `harvested_wallets` table (token, network, address, confidence)
-- [ ] Design `agent_sessions` table (per-action audit trail)
-- [ ] Design `pii_exposures` table (what PII the scam collects)
-- [ ] Write Alembic migration for new tables (in core)
-- [ ] Validate SQLite and PostgreSQL dialect compatibility
+- [x] Design `site_scans` table (scan metadata, passive/active results, cost)
+- [x] Design `harvested_wallets` table (token, network, address, confidence)
+- [x] Design `agent_sessions` table (per-action audit trail)
+- [x] Design `pii_exposures` table (what PII the scam collects)
+- [x] Write Alembic migration for new tables (in core)
+- [x] Validate SQLite and PostgreSQL dialect compatibility
 
 ### 3B: Store Implementation
 
-- [ ] Create `ScanStore` class following core's `StructuredStore` pattern
-- [ ] Implement CRUD for `site_scans`, `harvested_wallets`, `agent_sessions`, `pii_exposures`
-- [ ] Add factory function `build_scan_store()` in SSI
-- [ ] Wire orchestrator to store results after each phase
+- [x] Create `ScanStore` class following core's `StructuredStore` pattern
+- [x] Implement CRUD for `site_scans`, `harvested_wallets`, `agent_sessions`, `pii_exposures`
+- [x] Add factory function `build_scan_store()` in SSI
+- [x] Wire orchestrator to store results after each phase
 
 ### 3C: Case Integration
 
-- [ ] Wire investigation submission to create a `case` in core's `cases` table
-- [ ] Map SSI classification to core's `classification_result` JSONB field
-- [ ] Map risk score to core's `risk_score` column
-- [ ] Store wallet addresses as `indicators` (IOC type: crypto_wallet)
-- [ ] Store domains, IPs, registrants as `entities`
-- [ ] Store evidence files as `source_documents`
-- [ ] Add unit tests for all store operations
+- [x] Wire investigation submission to create a `case` in core's `cases` table
+- [x] Map SSI classification to core's `classification_result` JSONB field
+- [x] Map risk score to core's `risk_score` column
+- [x] Store wallet addresses as `indicators` (IOC type: crypto_wallet)
+- [x] Store domains, IPs, registrants as `entities`
+- [x] Store evidence files as `source_documents`
+- [x] Add unit tests for all store operations
 
 ---
 
