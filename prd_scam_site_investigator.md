@@ -1,21 +1,21 @@
 # Product Requirements Document: Scam Site Investigator (SSI)
 
-> **Document Version**: 1.0
-> **Last Updated**: February 18, 2026
+> **Document Version**: 2.0
+> **Last Updated**: February 22, 2026
 > **Owner**: Jerry Soung
-> **Status**: Prototype Complete — Local
+> **Status**: AWH Merge Complete — Deployed to `i4g-dev`
 
 ---
 
 ## 1. Executive Summary
 
-**Scam Site Investigator (SSI)** is an AI-driven tool that takes a suspicious URL and automatically performs deep reconnaissance — extracting infrastructure intelligence, identifying the scam type, cataloguing the PII it targets, and generating a prosecution-ready evidence package for law enforcement.
+**Scam Site Investigator (SSI)** is an AI-driven tool that takes a suspicious URL and automatically performs deep reconnaissance — extracting infrastructure intelligence, identifying the scam type, cataloguing the PII it targets, extracting cryptocurrency wallet addresses, and generating a prosecution-ready evidence package for law enforcement.
 
-The key differentiator: SSI does not just _scan_ the site — it **interacts** with it using an AI agent and synthetic PII, walking through the scam funnel the way a victim would, documenting every step forensically.
+The key differentiator: SSI does not just _scan_ the site — it **interacts** with it using an AI agent and synthetic PII, walking through the scam funnel the way a victim would, documenting every step forensically. It then extracts scammer wallet addresses from deposit pages for blockchain tracing and exchange freezing.
 
-**Current State**: Local prototype running on Ollama (Llama 3.3) + Playwright, with CLI and API interfaces. All core capabilities are implemented and ready for testing against real scam sites.
+**Current State**: The SSI–AWH (Agentic Wallet Harvester) merge is complete. SSI now includes wallet extraction, a playbook engine, a state machine-based browser agent (zendriver), real-time WebSocket monitoring, and a Next.js analyst UI. Deployed to `i4g-dev` on GCP Cloud Run. 599 tests passing (575 unit + 24 integration).
 
-**Deployment**: Standalone Python package (`ssi`) in the `ssi/` repo within the i4g workspace. Runs locally via `ssi` CLI or FastAPI on port 8100.
+**Deployment**: Standalone Python package (`ssi`) in the `ssi/` repo within the i4g workspace. Runs locally via `ssi` CLI or FastAPI on port 8100. Deployed to GCP Cloud Run (API service + investigation job) via Terraform.
 
 ---
 
@@ -80,23 +80,30 @@ Given a URL, SSI automatically collects:
 
 ### Tier 2 — Active Interaction (AI Agent)
 
-An LLM-powered agent navigates the scam site interactively:
+An LLM-powered agent navigates the scam site interactively using a dual-engine browser architecture (zendriver for stealth + Playwright for capture):
 
-- **Form completion with synthetic PII** — fills forms using data from the Synthetic Identity Vault, submits and records responses
+- **State machine orchestration** — 8-state finite state machine (LOAD_SITE → FIND_REGISTER → FILL_REGISTER → SUBMIT_REGISTER → CHECK_EMAIL → NAVIGATE_DEPOSIT → EXTRACT_WALLETS → COMPLETE) with stuck detection and human guidance
+- **Four-tier decision cascade** — Playbook ($0) → DOM Inspector ($0) → Gemini text → Gemini vision → human fallback. Cost target: <$0.01/investigation
+- **Form completion with synthetic PII** — fills forms using data from the Synthetic Identity Vault with batch fill optimization (reduces N LLM calls to 2)
 - **Multi-step funnel traversal** — follows the scam through login → dashboard → payment → confirmation
-- **Decision-point reasoning** — reasons about which paths to explore when the site presents choices
+- **Wallet extraction** — JS regex patterns for 10+ blockchain formats + coin tab discovery + LLM verification against a configurable token-network allowlist
+- **Playbook engine** — deterministic scripted flows for known scam site templates, eliminating LLM costs. JSON playbooks matched by URL regex pattern
 - **Download interception** — captures files offered for download without executing them; hashes and checks against VirusTotal
 - **CAPTCHA detection** — identifies reCAPTCHA, hCaptcha, Cloudflare Turnstile, and others; applies configurable handling strategies
 - **HAR recording** — captures full HTTP archive of the browser session
-- **Anti-detection** — randomized user-agent, browser fingerprint, stealth scripts, proxy rotation
+- **Anti-detection** — zendriver (inherently undetected Chrome), randomized fingerprint, proxy rotation, overlay dismissal
+- **Real-time monitoring** — WebSocket-based live screenshot feed, action log, and human guidance interface
+- **PII collection mapping** — tracks what PII the scam site collects, at which step
 
 ### Tier 3 — Intelligence Synthesis & Reporting
 
 - **Fraud taxonomy classification** — five-axis classification (Intent, Channel, Techniques, Actions, Persona) with confidence scores and risk score (0–100)
-- **Structured investigation report** — JSON + Markdown
+- **Structured investigation report** — JSON + Markdown + PDF (with embedded evidence appendices)
 - **Law enforcement evidence report** — prosecution-oriented summary
-- **STIX 2.1 threat indicator bundle** — IOCs in standard threat intelligence format
+- **STIX 2.1 threat indicator bundle** — IOCs in standard threat intelligence format, including wallet addresses
 - **Evidence ZIP** — all artifacts with SHA-256 chain-of-custody manifest
+- **Wallet manifest** — all extracted wallet addresses with token, network, address, extraction method, and confidence
+- **XLSX export** — wallet data export for analysts
 - **PII collection map** — table of what PII the scam collects, at which step, with field labels
 
 ---
@@ -121,34 +128,39 @@ Design principles: never endanger real people, region-appropriate generation, in
 
 SSI extends the existing i4g platform:
 
+- **Database integration** — Each scam site becomes a `case` in core's database with 4 new SSI-specific tables (`site_scans`, `harvested_wallets`, `agent_sessions`, `pii_exposures`)
 - **Fraud Taxonomy** — SSI classification output feeds directly into the five-axis taxonomy
 - **Evidence Store** — evidence packages attach to existing case records
 - **LEO Reports** — SSI intelligence enriches the existing dossier/LEO report pipeline
 - **Ingestion** — a scam URL submitted by a victim can trigger an SSI investigation via the worker/jobs pipeline
-- **Core Bridge** — HTTP-based integration creates cases, attaches evidence, stores taxonomy results, and triggers dossier generation
+- **Core Bridge** — `CoreBridge.push_investigation()` creates cases, attaches evidence, stores taxonomy results. Wired into API (`push_to_core: true`) and worker job
+- **Analyst Console** — Next.js UI with investigations list, 3-tab detail view (Recon / Live Monitor / Results), wallet browser, live WebSocket monitoring
+- **Wallet Intelligence** — wallet addresses stored as `indicators` (IOC type: crypto_wallet), searchable across all investigations
 
 ---
 
 ## 8. Cost Estimation
 
+With the four-tier decision cascade (Playbook → DOM Inspector → Gemini text → Gemini vision), the cost target is **<$0.01 per full investigation** on GCP.
+
 ### Per-Investigation
 
 | Component                  | Local (Ollama) | Production (GCP) |
 | -------------------------- | -------------- | ---------------- |
-| LLM inference (~50 pages)  | $0             | ~$0.05–0.15      |
-| Classification + synthesis | $0             | ~$0.01–0.03      |
+| LLM inference (cascade)    | $0             | ~$0.005–0.01     |
+| Classification + synthesis | $0             | ~$0.001–0.003    |
 | Browser sandbox            | $0             | ~$0.01–0.02      |
 | OSINT API calls            | $0             | ~$0.01–0.05      |
 | Cloud Storage              | $0             | ~$0.001          |
-| **Total**                  | **$0**         | **~$0.08–0.25**  |
+| **Total**                  | **$0**         | **~$0.03–0.08**  |
 
 ### Monthly Projections
 
-| Scenario                | Investigations/month | Cost        |
-| ----------------------- | -------------------- | ----------- |
-| Testing                 | 50                   | $0          |
-| Early production        | 500                  | ~$40–125    |
-| Scale (LEA partnership) | 5,000                | ~$400–1,250 |
+| Scenario                | Investigations/month | Cost      |
+| ----------------------- | -------------------- | --------- |
+| Testing                 | 50                   | $0        |
+| Early production        | 500                  | ~$15–40   |
+| Scale (LEA partnership) | 5,000                | ~$150–400 |
 
 ---
 
@@ -164,13 +176,17 @@ SSI extends the existing i4g platform:
 
 ## 10. Technical References
 
-| Document               | Location                                       |
-| ---------------------- | ---------------------------------------------- |
-| Architecture decisions | `ssi/docs/architecture.md`                     |
-| User guide             | `ssi/docs/user_guide.md`                       |
-| Developer guide        | `ssi/docs/developer_guide.md`                  |
-| Next steps / roadmap   | `planning/proposals/ssi_next_steps.md`         |
+| Document               | Location                                    |
+| ---------------------- | ------------------------------------------- |
+| Technical design (TDD) | `ssi/docs/tdd.md`                           |
+| Developer guide        | `ssi/docs/developer_guide.md`               |
+| API reference          | `ssi/docs/api_reference.md`                 |
+| Playbook authoring     | `ssi/docs/playbook_authoring.md`            |
+| Batch scheduling       | `ssi/docs/batch_scheduling.md`              |
+| User guide (GitBook)   | `docs/book/ssi/`                            |
+| Next-cycle roadmap     | `planning/tasks/ssi_roadmap.md`             |
+| AWH merge summary      | `planning/archive/ssi_awh_merge_summary.md` |
 
 ---
 
-_This PRD describes the Scam Site Investigator as delivered in the prototype phase. For the roadmap to production deployment and platform integration, see `planning/proposals/ssi_next_steps.md`._
+_This PRD describes the Scam Site Investigator as delivered after the SSI–AWH merge cycle (February 2026). For the roadmap to production deployment and platform integration, see `planning/tasks/ssi_roadmap.md`._

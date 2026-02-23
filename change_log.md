@@ -1,8 +1,66 @@
 # Planning Change Log (active items only)
 
-Last updated: 18 Feb 2026
+Last updated: 22 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2026-02-22 — SSI: Phase 8 Complete — Testing, Hardening & Documentation
+
+- **8A Testing:** Created HTML test fixtures (`tests/fixtures/scam_sites/`), expanded `conftest.py` with shared fixtures + custom markers. Added 24 integration tests across 3 files: `test_e2e_pipeline.py` (4 tests — full pipeline, scan store persistence, NXDOMAIN graceful degradation, full scan type), `test_api_integration.py` (8 tests — health, submit, status, task tracking), `test_wallet_extraction.py` (12 tests — BTC/ETH/TRX/SOL extraction, no false positives, validator API). All 575 existing unit tests preserved.
+- **8B Hardening:** `BudgetExceededError` and `ConcurrentLimitError` exceptions in `ssi/exceptions.py`. `CostTracker.check_budget()` with budget gates between investigation phases (partial results preserved on budget exceeded). Concurrent investigation limit in API routes (thread-safe counter, HTTP 429, configurable `max_concurrent_investigations`). `RetryingLLMProvider` in `ssi/llm/retry.py` (exponential backoff, retryable HTTP 429/5xx). `@with_retries` decorator in `ssi/osint/__init__.py` applied to all OSINT modules. Security audit: sanitized API error responses (no internal details), log messages use `type(exc).__name__`. 14 hardening-specific tests in `test_phase8b_hardening.py`.
+- **8C Documentation:** Updated `architecture.md` (system diagram, wallet extraction phase, hardening section). Updated `developer_guide.md` (project tree, key entry points, integration tests, hardening section, Playwright→zendriver). Created `playbook_authoring.md` (schema, step types, templates, URL matching, testing). Created `batch_scheduling.md` (campaign runner, Cloud Run Jobs, Cloud Scheduler, API batch, cost/concurrency). Created `api_reference.md` (all endpoints, request/response schemas, 429 handling, status values). GitBook SSI section (10 pages) done in prior session.
+- **Test suite:** 599 tests pass (575 unit + 24 integration).
+- **Files changed:** `ssi/{src/ssi/{exceptions.py, monitoring/__init__.py, investigator/orchestrator.py, settings/config.py, api/routes.py, llm/{retry.py, factory.py}, osint/{__init__.py, dns_lookup.py, ssl_inspect.py, geoip_lookup.py, virustotal.py, urlscan.py}}, tests/{conftest.py, integration/{test_e2e_pipeline.py, test_api_integration.py, test_wallet_extraction.py}, unit/test_phase8b_hardening.py, fixtures/scam_sites/{register.html, deposit.html, phishing.html}}, docs/{architecture.md, developer_guide.md, playbook_authoring.md, batch_scheduling.md, api_reference.md}}`, `planning/ssi-awh/04_roadmap.md`.
+
+## 2026-02-22 — SSI: Phase 7 Complete — Evidence & Reporting Enhancements
+
+- **PDF evidence appendices (A–F):** PDF reports now embed all text-based evidence artifacts as appendix pages with bidirectional anchor links. Appendix A: Screenshot, B: DOM Snapshot, C: Investigation JSON (`model_dump` minus bulky fields, capped 300 lines), D: Network Activity (HAR summary — stats table, domain breakdown, first 30 requests), E: Wallet Manifest (re-generated from model data at render time), F: STIX 2.1 IOC Bundle. Each appendix has `page-break-before`, stable `id` anchor, and "↑ Back to Evidence Artifacts" back-link.
+- **Template link fixes:** Page Analysis screenshot changed from plain-text `screenshot.png` to `[screenshot.png](#appendix-screenshot)`. Evidence Artifacts table now links every row to its appendix; Investigation Summary always shown (removed stale `report_path` condition). Agent Video marked as `*(video — see evidence ZIP)*`.
+- **Wallet manifest in evidence ZIP:** `_write_wallet_manifest()` added to orchestrator; generates `wallet_manifest.json` with per-wallet metadata and aggregate stats. Included in evidence ZIP with chain-of-custody entry.
+- **STIX wallet indicators:** `crypto_wallet` pattern updated from `artifact:payload_bin` to `cryptocurrency-wallet:address` for proper TIP ingestion. `_create_wallet_indicator_sdo()` added with rich metadata (token, network, confidence). Infrastructure SDO description now mentions wallet count.
+- **PII exposure model:** Added `PiiExposure` model to `InvestigationResult`. Both `report.md.j2` and `leo_report.md.j2` render PII exposure tables with field type, label, page URL, required/submitted status.
+- **Wallet export endpoints:** `GET /investigations/{scan_id}/wallets.xlsx` and `.csv` for per-investigation wallet export via `WalletExporter`.
+- **LEA report enhancements:** Added Section 4 (Cryptocurrency Wallet Addresses & Blockchain Intelligence) with recommended actions, Section 3 (PII Collection Map + Exposure Detail), and Section 9 (Evidence Package Contents with chain-of-custody manifest).
+- **Evidence Bundle Download task:** Created future-work roadmap item for web app signed URLs, evidence bundle ZIP endpoint, and LEA package endpoint.
+- **Test coverage:** 67 Phase 7 tests in `test_phase7_evidence_reporting.py` across 8 test classes; 561 total tests passing.
+- **Files changed:** `ssi/src/ssi/{reports/pdf.py, evidence/stix.py, investigator/orchestrator.py, models/investigation.py, api/investigation_routes.py}`, `ssi/templates/{report.md.j2, leo_report.md.j2}`, `ssi/tests/unit/{test_phase7_evidence_reporting.py, test_stix.py}`, `planning/ssi-awh/04_roadmap.md`.
+
+## 2026-02-22 — Infra: Dev/Prod Parity & Shared Module Refactor
+
+- **Shared `secret_manager` module refactored:** Updated `modules/security/secret_manager/` to accept a `secrets` map variable with `for_each` loop and `auto {}` replication. Replaced single-secret interface (`secret_id` + `region`) with multi-secret map. Outputs `secret_ids` and `secret_names` maps.
+- **Dev SSI secrets:** Replaced 4 inline `google_secret_manager_secret` resources with `module.ssi_secrets` using the shared module.
+- **Prod SSI secrets:** Added identical `module.ssi_secrets` block to prod `main.tf` (4 secrets: proxy, VirusTotal, urlscan, ipinfo) with `env = "prod"` labels.
+- **SSI API parity:** Added `ssi_api_enabled` variable + `count` guard to dev (matching prod pattern). Added GCS bucket merge to prod `run_ssi_api` module. Both envs now use `merge(var.ssi_api_env_vars, { SSI_EVIDENCE__GCS_BUCKET = ... })` and conditional `SSI_API_URL` in console.
+- **Prod `terraform.tfvars` completed:** Added 10 missing SSI API env vars (GCS prefix, auth, browser, proxy, monitoring, cost, integration). Added 4 `ssi_api_secret_env_vars`. Added full `ssi_investigate` job config with 13 env vars + 4 secret_env_vars.
+- **Bucket hardening:** Added `uniform_bucket_level_access = true` and `public_access_prevention = "enforced"` to prod `ssi_evidence` bucket (matching dev).
+- **`SSI_JOB__SCAN_TYPE` env var:** Added to both dev and prod `ssi_investigate` job configs (default `"full"`).
+- **PII-vault migration:** Updated `pii-vault/dev` and `pii-vault/prod` to use the new `module.tokenization_secrets` with the `secrets` map interface. Updated `cloud_run.tf` IAM and secret references accordingly.
+- **Files changed:** `modules/security/secret_manager/{main,variables}.tf`, `environments/app/{dev,prod}/{main.tf,terraform.tfvars,variables.tf}`, `environments/pii-vault/{dev,prod}/main.tf`, `environments/pii-vault/dev/cloud_run.tf`.
+
+## 2026-02-22 — SSI: Phase 6 Complete — GCP Deployment, Bug Fixes & SDK Migration
+
+- **Phase 6 GCP Deployment:** Updated both Dockerfiles (ssi-api, ssi-job) with Chromium for zendriver, CJK fonts, GCP dep caching layer, healthcheck. Added Terraform resources for Secret Manager (proxy, VirusTotal, urlscan, ipinfo), expanded IAM roles for `sa-ssi`, dynamic GCS bucket injection. Expanded `settings.dev.toml` with 12 sections. Added 33 settings tests.
+- **Post-Deploy Bug Fixes:** (1) WHOIS: added retry with backoff + RDAP HTTP fallback for environments where TCP port 43 is blocked. (2) Cloud Logging: added JSON-structured `_CloudFormatter` for Cloud Run (severity parsing). (3) Orchestrator: fixed misleading "Ollama not available" message — now names the actual LLM provider with diagnostic context.
+- **SDK Migration:** Migrated `gemini_provider.py` from deprecated `vertexai.generative_models` SDK to `google-genai` unified SDK (`google.genai`). Replaced `vertexai.init()` + `GenerativeModel()` with `genai.Client(vertexai=True)`. Updated `pyproject.toml` dependency from `google-cloud-aiplatform` to `google-genai>=1.0.0,<2.0`. Deduplicated response parsing into shared `_parse_response()` helper.
+- **Pre-merge cleanup:** Fixed type hints (gemini_provider, whois_lookup, jobs.py), added missing docstrings on nested helpers, removed dead code line in orchestrator, removed redundant `urlparse` re-imports, tightened Dockerfile permissions (`chmod 755`), fixed pyproject.toml section comment formatting.
+- **Roadmap:** Phase 6 fully checked off. Added Phase 7 task for PDF report evidence embedding (screenshots/DOM inline for print-friendly law enforcement reports).
+
+## 2026-02-19 — SSI: Phase 5C/5D Complete — Console UI & Navigation
+
+- **SSI Backend Endpoints:** Added `investigation_routes.py` with `GET /investigations` (paginated list, domain/status filters), `GET /investigations/{id}` (full detail: scan + wallets + PII + agent actions), `GET /wallets` (cross-investigation wallet search by address/token). Wired router into `ssi/api/app.py`.
+- **TypeScript Types:** Created `ui/apps/web/src/types/ssi.ts` with comprehensive SSI type definitions (scan summaries, investigation detail, wallets, PII exposure, agent actions, WebSocket events, scan types).
+- **API Proxies:** Added 3 Next.js API route proxies: `investigations/route.ts`, `investigations/[id]/route.ts`, `wallets/route.ts` — all forwarding to `SSI_API_URL`.
+- **WebSocket Hook:** Created `use-investigation-monitor.ts` — React hook for real-time investigation monitoring via `/ws/monitor/{id}` and `/ws/guidance/{id}`, with snapshot handling, screenshot updates, keepalive, auto-reconnect.
+- **Console SSI Pages:** Moved SSI into `(console)` route group (authenticated):
+  - `/ssi` — Investigate page with scan type selector (passive/active/full), step progress tracker, risk badge, PDF download
+  - `/ssi/investigations` — Server component list page with status filter pills, investigation cards
+  - `/ssi/investigations/[id]` — 3-tab detail view (Recon, Live Monitor, Results)
+  - `/ssi/wallets` — Client-side wallet search with address/token filters
+- **Navigation:** Extended `NavItem` interface with optional `children` for sub-navigation. SSI nav expands to show Investigate / Investigations / Wallets when the section is active.
+- **Auth Migration:** Removed `/ssi` from `PUBLIC_PREFIXES` in `middleware.ts`. Deleted the old standalone `app/ssi/` route (now served by `(console)/ssi/`).
+- **Files created:** `ssi/src/ssi/api/investigation_routes.py`, `ui/apps/web/src/types/ssi.ts`, `ui/apps/web/src/app/api/ssi/{investigations,investigations/[id],wallets}/route.ts`, `ui/apps/web/src/lib/use-investigation-monitor.ts`, `ui/apps/web/src/app/(console)/ssi/{layout,page}.tsx`, `ui/apps/web/src/app/(console)/ssi/investigations/{page,loading,[id]/page}.tsx`, `ui/apps/web/src/app/(console)/ssi/wallets/page.tsx`.
+- **Files modified:** `ssi/src/ssi/api/app.py`, `ui/apps/web/src/app/(console)/navigation.tsx`, `ui/apps/web/middleware.ts`.
+- **Files removed:** `ui/apps/web/src/app/ssi/{page,layout}.tsx` (replaced by console version).
 
 ## 2026-02-18 — SSI: GCP Deployment, Gemini Integration, Web UI & PDF Reports
 
