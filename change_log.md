@@ -1,8 +1,35 @@
 # Planning Change Log (active items only)
 
-Last updated: 22 Feb 2026
+Last updated: 25 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2026-02-25 — IAP JWT Audience Mismatch Investigation
+
+- **Finding:** The "IAP JWT present but verification failed" warning in `fastapi-gateway` logs is caused by an audience format mismatch, **not** a misconfigured env var. All OIDC audience env vars (`I4G_IDENTITY__AUDIENCE`, `SSI_INTEGRATION__IAP_AUDIENCE`, `I4G_IAP_CLIENT_ID`) correctly point to the OAuth client ID.
+- **Root cause:** The IAP-signed JWT assertion (`X-Goog-IAP-JWT-Assertion`) injected by the LB has `aud = /projects/PROJECT_NUMBER/global/backendServices/BACKEND_SERVICE_ID`. Core's `_verify_iap_jwt(is_iap_assertion=True)` checks against `settings.identity.audience` (= OAuth client ID). Different formats → always fails. This affects all callers through the LB (UI and SSI alike).
+- **Current behavior:** Auth falls through to API key (step 4 in `require_token`), so requests authenticate — but caller identity is lost (`"service"` instead of the SA email).
+- **Fix (task 3.3):** Add `settings.identity.iap_backend_audience` for the backend-service audience string; use it in `_verify_iap_jwt(is_iap_assertion=True)`. No SSI changes needed. Promote Bearer-path (step 3) failure logging from DEBUG → WARNING to confirm whether step 3 also fails.
+- **SQL 500 fix:** The `prefix_with("OR IGNORE")` issue was already resolved in the working tree and is included in this session's commits.
+
+## 2026-02-25 — SSI Dev Deployment Fixes: OIDC Auth + CloudSQL Backend
+
+- **CoreBridge OIDC auth:** Added `_get_oidc_token()` helper (follows `core/worker/jobs/intake.py` pattern) and `_build_auth_headers()` method. CoreBridge now injects an OIDC identity token as `Authorization: Bearer` when the target `core_api_url` is HTTPS. This allows the SSI Cloud Run service to authenticate to the core API behind IAP.
+- **CloudSQL backend for ScanStore:** Extended `build_engine()` in `ssi/store/sql.py` to support `storage.backend = "cloudsql"`. Uses `google.cloud.sql.connector.Connector` with pg8000 and IAM auth — same pattern as core. New `_build_cloudsql_engine()` factory reads `cloudsql_instance`, `cloudsql_database`, `cloudsql_user`, `cloudsql_enable_iam_auth` from `StorageSettings`.
+- **StorageSettings expanded:** Added `cloudsql_instance`, `cloudsql_database`, `cloudsql_user`, `cloudsql_password`, `cloudsql_enable_iam_auth` fields (env prefix `SSI_STORAGE__`).
+- **Dev settings updated:** `config/settings.dev.toml` changed `storage.backend` from `"sqlite"` to `"cloudsql"` and `integration.push_to_core` from `false` to `true`.
+- **Infra (dev):** Added `SSI_STORAGE__CLOUDSQL_*` env vars to `ssi_api_env_vars` in `terraform.tfvars`. Granted `roles/cloudsql.client` and `roles/cloudsql.instanceUser` to the SSI service account.
+- **Root causes:** (1) Cases not showing on `/cases` page: CoreBridge sent plain HTTP to IAP-protected core API → 403. (2) Investigation history lost on restart: ScanStore used ephemeral SQLite on Cloud Run's filesystem.
+- **Tests:** 724 core + 701 SSI unit tests pass.
+
+## 2026-02-24 — SSI Phase 2: Production Readiness (2.1–2.4)
+
+- **2.1 Evidence delivery:** Added `GET /investigations/{id}/evidence-bundle` (ZIP download) and `GET /investigations/{id}/lea-package` (LEA-ready signed ZIP with chain-of-custody manifest). GCS-backed storage returns signed URL redirects; local falls back to direct file serving.
+- **2.2 GCS evidence upload:** New `EvidenceStorageClient` in `ssi/evidence/storage.py` with local and GCS backends. Orchestrator uploads evidence directory to GCS after packaging when `SSI_EVIDENCE__STORAGE_BACKEND=gcs`. Factory function `build_evidence_storage_client()` reads from settings.
+- **2.3 Core case creation (end-to-end):** Added `POST /cases`, `PATCH /cases/{id}`, `POST /cases/{id}/entities/batch`, `POST /cases/{id}/indicators/batch`, and `POST /cases/{id}/evidence` to core API. `CoreBridge.push_investigation()` creates a case, attaches evidence, stores classification, and creates entity/indicator records. Cases now write to both `cases` and `scam_records` tables so the dashboard join works. Descriptive case titles built from URL domain + taxonomy intent (e.g., "Investment Scam — example.com"). `push_to_core` defaults to `True`.
+- **2.4 Redis task store:** Replaced in-memory `_TASKS` dict with pluggable `TaskStore` (in-memory or Redis). New `TaskStoreSettings` with `SSI_TASK_STORE__BACKEND`, `SSI_TASK_STORE__REDIS_URL`, `SSI_TASK_STORE__KEY_PREFIX`, `SSI_TASK_STORE__DEFAULT_TTL_SECONDS` env vars. Singleton factory `build_task_store()`.
+- **Bug fixes:** Fixed camelCase key mismatch in CoreBridge (`caseId` vs `case_id`); fixed test DB isolation (test file rewrote with `monkeypatch` + `tmp_path`); added GDPR export/delete endpoints to core cases router.
+- **Tests:** 724 core unit tests pass (1 skipped); 701 SSI unit tests pass. 11 new tests for case write endpoints; 11 new tests for task store.
 
 ## 2026-02-22 — SSI: Phase 8 Complete — Testing, Hardening & Documentation
 
