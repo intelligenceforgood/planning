@@ -1,8 +1,75 @@
 # Planning Change Log (active items only)
 
-Last updated: 25 Feb 2026
+Last updated: 28 Feb 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2025-12-14.md`.
+
+## 2026-02-28 — SSI API Consolidation: Complete (All Phases Done)
+
+- **Phase H — Validation & Cloud Smoke Test:** Deployed to `i4g-dev` and passed full smoke test checklist.
+  - **H.1 Deploy:** Terraform applied (0 add, 2 change, 0 destroy — scaling drift only). Built and deployed `fastapi:dev` (gateway rev `00168-kdv`), `ssi-job:dev`, and `i4g-console:dev` (rev `00113-7j4`).
+  - **H.2 Smoke test:** All endpoints verified via IAP-authenticated curl: investigation trigger (HTTP 202 → Cloud Run Job), task polling (`running` → `completed`, 39.52s), history (latest scan appears), detail (camelCase keys, wallets/PII/agent data), evidence bundle (307 → GCS signed URL), report PDF (307 → GCS signed URL), wallet search (200, cross-scan dedup). Case back-reference N/A (benign test site, no case created).
+- **Post-merge items:** Orchestrator `investigation_id` skip-create test added (`ssi/tests/unit/test_orchestrator.py`, 3 tests, SSI 720 passed). Prod terraform plan verified clean (0 add, 1 change, 0 destroy — no `ssi-api` resources).
+- **Consolidation status:** All 8 phases complete. SSI API fully merged into the FastAPI gateway. Single gateway (19 routers), single Cloud SQL database, one Cloud Run Job.
+
+## 2026-02-28 — SSI API Consolidation: Phase F Complete, A Done, H Validated (earlier)
+
+- **Phase F — Infrastructure Decommission:** Staged rollout complete. The standalone `ssi-api` Cloud Run Service has been deleted. All SSI traffic now routes through the FastAPI gateway. Terraform changes applied: removed `module "run_ssi_api"`, `ssi-api` IAP binding, `sa-ssi` IAP access, and `ssi_api_*` variables. `ssi-api` Artifact Registry images cleaned up. `ssi/docker/ssi-api.Dockerfile` deleted. SSI's `scripts/build_image.sh` updated to remove `ssi-api` references.
+- **Task status tracking:** Refactored from HTTP callback (`TaskStatusReporter`) to shared database polling. Core pre-creates a `site_scans` row before launching the SSI Cloud Run Job; the job writes status updates directly to the shared Cloud SQL database; the `GET /tasks/{task_id}` endpoint polls the scan row for completion. This eliminates the OIDC authentication dance between SSI Job and core gateway.
+- **Architecture:** Single gateway (19 routers), single Cloud SQL database, one Cloud Run Job (`ssi-investigate`). No `ssi-api` service in production.
+- **Phase A — Documentation:** Complete. Updated system topology Mermaid diagram (19 routers, 8 Cloud Run Jobs, SSI Job node), API README with 13 SSI endpoint reference, SSI docs (deployment note, getting-started architecture note, configuration shared DB docs, live-monitoring WebSocket availability note), and settings manifest (12 `ssi_job` entries).
+- **Phase H — Validation:**
+  - Core tests: **850 passed**, 1 skipped. SSI tests: **717 passed**. UI type-check: 0 errors.
+  - Bootstrap local reset: 7,086 cases, 7,532 source documents, all SSI tables created (site_scans, harvested_wallets, agent_sessions, pii_exposures), verify.json + verify.md generated.
+  - SSI CLI local dev: `ssi investigate list` confirmed working with local store.
+  - H.1/H.2 (deploy to `i4g-dev` + cloud smoke tests): deferred to next deploy cycle.
+
+## 2026-02-26 — SSI API Consolidation: Phases D, E, G (pre-merge)
+
+- **Phase D — UI Simplification:** Removed dual-backend proxy layer. All 4 data routes (`investigations`, `investigations/[id]`, `wallets`, `report/[id]`) now go through core via `apiFetch()`. Only 2 trigger+poll routes (`investigate`, `investigate/[id]`) retain `SSI_API_URL` conditional for local dev (core subprocess can't update in-memory task status). Removed `backend` field from response types. Updated `page.tsx` with case link, scanId tracking, queued status support, and risk score fallback chain.
+- **Phase D — Types:** `ssi.ts` updated — `InvestigationResult` gets `ssi_investigation_id`, `case_id`, `pdf_report_path` fields. `InvestigationDetailResponse` uses camelCase top-level keys (`piiExposures`, `agentActions`) matching core's `CamelModel` output.
+- **Phase E — WebSocket Decision:** Option B selected — defer WebSocket/SSE live monitoring to CLI/local-dev. Task polling via `GET /tasks/{task_id}` provides adequate production UX.
+- **Phase G — Shared Database:** SSI now writes directly to core's SQLite DB in local dev via `SSI_STORAGE__DB_URL`. `build_engine()` in `ssi/store/sql.py` supports `db_url` override. Removed `download_report_pdf` workaround from SSI API. One-time data migration script at `ssi/scripts/migrate_to_core_db.py`.
+- **Phase C.4 — Playbook Router:** `core/src/i4g/api/ssi_playbooks.py` — 6 endpoints (list, detail, create, update, delete, test-match) under `/playbooks/ssi`. File-based storage via `settings.ssi_job.playbook_dir` (env: `SSI_PLAYBOOK_DIR`). 27 tests in `tests/unit/api/test_ssi_playbooks.py`. Self-contained models (no SSI imports). Path resolution added to `runtime_overrides.py`.
+- **Cleanup:** `.coverage` removed from git tracking, added to `.gitignore`. Orchestrator `scan_id` passthrough so DB record and result object share the same ID.
+- **Tests:** Core 842 passed (1 skipped), SSI 717 passed. UI `tsc --noEmit` zero errors.
+
+## 2026-02-26 — Phase B + C: SSI Database Schema & Endpoint Migration
+
+- **`SsiStore` data access layer (`core/src/i4g/store/ssi_store.py`):** Full CRUD layer for the four SSI tables (`site_scans`, `harvested_wallets`, `agent_sessions`, `pii_exposures`) in core's Alembic-managed database. Mirrors `ssi.store.ScanStore` public API. Supports SQLite (local) and Cloud SQL backends via `build_ssi_store()` factory in `core/src/i4g/services/factories.py`.
+- **Investigation history & detail (`core/src/i4g/api/ssi_investigations.py`):** 3 endpoints — `GET /investigations/ssi/history` (paginated, filterable), `GET /investigations/ssi/active` (stub), `GET /investigations/ssi/{scan_id}` (full detail with wallets, PII, agent actions).
+- **Wallet search & export (`core/src/i4g/api/ssi_wallets.py`):** 3 endpoints — `GET /investigations/ssi/wallets` (cross-scan search with dedup), `GET /investigations/ssi/{scan_id}/wallets.csv`, `GET /investigations/ssi/{scan_id}/wallets.xlsx` (optional `openpyxl` dep).
+- **Evidence & report downloads (`core/src/i4g/api/ssi_evidence.py`):** 3 endpoints — evidence-bundle, lea-package, report.pdf. GCS signed URL redirect for cloud, local file serving for dev.
+- **Router registration order:** Wallet/evidence routers registered before `ssi_investigations` in `app.py` so static paths (`/wallets`, `/*.csv`) resolve before the `{scan_id}` catch-all. The old `GET /investigations/ssi/{task_id}` convenience alias is now shadowed; use `GET /tasks/{task_id}` for task polling.
+- **Alembic migration:** `20260221_01_add_ssi_scan_tables.py` — 4 tables with idempotent guards, FKs to `cases.case_id`, and indexes on domain/status/address/token.
+- **Tests:** 815 passed, 1 skipped, 0 failures. 41 store tests + 35 endpoint tests covering all new code. Phase C.4 (playbook router) deferred to next sprint.
+
+## 2026-02-25 — Phase 3A: SSI Platform Integration (API & Triggering)
+
+- **Core API trigger (`POST /investigations/ssi`):** New endpoint triggers SSI Cloud Run Jobs from the analyst console. Returns a task ID for polling via `GET /tasks/{task_id}`. Supports `scanType` (passive/active/full), `pushToCore`, `triggerDossier`, and `dataset` parameters. Local-dev mode fires a subprocess instead.
+- **SSI `TaskStatusReporter`:** New `ssi/src/ssi/worker/task_reporter.py` posts progress updates from the SSI Cloud Run Job back to core's `TASK_STATUS` API. Uses dual-auth (OIDC + API key). No-ops when env vars absent (standalone mode).
+- **`SsiJobSettings`:** New settings section in `core/src/i4g/settings/sections/jobs.py` with `job_name`, `project`, `region`, `service_account`, `core_api_url`. Override via `I4G_SSI_JOB__*` env vars.
+- **Pre-merge review applied:** Fixed silent test-pass guard (critical), removed getattr chain with redundant defaults, broadened subprocess error handling to `OSError`, added `SsiInvestigationStatusResponse` model, replaced settings singleton mutation with `monkeypatch`.
+- **Tests:** 738 core + 717 SSI = 1,455 passed, 0 failures.
+
+## 2026-02-25 — IAP JWT Fix, WHOIS Hardening, SSI VPC Egress
+
+- **IAP backend-service audience (core):** Added `settings.identity.iap_backend_audience` (`I4G_IDENTITY__IAP_BACKEND_AUDIENCE`) to `IdentitySettings`. `_verify_iap_jwt(is_iap_assertion=True)` now uses this value instead of the OAuth client ID for IAP assertion verification. This fixes the "IAP JWT present but verification failed" warning — IAP assertions carry `aud = /projects/PROJECT_NUMBER/global/backendServices/BACKEND_ID` which never matched the OAuth client ID. Bearer-path (step 3) failure logging promoted from DEBUG → WARNING for visibility. Terraform dynamically computes the audience from `module.global_lb.backend_service_ids["api"]`. New LB module output `backend_service_ids` exposes numeric IDs. 2 new unit tests added.
+- **SSI VPC connector + Cloud NAT (infra):** Wired `google_vpc_access_connector.serverless` to `run_ssi_api` module and added `ssi_investigate` to `run_job_vpc_connector_overrides`. All SSI egress now routes through Cloud NAT with a static IP, fixing WHOIS port-43 connection resets and RDAP 403s caused by Cloud Run's shared egress IPs being blocked/rate-limited.
+- **WHOIS non-fatal fallback (SSI):** `lookup_whois()` no longer raises `RuntimeError` when both WHOIS and RDAP fail. Returns an empty `WHOISRecord` with the domain populated. Improved logging messages include Cloud Run egress context to aid diagnosis.
+- **ipinfo.io API key:** Already fully wired — `OSINTSettings.ipinfo_token` → `SSI_OSINT__IPINFO_TOKEN` → Secret Manager `ssi-ipinfo-token` → both `ssi_api_secret_env_vars` and `ssi_investigate` secret_env_vars. Secret value populated via `gcloud secrets versions add`. Added unit test for `ipinfo_token` env var override.
+- **Tests:** 39 core settings tests pass (2 new); 3 SSI OSINT settings tests pass (1 new). No regressions.
+
+## 2026-02-25 — SSI Dev: Persistence & OSINT Error Handling Fixes
+
+- **ScanStore auto-create on PostgreSQL:** `ScanStore.__init__()` now checks for missing tables on PostgreSQL and runs `METADATA.create_all(checkfirst=True)` as a fallback when Alembic migration `20260221_01` hasn't been applied. Logs a clear warning pointing to the migration. Prevents silent data loss where `scan_store` was set to `None` in the orchestrator.
+- **Orchestrator NXDOMAIN gating:** DNS, SSL, GeoIP, and urlscan.io OSINT calls are now skipped when `_check_domain_resolution()` returns `False`. Previously, these were called regardless, producing noisy errors (e.g., `SSL connection failed for frost-treasuryconnect.com: [Errno -2] Name or service not known`) and wasting API calls to urlscan.io (which returned HTTP 400 for unresolvable domains).
+- **urlscan.io retry policy:** Changed `@with_retries` to only retry on `httpx.TransportError` (transport-level failures). HTTP 4xx client errors (like 400 Bad Request) are no longer retried. The error handler now logs the response body for 4xx to aid debugging.
+- **SSL inspection:** Added specific `socket.gaierror` handling so DNS resolution failures are logged as "inspection skipped" rather than "connection failed". Removed `OSError` from retryable exceptions to avoid retrying DNS failures.
+- **Agent session persistence:** `persist_investigation()` now bulk-inserts agent steps from `result.agent_steps` into the `agent_sessions` table. Previously only wallets and PII exposures were persisted; agent browser-interaction steps were silently dropped, leaving `agent_sessions` empty. Also wired `site_result = agent_session` in the orchestrator so the `active_result` JSON column on `site_scans` is populated after Phase 2.
+- **AgentSession UUID serialization:** `AgentSession.to_dict()` now converts `UUID` and `Enum` fields to strings via a custom `dict_factory`. Previously, `dataclasses.asdict()` returned raw `UUID` objects which caused `TypeError: Object of type UUID is not JSON serializable` when SQLAlchemy tried to store the `active_result` JSON column, failing `persist_investigation()`.
+- **Core evidence upload endpoint:** Fixed `upload_evidence()` in `core/src/i4g/api/evidence.py` — was calling `evidence.store(storage_key, content)` but `EvidenceStorage` has no `store` method. Changed to `evidence.save(intake_id=case_id, file_name=file_name, data=content, content_type=mime_type)` and now uses the returned `StoredAttachment.storage_uri` and `checksum_sha256` for the `source_documents` row. This was the root cause of all "Failed to attach … 500 Internal Server Error" messages in SSI logs.
+- **Tests:** 705 SSI + 18 core evidence/case-write tests pass, zero failures.
 
 ## 2026-02-25 — IAP JWT Audience Mismatch Investigation
 
