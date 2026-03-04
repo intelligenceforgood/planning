@@ -1,8 +1,116 @@
 # Planning Change Log (active items only)
 
-Last updated: 03 Mar 2026
+Last updated: 04 Mar 2026
+
+## 2026-03-04 — Gemini Model Migration: Phase 8 (Cleanup) — Complete
+
+**Context:** Phase 8 removes the backwards-compat shim and dead code introduced during the SDK migration (Phases 2–3). All consumers use `chat_model` directly; `vertex_ai_model` is no longer needed.
+
+**Changes:**
+
+- `core/src/i4g/llm/client.py` — Removed `_resolve_model_name()` shim; `build_llm_client` and `_build_vertex_langchain` now use `settings.llm.chat_model` directly
+- `core/src/i4g/settings/sections/ml.py` — Removed deprecated `vertex_ai_model` field (`LLM_VERTEX_AI_MODEL` / `LLM__VERTEX_AI__MODEL` env vars no longer honored)
+- `core/src/i4g/settings/runtime_overrides.py` — Removed `"vertex_ai_model": None` from local-mode override dict
+- `core/tests/unit/llm/test_client.py` — Removed `TestResolveModelName` class (3 tests) and `vertex_ai_model` from `_make_settings`; removed `_resolve_model_name` import
+- `core/config/settings.default.toml` — Removed commented `# vertex_ai_model = ""` line
+- `infra/environments/app/dev/terraform.tfvars` — `I4G_LLM__PROVIDER` changed to `"gemini"` (core-svc, ingest-job sweeper)
+- `infra/environments/app/prod/terraform.tfvars` — `I4G_LLM__PROVIDER` changed to `"gemini"` (core-svc, report-job, account-job, retention-purge)
+- `docs/config/settings_manifest.json` — Removed `llm.vertex_ai_model` entry
+- `docs/book/config/settings.md` — Removed `llm.vertex_ai_model` row; updated provider Literal to `Literal['ollama', 'vertex_ai', 'gemini', 'mock']`
+
+**Note (Phase 8.2):** `google-cloud-aiplatform` was already fully removed in Phase 2; no further action required.
+
+**Tests:** 881 passed, 3 skipped (3 fewer than Phase 5 baseline — the 3 removed `TestResolveModelName` tests).
+
+**Remaining (Phase 7 — manual cloud deployment):** Deploy Core API + SSI to `i4g-dev`, monitor 48h, then deploy to `i4g-prod`.
+
+## 2026-03-05 — Core Pre-commit Standardization (Matches SSI Standard) — Complete
+
+**Context:** SSI had a more robust pre-commit suite (black + isort + ruff + pre-commit-hooks). Core only had black + isort without ruff or the pre-commit-hooks suite.
+
+**Changes:**
+
+- `core/.pre-commit-config.yaml` — Rewritten to match SSI structure: black (frozen 26.1.0, `--line-length=120`), isort (frozen 8.0.1, `--profile=black --line-length=120`), ruff (frozen v0.15.4, `--fix`), plus trailing-whitespace, end-of-file-fixer, check-yaml, check-toml, check-added-large-files from pre-commit-hooks v6.0.0
+- `core/pyproject.toml` — Added `[tool.ruff]`, `[tool.ruff.lint]`, `[tool.ruff.lint.per-file-ignores]`: rules `E/F/N/W/UP/B/SIM` selected (`I` omitted — isort is authoritative for imports to avoid isort 8.0.1 ↔ ruff I001 convergence conflict), `B008` globally ignored (FastAPI Depends idiom), per-file-ignores for tests (N806/N803) and migration/infra scripts (E501)
+- 25 real ruff violations fixed: missing imports (`Settings`, `EntityStore`, `DossierPlan`, `Optional`, `Dict`, `documents`), unused variables across 7 files, duplicate test function
+- 45 auto-fixes applied: UP042 StrEnum conversions, UP031 %-format → f-strings, SIM simplifications, B905/B007/B017
+- 40 `# noqa` directives added for pre-existing brownfield E501/B904 violations
+- B904 in `review_search.py` fixed with proper `from exc` exception chaining
+- End-of-file and trailing-whitespace normalization across 80+ files
+
+**Decision:** `I` (isort rules) excluded from ruff's select because isort 8.0.1 (pre-commit frozen) and ruff's I001 disagree on aliased same-module imports (e.g., `from i4g.store.sql import session_factory as build_sql_session_factory`), causing an infinite fix loop. isort is the single authoritative import formatter.
+
+**Tests:** 884 passed, 3 skipped — no regressions.
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2026-02-28.md` (and before that, `archive/change_log_2025-12-14.md`).
+
+## 2026-03-04 — Gemini Model Migration: Phases 5 & 6 (Testing + Infra) — Complete
+
+**Context:** Phases 1–4 had already migrated Core SDK (`google-genai==1.52.0`) and updated all model strings to `gemini-2.5-flash`. Phases 5 and 6 complete the verification and infrastructure alignment.
+
+**Phase 5 — Testing & Evaluation results:**
+
+- Core unit tests: **884 passed, 3 skipped, 0 failures** (no regressions from SDK migration)
+- Core mock smoke: `MockLLMClient.generate()` works; `google-genai` SDK imports correctly with `gemini` provider + `gemini-2.5-flash` model
+- SSI unit tests: **715 passed, 0 failures** (model-string update to `gemini-2.5-flash` in Phase 3 fully validated)
+- Structured output / JSON mode audited: both Core and SSI use `response_mime_type="application/json"` via `types.GenerateContentConfig` — correct `google-genai` SDK pattern, no breaking changes
+
+**Phase 6 — Infrastructure & Config:**
+
+- `infra/environments/app/dev/terraform.tfvars` — core-svc `I4G_LLM__CHAT_MODEL` and SSI `SSI_LLM__MODEL`: `gemini-2.0-flash` → `gemini-2.5-flash`
+- `infra/environments/app/prod/terraform.tfvars` — SSI `SSI_LLM__MODEL`: `gemini-2.0-flash` → `gemini-2.5-flash`
+- Docs (`settings_manifest.json`, `settings.md`) and `settings.default.toml` were already current — no further changes needed
+- Phase 6.5 (quota verification in `i4g-dev`) is a manual GCP Console step remaining before deploy
+
+**Status:** Phase 7 (deploy to `i4g-dev`) is next.
+
+## 2026-03-04 — Gemini Model Migration: Phase 3 (Model String Updates) — Complete
+
+**Context:** SSI still defaulted to the retiring `gemini-2.0-flash` (June 1 deadline). Phase 3 updates all model string references across SSI and Core to `gemini-2.5-flash`.
+
+**Changes:**
+
+- `ssi/src/ssi/llm/gemini_provider.py` — updated `GeminiProvider.__init__` default from `gemini-2.0-flash` → `gemini-2.5-flash`; updated docstring example
+- `ssi/config/settings.dev.toml` — updated `model = "gemini-2.5-flash"`
+- `ssi/tests/unit/test_settings.py` — updated `test_dev_profile_loads_gemini` assertion to `gemini-2.5-flash`
+- `ssi/src/ssi/monitoring/__init__.py` — added `gemini-2.5-flash` cost entry (`input: $0.0003`, `output: $0.0025` per 1K tokens); kept `gemini-2.0-flash` with retirement note for historical tracking
+- `core/tests/unit/llm/test_client.py` — replaced deprecated `gemini-pro` in `vertex_ai_model` override test fixture with `gemini-2.5-flash`
+- `core/config/settings.default.toml` — improved `[llm]` section comment to call out `gemini-2.5-flash` as the Vertex AI target model
+- `core/src/i4g/cli/bootstrap/dev/jobs.py` — confirmed already at `gemini-2.5-flash`; no change required
+
+**Test results:** SSI — 715 passed; Core LLM tests — 12 passed; 0 failures across both.
+
+**Next:** Phase 5 — unit + smoke testing with new SDK and model.
+
+## 2026-03-04 — Gemini Model Migration: Phase 4 (Breaking-Change Audit) — Complete
+
+**Context:** Phase 4 audits core and SSI for Gemini 3.x breaking changes before finalizing the `gemini-2.5-flash` migration target.
+
+**Findings (all six items cleared — no code changes required):**
+
+- **Top-K removal (4.1):** All `top_k` occurrences are Vertex AI Vector Search nearest-neighbor count parameters (`retriever.py`, `vertex_vector.py`, `structured.py`) — not Gemini generation sampling. Neither `client.py` (Core) nor `gemini_provider.py` (SSI) pass `top_k` to `GenerateContentConfig`. No action required.
+- **Thinking parameter (4.2):** No `thinking_budget` or `thinking_level` anywhere. Not applicable.
+- **Thought signatures (4.3):** Not required for `gemini-2.5-flash`. SSI passes standard `role/content` message history only. Flag for future Gemini 3 Pro+ migration.
+- **PDF processing (4.4):** Core uses a dedicated OCR pipeline (`i4g.ingestion`); SSI uses Playwright browser automation. The LLM is never called with raw PDF bytes. Not applicable.
+- **Temperature (4.5):** Core and SSI both default to `temperature=0.1`. The `1.0` advisory applies to Gemini 3 Pro+ only; no restriction on `gemini-2.5-flash`. No change needed now.
+- **Content filter defaults (4.6):** SSI `_safety_off()` explicitly disables all four harm categories (`DANGEROUS_CONTENT`, `HARASSMENT`, `HATE_SPEECH`, `SEXUALLY_EXPLICIT`) via `HarmBlockThreshold.OFF` — valid with current `google-genai` SDK and `gemini-2.5-flash`. Core's `GenerateContentConfig` omits safety settings (uses model defaults). No changes needed. Revisit category names when migrating to Gemini 3.x.
+
+**Decision:** No code changes required for Phase 4. All identified breaking changes are Gemini 3.x concerns; current target is `gemini-2.5-flash`. Plan updated to mark Phase 4 ✅.
+
+## 2026-03-03 — Gemini Model Migration: Phase 2 (Core SDK Migration) — Complete
+
+**Context:** Core used the deprecated `vertexai.generative_models` SDK (`google-cloud-aiplatform`). Phase 2 migrates to the `google-genai` unified SDK, aligning with the SSI repo which already uses it.
+
+**Changes:**
+
+- `core/pyproject.toml` — replaced `google-cloud-aiplatform>=1.70.0,<3.0` with `google-genai>=1.0.0,<2.0`
+- `core/src/i4g/services/classifier.py` — removed `vertexai.init()` / `GenerativeModel` imports; rewrote `VertexAIClient` to use `genai.Client(vertexai=True)` and `models.generate_content()` with `types.GenerateContentConfig`
+- `core/src/i4g/llm/client.py` — rewrote `_build_vertex_langchain()` to use `genai.Client`; `_VertexLangChainAdapter` now holds a `genai.Client` instance instead of `GenerativeModel`
+- `core/src/i4g/settings/sections/ml.py` — added `"gemini"` as accepted `provider` value (synonym for `"vertex_ai"`); existing deployments using `I4G_LLM__PROVIDER=vertex_ai` are unaffected
+- `core/requirements.txt` — regenerated via `pip-compile`; `google-cloud-aiplatform` removed, `google-genai==1.52.0` pinned
+- Full unit test suite: **884 passed, 3 skipped, 0 failures**
+
+**Next:** Phase 3 — model string updates (SSI default → `gemini-2.5-flash`, infra tfvars).
 
 ## 2026-03-03 — Phase 3C: Analyst Guidance in Cloud Mode — Complete
 
