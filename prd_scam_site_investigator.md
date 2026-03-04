@@ -133,7 +133,7 @@ SSI extends the existing i4g platform:
 - **Evidence Store** — evidence packages attach to existing case records
 - **LEO Reports** — SSI intelligence enriches the existing dossier/LEO report pipeline
 - **Ingestion** — a scam URL submitted by a victim can trigger an SSI investigation via the worker/jobs pipeline
-- **Core Bridge** — `CoreBridge.push_investigation()` creates cases, attaches evidence, stores taxonomy results. Wired into API (`push_to_core: true`) and worker job
+- **Database integration** — `ScanStore.create_case_record()` writes cases, timeline events, and evidence documents directly to the shared database. Wired into API (`push_to_core: true`) and worker job
 - **Analyst Console** — Next.js UI with investigations list, 3-tab detail view (Recon / Live Monitor / Results), wallet browser, live WebSocket monitoring
 - **Wallet Intelligence** — wallet addresses stored as `indicators` (IOC type: crypto_wallet), searchable across all investigations
 

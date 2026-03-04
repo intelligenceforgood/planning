@@ -54,7 +54,7 @@ Built the SSI product from the AWH merge (see `archive/ssi_awh_merge_summary.md`
 - LLM provider abstraction (Ollama, Gemini, mock), PDF reports, built-in web UI
 - GCP deployment (Terraform, Docker images, Secret Manager, Cloud Run)
 - Evidence bundle + LEA package endpoints with GCS signed URLs
-- Core case creation end-to-end (`CoreBridge.push_investigation()`)
+- Core case creation end-to-end (direct DB writes via `ScanStore`)
 - Console UI pages (investigate, history, detail, wallets, live monitoring)
 - Hardening (budget gates, concurrent limits, retry policies, OSINT error handling)
 - 717 tests (unit + integration)
@@ -73,18 +73,18 @@ Wired SSI into the i4g platform:
 
 Eliminated the standalone `ssi-api` Cloud Run Service — the biggest architectural change:
 
-| Phase              | What Changed                                                                                             |
-| ------------------ | -------------------------------------------------------------------------------------------------------- |
-| **A — Docs**       | Updated topology diagrams, API reference, SSI docs, settings manifest                                    |
-| **B — Database**   | `SsiStore` in core with factory; Alembic migration for 4 tables; 41 tests                                |
-| **C — Endpoints**  | 4 routers migrated to core: investigations, wallets, evidence, playbooks (62 tests)                      |
-| **D — UI**         | Removed dual-backend proxy; 4 data routes core-only; 2 trigger routes retain `SSI_API_URL` for local dev |
-| **E — WebSocket**  | Deferred to CLI/local-dev; task polling sufficient for production                                        |
-| **F — Infra**      | Staged decommission of `ssi-api` Cloud Run Service, IAP binding, Dockerfile, Terraform                   |
-| **G — Shared DB**  | SSI writes directly to core's DB via `SSI_STORAGE__DB_URL`; CoreBridge eliminated for persistence        |
-| **H — Validation** | Full deploy + smoke test on `i4g-dev` (all endpoints verified)                                           |
+| Phase              | What Changed                                                                                              |
+| ------------------ | --------------------------------------------------------------------------------------------------------- |
+| **A — Docs**       | Updated topology diagrams, API reference, SSI docs, settings manifest                                     |
+| **B — Database**   | `SsiStore` in core with factory; Alembic migration for 4 tables; 41 tests                                 |
+| **C — Endpoints**  | 4 routers migrated to core: investigations, wallets, evidence, playbooks (62 tests)                       |
+| **D — UI**         | Removed dual-backend proxy; 4 data routes core-only; 2 trigger routes retain `SSI_API_URL` for local dev  |
+| **E — WebSocket**  | Deferred to CLI/local-dev; task polling sufficient for production                                         |
+| **F — Infra**      | Staged decommission of `ssi-api` Cloud Run Service, IAP binding, Dockerfile, Terraform                    |
+| **G — Shared DB**  | SSI writes directly to core's DB via `SSI_STORAGE__DB_URL`; legacy HTTP bridge eliminated for persistence |
+| **H — Validation** | Full deploy + smoke test on `i4g-dev` (all endpoints verified)                                            |
 
-**Why consolidate:** The dual-service architecture created auth complexity (broken OIDC), UI routing complexity (conditional `SSI_API_URL`), data duplication (CoreBridge HTTP copies), and infra overhead (two Cloud Run Services + IAP bindings). The single-gateway approach eliminated all four problems.
+**Why consolidate:** The dual-service architecture created auth complexity (broken OIDC), UI routing complexity (conditional `SSI_API_URL`), data duplication (HTTP bridge copies), and infra overhead (two Cloud Run Services + IAP bindings). The single-gateway approach eliminated all four problems.
 
 ---
 

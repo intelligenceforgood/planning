@@ -11,7 +11,7 @@ Five phases fixing two root problems: (1) SSI-created cases had empty timelines 
 ### Phase 1 — Case Enrichment ✅
 
 **Problem:** Timeline and Artifacts cards empty on SSI cases.
-**Design:** Direct DB writes via `ScanStore._insert_timeline_events()` and `_insert_evidence_documents()` — skipped the CoreBridge HTTP path entirely. Artifacts card fixed by querying `source_documents` in `get_case()` instead of relying on `metadata.files`.
+**Design:** Direct DB writes via `ScanStore._insert_timeline_events()` and `_insert_evidence_documents()` — skipped the legacy HTTP bridge path entirely. Artifacts card fixed by querying `source_documents` in `get_case()` instead of relying on `metadata.files`.
 
 ### Phase 2 — Investigate Page State Persistence ✅
 
