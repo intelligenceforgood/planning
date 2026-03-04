@@ -1,8 +1,142 @@
 # Planning Change Log (active items only)
 
-Last updated: 28 Feb 2026
+Last updated: 03 Mar 2026
 
 This log keeps only decisions that affect future development. Older history lives in `archive/change_log_2026-02-28.md` (and before that, `archive/change_log_2025-12-14.md`).
+
+## 2026-03-03 — Phase 3C: Analyst Guidance in Cloud Mode — Complete
+
+**Context:** With live monitoring deployed (Phase 3B), analysts can observe SSI investigations in the cloud but cannot guide them. Phase 3C adds bidirectional guidance — analysts submit commands (click, goto, type, skip, abort, etc.) through the UI, which are stored in core and polled by SSI during the investigation.
+
+**Architecture:**
+
+1. **Core endpoints** — `POST /events/ssi/{scan_id}/guidance` stores commands in `ssi_guidance_commands` table (Alembic `20260303_02`). `GET .../guidance/pending` returns unacknowledged commands. `POST .../guidance/{id}/ack` marks consumed. Redis pub/sub notifies on `ssi:guidance:{scan_id}`.
+2. **SSI polling** — `GuidancePollRelay` (background `asyncio.Task`) continuously polls core and feeds commands into `EventBus.provide_guidance()`. `GuidancePollHandler` implements `GuidanceHandler` protocol for future `AgentController` integration. Enabled via `SSI_INTEGRATION__GUIDANCE_POLL_ENABLED=true`.
+3. **UI** — Next.js proxy route at `/api/events/ssi/[scanId]/guidance`. `useInvestigationMonitor.sendGuidance()` falls back to HTTP POST in SSE/cloud mode. `/ssi` page has action dropdown, value input, reason field, and send button.
+4. **Auto-continue** — `GuidancePollHandler` returns `HumanAction.CONTINUE` after 300s timeout if no analyst responds.
+
+**Files changed (core):** `src/i4g/store/sql.py`, `src/i4g/store/ssi_events_store.py`, `src/i4g/api/ssi_events.py`, `src/i4g/migrations/versions/20260303_02_add_ssi_guidance_commands.py`, `tests/unit/test_ssi_guidance.py` (8 tests)
+
+**Files changed (ssi):** `src/ssi/monitoring/guidance_poll_handler.py`, `src/ssi/settings/config.py`, `src/ssi/api/investigation_routes.py`, `tests/unit/test_guidance_poll.py` (8 tests)
+
+**Files changed (ui):** `apps/web/src/app/api/events/ssi/[scanId]/guidance/route.ts`, `apps/web/src/lib/use-investigation-monitor.ts`, `apps/web/src/app/(console)/ssi/page.tsx`
+
+## 2026-03-03 — 3B.10 Root Cause 5: WebSocket Transport Still Active in Cloud
+
+**Context:** After deploying with `.dockerignore`, Cloud Run timeout, and SSE proxy rewrite fixes, the Live View still showed `connecting…` indefinitely (no longer going to "unavailable" — timeout fix helped). Cloud Run logs confirmed **zero** requests to `/api/events/ssi/` during the entire investigation. The hook was calling WebSocket `connect()` instead of `connectSSE()`.
+
+**Diagnosis:** `NEXT_PUBLIC_SSI_WS_URL=ws://localhost:8100` was still baked into the deployed image despite `.dockerignore`. Docker's build cache retained the stale `COPY . .` layer from a prior build. The hook's transport decision — `if (process.env.NEXT_PUBLIC_SSI_WS_URL) connect() else connectSSE()` — always chose WebSocket. WebSocket to `ws://localhost:8100` inside a Cloud Run container fails silently (no server to connect to), keeps retrying, and produces no server-side logs.
+
+**Fix — runtime transport selection:** Added `shouldUseWebSocket()` helper that requires **both** `NEXT_PUBLIC_SSI_WS_URL` to be set **and** `window.location.protocol !== "https:"`. In cloud (always HTTPS), this forces SSE transport regardless of whether the env var got baked in. WebSocket is now only used under HTTP (local dev). Also added `console.debug` diagnostic logging for transport selection, SSE connection, and errors.
+
+**Files changed:**
+
+- `ui/apps/web/src/lib/use-investigation-monitor.ts` — `shouldUseWebSocket()` guard, diagnostic logging
+- `ui/apps/web/src/app/api/ssi/investigate/[id]/route.ts` — diagnostic log showing `ssi_investigation_id` from core
+- `ui/apps/web/src/app/api/events/ssi/[scanId]/stream/route.ts` — log on stream open
+
+**Action required:** Rebuild `i4g-console` with `--no-cache` flag, then redeploy. Check browser console for `[Monitor]` logs to confirm SSE transport is selected.
+
+## 2026-03-03 — 3B.10 SSE Proxy Rewrite: Polling Replaces Stream Proxy
+
+**Context:** After rebuilding with `.dockerignore` and Cloud Run timeout fixes, the Live View still showed `connecting…` → `disconnected` after ~60 s. Root cause: Next.js patches global `fetch` for response caching. The SSE proxy route's `await fetch(upstream_sse_url)` buffered the entire SSE response body before resolving — but SSE streams never end, so the fetch hung until the browser's EventSource exhausted its retry budget (~60 s).
+
+**Fix — polling approach:**
+
+1. **Rewrote SSE proxy route** (`ui/apps/web/src/app/api/events/ssi/[scanId]/stream/route.ts`) from a stream-proxy to a polling loop. Every 2.5 s, the route calls `GET /events/ssi/{scanId}?after={timestamp}` (short-lived JSON fetch that resolves instantly) and re-emits new events as SSE `data:` frames. Sends `: connected` comment on stream open to trigger `EventSource.onopen` immediately.
+
+2. **Added `after` query param** to core-svc `GET /events/ssi/{scan_id}` endpoint (`core/src/i4g/api/ssi_events.py`). Accepts ISO-8601 timestamp; returns only events strictly after that time. Enables incremental polling (avoids re-sending all events every cycle).
+
+**Why not `cache: "no-store"`?** It might work in isolation, but behaviour is fragile across Next.js versions — the patched `fetch` wrapper has changed multiple times and may re-introduce buffering. The polling approach is reliable regardless of Next.js internals: each poll is a standard short-lived JSON request.
+
+**Files changed:**
+
+- `ui/apps/web/src/app/api/events/ssi/[scanId]/stream/route.ts` — rewritten (stream proxy → polling loop)
+- `core/src/i4g/api/ssi_events.py` — added `after` query param to `get_ssi_events()`
+- `planning/tasks/ssi_case_enrichment_and_live_monitor.md` — updated 3B.10 with all 4 root causes
+
+**Action required:** Rebuild + redeploy both `i4g-console` and `core-svc` images, then `terraform apply dev`, then re-run E2E cloud smoke.
+
+## 2026-03-03 — 3B.10 Live View Bug Investigation: Three Root Causes Found
+
+**Context:** After starting an investigation in dev (GCP), the Live View status badge stayed on `connecting…` then switched to `disconnected`. The Live View panel showed "not available". No errors in ssi-svc or core-svc logs.
+
+**Root causes diagnosed and fixed:**
+
+1. **Primary — `.env.local` bundled into Cloud Run image (no `.dockerignore`).**
+   `NEXT_PUBLIC_SSI_WS_URL=ws://localhost:8100` from `.env.local` was copied into the cloud image during `docker build` because `ui/` had no `.dockerignore`. Next.js bakes `NEXT_PUBLIC_*` vars at build time, so the cloud console tried WebSocket to `localhost:8100` (immediate failure), never falling back to SSE. The `ws.onclose` retried MAX_RETRIES (10) then set state to `"disconnected"` — all client-side, no server errors.
+   **Fix:** Added `ui/.dockerignore` excluding `**/.env.local` and `**/.env.*.local`.
+   **Action required:** Rebuild `i4g-console` image and redeploy to dev.
+
+2. **Secondary — Cloud Run request timeout at 300 s.**
+   Both `core-svc` and `i4g-console` had `timeout_seconds = 300` (module default). Long-lived SSE streams would be cut at 5 min. Added `timeout_seconds = 3600` on both services in `dev` and `prod` `main.tf`.
+   **Note:** GCP Global HTTPS LB backend services backed by Serverless NEGs do **not** support `timeoutSec` — applying it returns a 400 error. That setting only works for instance group / zonal NEG backends. The timeout for Cloud Run SSE is controlled solely by the Cloud Run service's `timeout_seconds`.
+
+**Files changed:**
+
+- `ui/.dockerignore` — new file (excludes `.env.local` from Docker build context)
+- `infra/environments/app/dev/main.tf` — `timeout_seconds = 3600` on `run_core_svc` and `run_console`
+- `infra/environments/app/prod/main.tf` — same as dev
+
+## 2026-03-03 — Phase 3B: Cloud Live Monitoring via DB-Polled SSE
+
+- **What changed:** Implemented end-to-end cloud live monitoring: SSI pushes events over HTTP → core persists them → SSE streams them to the browser. 3B.1–3B.9 are complete; 3B.10 (E2E cloud verification) remains.
+- **Core repo:**
+  - Added `ssi_events` table to `sql.py` and Alembic migration `20260302_01_add_ssi_events.py`.
+  - New `SsiEventsStore` (`store/ssi_events_store.py`) with `insert_event_batch`, `get_events`, `get_latest_timestamp`.
+  - New `SsiEventsRouter` (`api/ssi_events.py`): `POST /events/ssi/{scan_id}` (ingest + Redis publish), `GET /events/ssi/{scan_id}` (replay), `GET /events/ssi/{scan_id}/stream` (SSE — Redis pub/sub fan-out with DB-polling fallback).
+  - Added `RedisSettings` (`REDIS__URL`, `REDIS__CHANNEL_PREFIX`, `REDIS__POLL_INTERVAL_SECONDS`) and `SsiSettings.events_endpoint` to settings.
+  - New factory `build_ssi_events_store()` in `services/factories.py`.
+  - Router registered in `api/app.py`.
+  - Tests: `tests/unit/test_ssi_events.py` (6 passed, 2 skipped for auth-env dependency).
+- **SSI repo:**
+  - New `HttpEventSink` (`monitoring/http_event_sink.py`): batches events, throttles screenshots (configurable interval), JPEG-compresses via Pillow, POSTs to core with bearer token or Google OIDC auth.
+  - Added `IntegrationSettings.push_events_to_core` (`SSI_INTEGRATION__PUSH_EVENTS_TO_CORE`) and `screenshot_interval_seconds`.
+  - Wired `HttpEventSink` into `trigger_investigate` and `_run_investigation` (flush on teardown).
+  - Tests: `tests/unit/test_http_event_sink.py` (13 passed).
+- **UI repo:**
+  - New SSE proxy route `app/api/events/ssi/[scanId]/stream/route.ts` — streams core `/events/ssi/{scanId}/stream` with proper `text/event-stream` headers, `X-Accel-Buffering: no`, IAP auth via `getIapHeaders`.
+  - `useInvestigationMonitor` extended with dual-transport support: WebSocket when `NEXT_PUBLIC_SSI_WS_URL` is set, SSE via EventSource when absent. Added `transport` to hook return type.
+  - `LiveMonitorTab` on `/ssi/investigations/[id]` now shows `ReplayPanel` for completed/failed scans (fetches `GET /api/events/ssi/{scanId}`, renders final JPEG screenshot and reverse-chronological event log). `LiveMonitorContent` is only mounted for running/pending scans so no WS connection opens unnecessarily.
+
+## 2026-03-02 — Phase 3A: Live Monitor on Investigate Page
+
+- **What changed:** Embedded a read-only Live View panel on the `/ssi` investigate page, showing live screenshots and an event log during active/full investigations. Previously, live monitoring required navigating to a separate `/ssi/investigations/[id]` page.
+- **SSI repo:** Added `emit_sync()` to `EventBus` for sync→async bridging from background threads. Wired `EventBus` through `trigger_investigate` → `_run_investigation` → `run_investigation` → `BrowserAgent`. Orchestrator emits state changes, screenshot updates, wallet findings, and completion/error events at each investigation phase. `BrowserAgent` gained a `step_callback` for per-step screenshot streaming. Pre-creates scan rows in `trigger_investigate` so the poll proxy works immediately.
+- **Core repo:** Deduplicated `report.pdf` from artifacts list (prominent "Investigation Report (PDF)" entry covers it). Added `?action=inline` to SSI report URL. Evidence download serves images/PDFs/text inline instead of forcing downloads. Evidence bundle preserves subdirectory structure from `title` column.
+- **UI repo:** Added Live View toggle panel on `/ssi` with screenshot display, status badge, and reverse-chronological event log. `useInvestigationMonitor` gained exponential-backoff retry (up to 10 attempts) and React Strict Mode guards. Poll proxy rewired to query SSI's `/investigations/{id}` endpoint and surface `ssi_investigation_id` during running status. Guidance controls on `/ssi/investigations/[id]` disabled when disconnected.
+- **Tests:** Core 868 passed (1 skipped), SSI 723 passed. Fixed `test_ssi_pdf_report_artifact` to match new `?action=inline` URL.
+
+## 2026-03-02 — 3.0.12b: Rename `fastapi`/`fastapi-gateway` → `core-svc`
+
+- **What changed:** Renamed all deployment artifact references from `fastapi`/`fastapi-gateway` to `core-svc` across the entire workspace. The FastAPI Python framework is unchanged — only the Cloud Run service name, Docker image name, Dockerfile name, Terraform variables/modules, CI matrix entries, and documentation labels were updated.
+- **Core repo:** Renamed `docker/fastapi.Dockerfile` → `docker/core-svc.Dockerfile`. Updated CI workflow matrix (`fastapi` → `core-svc`). Changed default URLs in `SmokeSettings` and `DEFAULT_SMOKE_API_URL` from `fastapi-gateway-*` to `core-svc-*`. Updated `clean_cloud_run_history.sh`. Renamed `FASTAPI_BASE` → `CORE_API_BASE` in all runbooks/cookbooks. Updated architecture.md Mermaid diagrams, iam.md service matrix, dev_guide.md build examples, settings manifests.
+- **Infra repo (dev + prod):** Renamed all `fastapi_*` Terraform variables → `core_svc_*` (`core_svc_image`, `core_svc_env_vars`, `core_svc_secret_env_vars`, `core_svc_invoker_member(s)`, `core_svc_custom_domain`). Renamed module `run_fastapi` → `run_core_svc`, locals/outputs. Updated `name = "core-svc"` (was `"fastapi-gateway"`), image path `applications/core-svc:*`, labels `service = "core-svc"`. Updated IAP OAuth refs (`iap-core-svc`). Updated all docs/READMEs, scripts, bootstrap.
+- **Docs repo:** Updated system-topology and security-model Mermaid diagrams, SVGs, settings manifests, secrets-reference, CLI guide. Replaced `FastAPI Gateway` labels with `Core API (core-svc)`.
+- **UI repo:** Updated `deployment-guide.md` — `I4G_API_URL` default, env var descriptions.
+- **SSI repo:** Updated `api_reference.md` — `core FastAPI gateway` → `Core API (core-svc)`.
+- **All repos:** Updated `.github/copilot-instructions.md` Docker Build Reference section (`fastapi` → `core-svc`).
+- **Note:** Terraform `name` change on the Cloud Run Service triggers a destroy+recreate. Apply requires coordinating DNS/domain mapping, IAP backend, and UI `I4G_API_URL` in the same apply. Consider blue-green approach.
+
+## 2026-03-02 — 3.0.12: Remove ssi-job, Service-Only Cutover (code complete)
+
+- **What changed:** Eliminated the `ssi-investigate` Cloud Run Job, `ssi_job.mode` toggle, and all `SSI_JOB__*` / `I4G_SSI_JOB__*` env vars. SSI investigations now run exclusively via the `ssi-svc` Cloud Run Service (`POST /trigger/investigate` and `POST /trigger/batch`).
+- **SSI repo:** Removed `jobs.py`, `batch_jobs.py`, `job_routes.py`, `ssi-job.Dockerfile`. Rewrote CLI (`job.py`) for in-process orchestrator. Added `investigation_routes.py` with `/trigger/investigate` and `/trigger/batch` endpoints. Consolidated to single `Dockerfile`. 723 tests pass.
+- **Core repo:** Removed `_trigger_cloud_run_job()`, `_trigger_local_investigation()`, and mode branching from `investigations.py`. Renamed `SsiJobSettings` → `SsiSettings`, `settings.ssi_job` → `settings.ssi`. Updated endpoint to `/trigger/investigate`. Removed job-only fields (`job_name`, `project`, `region`, `service_account`). 868 tests pass.
+- **Infra repo (dev + prod):** Removed `ssi_investigate` job block from `terraform.tfvars` (image, env vars, secrets). Replaced `I4G_SSI_JOB__MODE` + `I4G_SSI_JOB__SERVICE_URL` with `I4G_SSI__SERVICE_URL` in gateway config. Renamed `SSI_JOB__PUSH_TO_CORE` → `SSI_INTEGRATION__PUSH_TO_CORE`, removed `SSI_JOB__SCAN_TYPE`. Set `ssi_service_enabled` default to `true`.
+- **Docs repo:** Updated all config manifests (`settings_manifest.json`, `settings_manifest.yaml`, `settings.md`, `settings.yaml`), SSI docs (`getting-started.md`, `README.md`, `configuration.md`), API docs, and system topology Mermaid diagram. Cloud Run Jobs count updated from 8 to 7.
+- **UI repo:** Verified clean — no `ssi_job`/`SSI_JOB`/`ssi-job` references.
+- **Env var mapping note:** `SSI_JOB__PUSH_TO_CORE` maps to `SSI_INTEGRATION__PUSH_TO_CORE` (lives in SSI's `IntegrationSettings` with `env_prefix="SSI_INTEGRATION__"`). `SSI_JOB__SCAN_TYPE` removed entirely — `scan_type` is per-investigation, not a global setting.
+- **Remaining:** Terraform plan + apply (3.0.12ae), E2E validation (3.0.12an–ao), GCP job resource deletion (3.0.12ap).
+
+## 2026-02-28 — SSI Cases Pipeline: Enrichment + Backfill
+
+- **Issue 1 (Feb 27→28 case gap):** Analysis complete. Cases created Feb 27 came from a Docker image built from an uncommitted working tree that had a temporary `push_to_core` fix. Feb 28 Phase F commits reverted to broken CLI envvar behavior. The working tree fix (`_create_case_direct`, no gate) restored case creation Mar 1. No code change needed — the prior session's fix (default `push_to_core="true"` + `SSI_JOB__PUSH_TO_CORE` envvar) resolves this going forward.
+- **Issue 2 (dead env var):** Fixed. Replaced `SSI_INTEGRATION__PUSH_TO_CORE` with `SSI_JOB__PUSH_TO_CORE = "true"` in both `infra/environments/app/dev/terraform.tfvars` and `infra/environments/app/prod/terraform.tfvars`. The old env var targeted the deprecated `IntegrationSettings` Pydantic section; no code read it on the direct-DB path.
+- **Issue 3 (empty timeline/artifacts):** Implemented. `ScanStore.create_case_record()` now inserts `review_actions` (timeline) and `source_documents` (artifacts) rows alongside cases/scam_records/review_queue. Two new helper methods: `_insert_timeline_events()` (6 event types matching CoreBridge reference) and `_insert_evidence_documents()` (chain-of-custody aware, GCS URI construction, MIME type mapping, fallback for known files). Table definitions for `review_actions` and `source_documents` added to `ssi/src/ssi/store/sql.py` under `CORE_METADATA`.
+- **Tests:** 13 new tests in `ssi/tests/unit/test_case_enrichment.py` — all pass. 34 existing scan_store tests still pass.
+- **Backfill:** Linked 14 orphaned `site_scans` rows to their corresponding cases by matching `site_scans.metadata->>'investigation_id'` to `cases.metadata->>'ssi_investigation_id'`. 15 total linked scans (14 backfilled + 1 from direct DB path). 17 remaining orphans are scans without cases (pre-integration or failed runs).
+- **Files changed:** `ssi/src/ssi/store/scan_store.py` (enrichment methods), `ssi/src/ssi/store/sql.py` (table defs), `infra/environments/app/dev/terraform.tfvars`, `infra/environments/app/prod/terraform.tfvars`, `ssi/tests/unit/test_case_enrichment.py` (new).
 
 ## 2026-02-28 — SSI API Consolidation: Complete (All Phases Done)
 

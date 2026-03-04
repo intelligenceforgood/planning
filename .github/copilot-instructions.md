@@ -13,7 +13,7 @@
 
 3. **Coding Conventions** – Follow `core/.github/general-coding.instructions.md` for all language-specific standards (Python, TypeScript, Terraform, SQL, Shell, Markdown, config files). Use each language's idiomatic conventions. For Markdown in this repo: present tense, active voice, second person; focused code snippets (3-15 lines) with links to full files.
 
-4. **Core Architecture** – `src/i4g/api/app.py` wires FastAPI routers, middleware (rate limit + TASK_STATUS), and the report-generation lock. `src/i4g/api/review.py` orchestrates search + queue actions backed by `ReviewStore`, `HybridRetriever`, and audit logging via `store.log_action`. Background work executes through `src/i4g/worker/jobs/*` and `src/i4g/worker/tasks.py` (e.g., `generate_report_for_case`).
+4. **Core Architecture** – `src/i4g/api/app.py` wires FastAPI routers, middleware (rate limit + TASK_STATUS), and the report-generation lock. `src/i4g/api/review.py` orchestrates search + queue actions backed by `ReviewStore`, `HybridRetriever`, and audit logging via `store.log_action`. Background work executes through `src/i4g/worker/jobs/*` and `src/i4g/worker/tasks.py` (e.g., `generate_report_for_case`). **Read `core/.github/architecture-cheatsheet.instructions.md` at session start** — it covers UI↔API proxy routing, auth model per environment, SSI↔Core integration, storage flows, and common pitfalls that have wasted cycles in the past.
 
 5. **Developer Loop** – Install editable (`pip install -e .`) so CLI entry points (`i4g`, `i4g-azure`) resolve. Typical cycle: `uvicorn i4g.api.app:app --reload`, `pytest tests/unit`, and targeted demos in `tests/adhoc/` for OCR/extraction/report validation. Regenerate the sandbox with `i4g bootstrap local reset --report-dir data/reports/bootstrap_local` (use `--skip-*` flags for partial rebuilds). Call out if tests were skipped.
 
@@ -23,7 +23,7 @@
 
 8. **Docker Build Reference** – Use `scripts/build_image.sh` (requires `gcloud` auth).
    - UI: `cd ui/ && scripts/build_image.sh i4g-console dev`
-   - Core: `scripts/build_image.sh [fastapi|dossier-job|ingest-job|intake-job|report-job|account-job] dev`
+   - Core: `scripts/build_image.sh [core-svc|dossier-job|ingest-job|intake-job|report-job|account-job] dev`
 
 9. **External Integrations** – The Next.js analyst console calls `/reviews/search`, `/reviews/search/history`, saved-search CRUD endpoints, `/reviews/{id}`, and `/tasks/{task_id}`; keep payloads + audit logging in sync. Report generation uses `i4g/reports` templates plus worker tasks; ensure TASK_STATUS emits progress until Redis replaces the in-memory map. Ingestion enhancements must route through `i4g.ingestion` + `worker/jobs` so CLI and API paths stay aligned.
 
