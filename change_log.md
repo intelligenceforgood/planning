@@ -2,7 +2,38 @@
 
 Last updated: 04 Mar 2026
 
-## 2026-03-04 — Gemini Model Migration: Phase 8 (Cleanup) — Complete
+## 2026-03-04 — Feedback Feature — Deploy-Ready
+
+Completed all remaining items for the inline feedback system (Phases 1–4 already
+implemented; these are the deployment-gate items):
+
+- **Core fix:** `_get_service()` now short-circuits to `LoggingFeedbackService`
+  when `I4G_ENV=local` — prevents 403 from ADC credentials lacking the Sheets
+  scope during local development. `LoggingFeedbackService.submit()` raised to
+  `WARNING` so output surfaces through uvicorn's default handler.
+- **Settings** (`config/settings.local.toml`): Added `[feedback]` section with
+  `enabled = true` and `sheet_id = ""`.
+- **Tests** (`tests/unit/settings/test_feedback_settings.py`): Five tests cover
+  defaults, `I4G_FEEDBACK__SHEET_ID` override, and `I4G_FEEDBACK__ENABLED`
+  toggle.
+- **Infra** (`infra/environments/app/{dev,prod}/main.tf`): Added
+  `google_project_service.sheets` to enable `sheets.googleapis.com` in both
+  environments.
+- **Infra** (`infra/environments/app/{dev,prod}/terraform.tfvars`): Added
+  `I4G_FEEDBACK__SHEET_ID` to `core_svc_env_vars` and
+  `NEXT_PUBLIC_FEEDBACK_ENABLED = "true"` to `console_env_vars`.
+- **UI** (`ui/apps/web/.env.local`): Added `NEXT_PUBLIC_FEEDBACK_ENABLED=true`.
+- **Docs** (`docs/config/settings_manifest.{yaml,json}`): Added
+  `feedback.enabled` and `feedback.sheet_id` entries.
+
+**Manual steps still required before first cloud deploy:**
+
+1. Run `terraform apply` in `infra/environments/app/dev` to enable the Sheets
+   API and redeploy Cloud Run with the new env var.
+2. Share the Google Sheet (`1o8iSyLtFbSxdqEtT-L7OQvSqKTealP1H8f0VZzZKTw8`)
+   with `sa-app@i4g-dev.iam.gserviceaccount.com` as **Editor**.
+3. Verify a feedback submission creates a row in the Sheet tab.
+4. Repeat steps 1–3 for prod once dev is verified.
 
 **Context:** Phase 8 removes the backwards-compat shim and dead code introduced during the SDK migration (Phases 2–3). All consumers use `chat_model` directly; `vertex_ai_model` is no longer needed.
 
