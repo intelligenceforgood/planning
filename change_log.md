@@ -1,6 +1,229 @@
 # Planning Change Log (active items only)
 
-Last updated: 04 Mar 2026
+Last updated: 05 Mar 2026
+
+## 2026-03-05 — eCrimeX Integration Phase 2 — UI + Integration Tests [COMPLETE]
+
+Completed the remaining 2G (UI) and 2H (integration tests + docs) items for
+Phase 2. All backend tasks (2A–2F) were already done. 855 unit tests pass.
+Pre-commit clean double-pass. TypeScript type check zero errors.
+
+**2G — Analyst Console changes:**
+
+- **Investigation detail Results tab** — `EcxSubmissionsPanel` component added.
+  Shows per-submission status badge, eCX record ID, module, confidence, submitted-by,
+  submitted-at. Approve/Reject/Retract action buttons with analyst ID input for each
+  queued row. Fetches from `/api/ssi/ecx/submissions?scan_id=`.
+- **Investigation list** — Second filter row for eCX submission status (All / Queued /
+  Submitted / Failed / Rejected). "Submissions queue" button in page header linking
+  to `/ssi/submissions`. Filters compose with existing status filter.
+- **Submissions queue page** (`/ssi/submissions`) — Dedicated client component with
+  full submissions table, status filter pills, bulk analyst ID input, Bulk Approve /
+  Bulk Reject actions using `Promise.allSettled`, per-row Approve/Reject/Retract
+  buttons, selection count footer.
+- **Sidebar navigation** — "Submissions" link (Upload icon) added under Scam
+  Investigator children in `navigation.tsx`.
+- **API proxy routes** — Four Next.js route handlers created:
+  `GET /api/ssi/ecx/submissions`, `POST /api/ssi/ecx/submissions/[id]/approve|reject|retract`.
+- **TypeScript types** — `EcxSubmissionStatus`, `EcxSubmission`,
+  `EcxSubmissionsResponse`, `EcxApproveRequest`, `EcxRejectRequest` added to
+  `ui/apps/web/src/types/ssi.ts`.
+- **Backend filter** — `list_scans()` in `scan_store.py` now accepts
+  `ecx_submission_status` and filters via EXISTS subquery. `list_investigations`
+  FastAPI endpoint exposes this as a query param.
+
+**2H — Integration tests + docs:**
+
+- **Sandbox integration tests** — `TestECXSubmissionSandbox` class added to
+  `ssi/tests/integration/test_ecx_sandbox.py`. Tests: `test_submit_phish_and_verify`,
+  `test_submit_crypto_and_verify`, `test_update_record`, `test_add_note`,
+  `test_dedup_existing`, `test_analyst_reject`, `test_retract`. All guarded by the
+  dual safety-gate env var check; skip gracefully when submission is disabled or
+  when eCX module access is denied.
+- **Submission governance doc** — `ssi/docs/submission_governance.md` created.
+  Covers: safety gates, confidence thresholds, module field mapping, submission
+  lifecycle diagram, analyst approval workflow, deduplication, retraction flow,
+  full env var reference table, enabling step-by-step guide, testing commands.
+
+### Files Created (this session)
+
+- `ssi/docs/submission_governance.md`
+- `ui/apps/web/src/app/api/ssi/ecx/submissions/route.ts`
+- `ui/apps/web/src/app/api/ssi/ecx/submissions/[id]/approve/route.ts`
+- `ui/apps/web/src/app/api/ssi/ecx/submissions/[id]/reject/route.ts`
+- `ui/apps/web/src/app/api/ssi/ecx/submissions/[id]/retract/route.ts`
+- `ui/apps/web/src/app/(console)/ssi/submissions/page.tsx`
+
+### Files Modified (this session)
+
+- `ssi/src/ssi/store/scan_store.py` — `list_scans` + `ecx_submission_status` filter
+- `ssi/src/ssi/api/investigation_routes.py` — `list_investigations` + `ecx_submission_status` query param
+- `ssi/tests/integration/test_ecx_sandbox.py` — `TestECXSubmissionSandbox` class added
+- `ui/apps/web/src/types/ssi.ts` — ECX submission types added
+- `ui/apps/web/src/app/(console)/ssi/investigations/[id]/page.tsx` — `EcxSubmissionsPanel` + Results tab wiring
+- `ui/apps/web/src/app/(console)/ssi/investigations/page.tsx` — ECX filter row + header button
+- `ui/apps/web/src/app/(console)/navigation.tsx` — Submissions nav link
+- `planning/tasks/ecx_integration_plan.md` — 2G/2H checkboxes updated
+
+---
+
+**Phase 2 wrap-up additions (this session):**
+
+- **2A tests:** `TestECXClientSubmitMethods` added to `test_ecx.py` — mocked HTTP
+  tests for `submit_phish`, `submit_crypto`, `submit_domain`, `submit_ip`,
+  `add_note`, `update_record`, verifying request body construction and error handling.
+- **2B tests:** `TestECXSubmissionCRUD` added to `test_scan_store.py` — create,
+  update, get (not found), list (unfiltered / filtered by status / filtered by
+  scan_id).
+- **2C tests:** `TestFieldMapping` added to `test_ecx_submission.py` — phish brand
+  and IP forwarding, crypto currency code lookup via `ecx_currency_map.json`,
+  domain classification forwarding.
+- **2D model + test:** `ecx_submissions: list[dict[str, Any]]` field added to
+  `InvestigationResult`. `_run_ecx_submission()` in orchestrator now writes rows
+  back to `result.ecx_submissions`. `TestEndToEndSubmissionFlow` added to
+  `test_ecx_submission.py` covering both the populated-field path and the
+  dedup-update path.
+- **2E tests:** `TestAPISubmissionEndpoints` added to `test_ecx.py` — list,
+  approve, reject, retract endpoints plus 503/404/400 error cases.
+- **2F tests + impl:** `TestCLICommands` extended in `test_ecx.py` with submit,
+  status, retract, list-submissions tests. All four CLI commands (`submit`,
+  `status`, `retract`, `submissions`) written cleanly into `ecx_cmd.py` (the
+  file had been corrupted by a prior session; recovered via `git stash` and
+  rewritten from scratch).
+- **Bug fix:** `ECXSubmissionResponse.error_message: str` changed to
+  `str | None = None` to allow retract / approve paths where no error is present.
+- **Bug fix:** Reject endpoint long-line refactored to satisfy ruff E501.
+- **Pre-commit:** Clean double-pass — black, isort, ruff, whitespace, yaml, toml
+  all passed with no modifications on second run.
+
+**Safety design:** Both `SSI_ECX__SUBMISSION_ENABLED=true` **and**
+`SSI_ECX__SUBMISSION_AGREEMENT_SIGNED=true` must be explicitly set before any
+indicator data is transmitted to eCrimeX. The second flag defaults to `false` with
+a loud WARNING log until the agreement is signed.
+
+- **ECXClient submit methods (2A):** Added `submit_phish`, `submit_crypto`,
+  `submit_domain`, `submit_ip`, `add_note`, `update_record` to `ECXClient` in
+  `ssi/src/ssi/osint/ecrimex.py`. All use the existing `@with_retries` decorator.
+- **Submissions Table (2B):** `ecx_submissions` SQLAlchemy table added to
+  `ssi/src/ssi/store/sql.py` with 15 columns tracking the full submission
+  lifecycle (pending → queued → submitted / updated / failed / rejected / retracted).
+  Alembic migration `20260305_01_add_ecx_submissions.py` created in `core/`.
+  Five CRUD methods added to `ScanStore`: `create_ecx_submission`,
+  `update_ecx_submission`, `get_ecx_submission`, `list_ecx_submissions`,
+  `_row_to_dict`.
+- **Governance Service (2C):** New `ssi/src/ssi/ecx/` package with
+  `ECXSubmissionService`. Routes indicators by confidence: `>= auto_submit_threshold`
+  → auto-submit; `>= queue_threshold` → analyst review queue; below → skip.
+  Deduplication checks eCX before every POST and sends a PUT update when a
+  matching record already exists. Public methods: `process_investigation`,
+  `analyst_approve`, `analyst_reject`, `retract`.
+- **Pipeline wiring (2D):** `_run_ecx_submission()` added to
+  `investigator/orchestrator.py` and called after `persist_investigation()`. Fully
+  non-blocking — exceptions are caught and logged, never propagated.
+- **API endpoints (2E):** Four new endpoints on `ecx_routes.py`:
+  `GET /ecx/submissions`, `POST /ecx/submissions/{id}/approve|reject|retract`.
+  New Pydantic models: `ECXApproveRequest`, `ECXRejectRequest`, `ECXSubmissionResponse`.
+- **CLI commands (2F):** Four new sub-commands added to `ssi ecx`:
+  `submit <investigation-id>`, `status <investigation-id>`,
+  `retract <submission-id> --analyst`, and `submissions` (queue list).
+- **Unit Tests:** 32 new tests in `tests/unit/test_ecx_submission.py` covering
+  safety gates, threshold routing, deduplication, analyst approve/reject/retract,
+  `_extract_confidence`, `_extract_domain`, `_extract_indicators`, and the factory.
+  All 32 pass.
+
+### Files Created
+
+- `ssi/src/ssi/ecx/__init__.py`
+- `ssi/src/ssi/ecx/submission.py`
+- `ssi/tests/unit/test_ecx_submission.py`
+- `core/src/i4g/migrations/versions/20260305_01_add_ecx_submissions.py`
+
+### Files Modified
+
+- `ssi/src/ssi/settings/config.py` — `ECXSettings`: +`submission_agreement_signed`, +`queue_threshold`
+- `ssi/config/settings.default.toml` — `[ecx]`: +`submission_agreement_signed = false`, +`queue_threshold = 50`
+- `ssi/src/ssi/models/ecx.py` — `ECXSubmissionRecord` expanded; +`ECXApproveRequest`, `ECXRejectRequest`, `ECXSubmissionResponse`
+- `ssi/src/ssi/store/sql.py` — +`ecx_submissions` table
+- `ssi/src/ssi/store/scan_store.py` — +5 CRUD methods for `ecx_submissions`
+- `ssi/src/ssi/osint/ecrimex.py` — +6 Phase 2 submit methods
+- `ssi/src/ssi/investigator/orchestrator.py` — +`_run_ecx_submission()` + wired call
+- `ssi/src/ssi/api/ecx_routes.py` — +4 submission management endpoints
+- `ssi/src/ssi/cli/ecx_cmd.py` — +4 submission CLI commands
+
+---
+
+## 2026-03-05 — eCrimeX Integration Phase 1 — Consume (Enrichment)
+
+Implemented the full Phase 1 eCX integration for SSI, enabling every investigation
+to be enriched with APWG community intelligence data during passive recon:
+
+- **Settings & Models (1A):** Added `ECXSettings` Pydantic model with env-var
+  overrides (`SSI_ECX__*`), `[ecx]` TOML config sections, Pydantic models for
+  all 6 eCX modules (`ECXPhishRecord`, `ECXCryptoRecord`, `ECXMalDomainRecord`,
+  `ECXMalIPRecord`, `ECXEnrichmentResult`, `ECXSubmissionRecord`), and
+  `ecx_currency_map.json` for token symbol mapping.
+- **ECXClient (1B):** Full HTTP client in `ssi/src/ssi/osint/ecrimex.py` with
+  `@with_retries`, camelCase→snake_case normalisation, 5 search methods
+  (phish, domain, IP, crypto, report-phishing), singleton accessor, and
+  graceful degradation.
+- **Enrichment Pipeline (1C):** `enrich_from_ecx()` and
+  `enrich_wallets_from_ecx()` with `_safe_query()` fault isolation. Wired into
+  orchestrator at two points: passive recon phase and post-wallet-extraction.
+- **Cache Table (1D):** `ecx_enrichments` SQLAlchemy table added to
+  `ssi/src/ssi/store/sql.py` with scan_id, query_module, and expiry indexes.
+- **Cache Layer (1D):** `cache_ecx_enrichments()`, `get_ecx_enrichments()`, and
+  `get_cached_ecx_enrichment()` methods added to `ScanStore`. Cache is wired into
+  orchestrator after `persist_investigation()`. Configurable TTL via
+  `cache_ttl_hours` setting. Expired entries filtered by `cache_expires_at > now`.
+- **Report & STIX (1E):** "Community Intelligence (eCrimeX)" section added to
+  `report.md.j2` with tables for all 5 modules. STIX bundle extended with
+  `_add_ecx_indicators()` for phish and crypto hits with eCrimeX external
+  references. Wallet manifest table now shows "eCX Status" column (Known ✓/—).
+- **CLI & API (1F):** `ssi ecx search {phish|domain|ip|crypto}` CLI commands
+  with Rich tables and JSON output. FastAPI router with 4 POST search endpoints
+  and `GET /ecx/investigate/{scan_id}` for cached enrichment lookup.
+- **Wallet Expansion (1G):** Added XLM (Stellar), XMR (Monero), ZEC (Zcash),
+  XZC (Firo) regex patterns to `patterns.py`, `wallet_allowlist.json`, and
+  compiled `DEFAULT_TOKEN_NETWORKS`. Reordered patterns so specific-prefix
+  patterns precede the broad SOL/Base58 matcher. Expanded JS extraction patterns
+  in `zen_manager.py` from 7 to 16 (LTC-bech32, BCH, ADA, ZEC, XZC, XLM, XMR,
+  DASH, DOGE, LTC-legacy).
+- **Unit Tests (1H):** 64 eCX tests (`test_ecx.py`) covering models, key
+  normalisation, client methods, singleton, safe_query, enrichment, currency
+  map, settings, cache layer, report rendering, STIX bundle, CLI commands, and
+  API endpoints. Test fixtures in `tests/fixtures/ecx_responses.py`. Full suite:
+  783 passed. Pre-commit hooks: clean double-pass.
+- **Docs (1A):** SSI configuration docs updated with complete `SSI_ECX__*`
+  env-var reference table.
+
+### Files Created
+
+- `ssi/src/ssi/models/ecx.py`
+- `ssi/src/ssi/osint/ecrimex.py`
+- `ssi/config/ecx_currency_map.json`
+- `ssi/src/ssi/cli/ecx_cmd.py`
+- `ssi/src/ssi/api/ecx_routes.py`
+- `ssi/tests/unit/test_ecx.py`
+- `ssi/tests/fixtures/ecx_responses.py`
+
+### Files Modified
+
+- `ssi/src/ssi/settings/config.py` — ECXSettings + ecx field + path resolution
+- `ssi/config/settings.default.toml` — [ecx] section
+- `ssi/config/settings.local.toml` — [ecx] section
+- `ssi/src/ssi/models/investigation.py` — ecx_enrichment field
+- `ssi/src/ssi/investigator/orchestrator.py` — enrichment wiring + cache persistence
+- `ssi/src/ssi/store/sql.py` — ecx_enrichments table
+- `ssi/src/ssi/store/scan_store.py` — cache read/write/expiry methods
+- `ssi/templates/report.md.j2` — Community Intelligence section + wallet eCX status
+- `ssi/src/ssi/evidence/stix.py` — \_add_ecx_indicators
+- `ssi/src/ssi/cli/app.py` — ecx_app registration
+- `ssi/src/ssi/api/app.py` — ecx_router registration
+- `ssi/src/ssi/browser/zen_manager.py` — expanded JS wallet extraction (16 patterns)
+- `ssi/src/ssi/wallet/patterns.py` — 4 new patterns + reorder
+- `ssi/src/ssi/wallet/allowlist.py` — 4 new DEFAULT_TOKEN_NETWORKS
+- `ssi/config/wallet_allowlist.json` — 4 new entries
+- `ssi/tests/unit/test_wallet.py` — new addresses + pattern tests + count updates
 
 ## 2026-03-04 — Feedback Feature — Deploy-Ready
 
