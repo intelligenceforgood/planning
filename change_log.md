@@ -1,6 +1,172 @@
 # Planning Change Log (active items only)
 
-Last updated: 05 Mar 2026
+Last updated: 07 Mar 2026
+
+## 2026-03-07 — eCX Integration: Module Wrap-Up
+
+All three phases of the SSI–eCrimeX integration are complete and archived.
+Condensed summary moved to `planning/archive/ecx_integration_summary.md`.
+Plan status updated to Archived in `planning/tasks/ecx_integration_plan.md`.
+
+**Remaining non-development items (deferred):**
+
+- APWG data sharing agreement (required before production submissions)
+- Cloud Run Job validation in `i4g-dev` (Terraform + job definitions ready)
+
+**Pre-merge review results:**
+
+- SSI unit tests: 925 passed, 0 failures
+- Core unit tests: 908 passed, 3 skipped, 0 failures
+- Pre-commit clean double-pass on both `ssi/` and `core/`
+- Fixed trailing whitespace in `ssi/config/settings.dev.toml`
+
+## 2026-03-06 — eCX Integration Final Tasks: Security, Tests, Docs, Fix Flaky Tests
+
+Completed remaining cross-phase tasks from the eCX integration plan.
+
+**Security fixes:**
+
+- **CRITICAL**: Removed hardcoded eCX API key from `ssi/config/settings.dev.toml`
+  (was committed to git). Key now set to `""` with comment directing to Secret
+  Manager injection via `SSI_ECX__API_KEY`. Key rotation recommended since it was
+  in git history.
+- Verified PII cannot leak into eCX submissions — synthetic identity is
+  architecturally isolated (never stored in `InvestigationResult`; wallet regex
+  patterns reject non-blockchain formats).
+- Verified audit trail via `ecx_submissions` table (status, timestamps, analyst,
+  ecx_record_id per action).
+- Verified sandbox isolation: default `base_url` is sandbox; production requires
+  explicit override; double safety gate on submissions.
+
+**Integration tests (3H):**
+
+- Added `TestECXPollerSandbox` (5 tests): poll_phish_module, cursor persistence,
+  incremental polling, auto-investigate with mock, run_poll_cycle.
+- Added `TestCampaignCorrelationSandbox`: correlation with live enrichment data.
+- Added `TestEndToEndSandbox`: full poll → investigate → submit cycle against
+  sandbox API.
+
+**Documentation:**
+
+- Created `docs/config/ssi_ecx_settings_manifest.yaml` — all 19 `SSI_ECX__*`
+  variables with types, defaults, descriptions, and sensitive flag.
+- Created `docs/config/ssi_ecx_settings_manifest.json` — JSON equivalent.
+- Updated `docs/config/README.md` — cross-reference to SSI manifest.
+- Updated `docs/book/ssi/configuration.md` — added Phase 2 (submission) and
+  Phase 3 (polling) settings tables.
+- Created `docs/book/ssi/ecrimex-integration.md` — user guide covering
+  enrichment, submission governance, polling, campaign correlation, ad-hoc queries.
+- Added eCrimeX Integration to `docs/book/SUMMARY.md`.
+
+**Flaky test fix:**
+
+- Created `core/tests/unit/api/conftest.py` with `_clear_rate_limit_state`
+  autouse fixture that clears `REQUEST_LOG` before each API test. This prevents
+  rate-limit state from leaking between test files. 204 core API tests pass.
+
+**Deferred items (operational/external):**
+
+- 3B "Validate Cloud Run Job in i4g-dev" — deferred; requires decision on
+  sandbox vs production base_url for dev environment. Poller uses cursor-based
+  delta polling (not full DB pull), but org isn't ready for production data flood.
+- "Secure data sharing agreement with APWG" — legal/business prerequisite for
+  Phase 2 production launch.
+- "Rotate eCX API key" — operational step after removing from git history.
+
+### Files Created
+
+- `core/tests/unit/api/conftest.py`
+- `docs/config/ssi_ecx_settings_manifest.yaml`
+- `docs/config/ssi_ecx_settings_manifest.json`
+- `docs/book/ssi/ecrimex-integration.md`
+
+### Files Modified
+
+- `ssi/config/settings.dev.toml` — removed hardcoded API key
+- `ssi/tests/integration/test_ecx_sandbox.py` — added polling + correlation + E2E tests
+- `docs/config/README.md` — added SSI manifest reference
+- `docs/book/ssi/configuration.md` — added submission + polling settings
+- `docs/book/SUMMARY.md` — added eCrimeX Integration page
+- `planning/tasks/ecx_integration_plan.md` — updated checkboxes
+
+---
+
+## 2026-03-06 — eCrimeX Integration Phase 3 — Inbound Polling + Campaign Correlation + UI [COMPLETE]
+
+Completed Phase 3 of the eCX integration: inbound polling (3A), deployment
+infrastructure (3B), campaign correlation (3C), intelligence feed UI (3E),
+trend dashboard (3F), Phase 2 follow-ups (3G), and test/validation (3H).
+925 SSI tests, 906 core tests, 122 UI tests pass. Pre-commit clean double-pass
+on both SSI and core repos.
+
+**3A — Alembic Migration:**
+
+- `ecx_polling_state` table migration created in core
+  (`20260306_01_add_ecx_polling_state.py`)
+
+**3B — Deployment:**
+
+- Terraform resources for Cloud Run Job + Cloud Scheduler in
+  `infra/environments/app/dev/` (terraform.tfvars + main.tf VPC override)
+- Deployment docs in `ssi/docs/tdd_ecx_integration.md` sections 11.3, 11.4, 15.2
+
+**3C — Campaign Correlation:**
+
+- `CampaignCorrelator` class in `ssi/src/ssi/ecx/correlation.py`
+- Three strategies: wallet-based, infrastructure (IP/ASN), brand impersonation
+- 22 unit tests in `ssi/tests/unit/test_ecx_correlation.py`
+
+**3E — UI Intelligence Feed & Campaign View:**
+
+- SSI API: `GET /ecx/feed` (browse eCX records with filters) and
+  `GET /ecx/polling-status` (polling cursor state) — 9 tests
+- Core API: `GET /campaigns/{campaign_id}` with linked cases
+- UI proxy routes: `/api/ssi/ecx/feed`, `/api/ssi/ecx/polling-status`
+- Intelligence Feed page (`/ssi/ecx-feed`) — module selector, confidence/brand
+  filters, one-click Investigate, polling status banner
+- Campaign detail page (`/campaigns/[id]`) — campaign info, taxonomy badges,
+  linked cases timeline with risk scores
+- Navigation: "Intelligence Feed" + "Trend Dashboard" under SSI nav group
+- EcxEnrichmentPanel already in investigation detail Recon tab (Community Intel)
+- Component tests: 9 feed tests, 9 campaign detail tests
+
+**3F — Trend Dashboard:**
+
+- SSI API stats endpoints: `GET /ecx/stats/phish-by-brand`,
+  `GET /ecx/stats/wallet-heatmap`, `GET /ecx/stats/geo-infrastructure` — 9 tests
+- Store methods: `stats_submissions_by_brand`, `stats_wallet_heatmap`,
+  `stats_wallet_currency_breakdown`, `stats_geo_infrastructure`
+- UI proxy routes for all three stats endpoints
+- Trend Dashboard page (`/ssi/ecx-dashboard`) — Recharts: phish by brand
+  line chart, wallet currency pie chart, top wallets bar chart, geo distribution
+  bar chart
+- 6 dashboard component tests
+
+**3G — Phase 2 Follow-ups:**
+
+- Submission UI component tests covered in existing test suite
+
+### Files Created (this session)
+
+- `ui/apps/web/src/app/(console)/campaigns/[id]/page.tsx`
+- `ui/apps/web/src/app/(console)/ssi/ecx-dashboard/page.tsx`
+- `ui/apps/web/src/app/api/ssi/ecx/stats/phish-by-brand/route.ts`
+- `ui/apps/web/src/app/api/ssi/ecx/stats/wallet-heatmap/route.ts`
+- `ui/apps/web/src/app/api/ssi/ecx/stats/geo-infrastructure/route.ts`
+- `ui/apps/web/tests/unit/ecx-feed-page.test.tsx`
+- `ui/apps/web/tests/unit/campaign-detail-page.test.tsx`
+- `ui/apps/web/tests/unit/ecx-dashboard-page.test.tsx`
+- `ssi/tests/unit/test_ecx_stats.py`
+
+### Files Modified (this session)
+
+- `ssi/src/ssi/api/ecx_routes.py` — stats endpoints + response models
+- `ssi/src/ssi/store/scan_store.py` — stats query methods
+- `core/src/i4g/services/campaigns.py` — `get_campaign_detail()` method
+- `core/src/i4g/api/campaigns.py` — `GET /campaigns/{campaign_id}` endpoint
+- `ui/apps/web/src/types/ssi.ts` — feed/polling types
+- `ui/apps/web/src/app/(console)/navigation.tsx` — Intelligence Feed + Trend Dashboard nav items
+- `planning/tasks/ecx_integration_plan.md` — Phase 3 checkboxes updated
 
 ## 2026-03-05 — eCrimeX Integration Phase 2 — UI + Integration Tests [COMPLETE]
 
