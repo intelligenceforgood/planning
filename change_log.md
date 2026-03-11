@@ -1,6 +1,46 @@
 # Planning Change Log (active items only)
 
-Last updated: 07 Mar 2026
+Last updated: 11 Mar 2026
+
+## 2026-03-11 — Terraform DRY Refactor: Stacks Pattern (infra/)
+
+Major infrastructure refactoring merged to main. All per-environment Terraform logic
+consolidated into shared stack modules (`stacks/app/`, `stacks/pii-vault/`). The
+`environments/` directories are now thin wrappers (backend + tfvars only).
+
+**What changed:**
+
+- Created `infra/stacks/app/` — contains all app-stack logic that was previously duplicated
+  between `environments/app/dev/` and `environments/app/prod/`: Cloud Run services, WIF,
+  IAM bindings, Cloud SQL, storage, jobs, monitoring, and load balancer.
+- Created `infra/stacks/pii-vault/` — unified vault stack (Cloud SQL, Cloud KMS, Secret Manager,
+  optional vault Cloud Run service) replacing per-environment copies.
+- `environments/app/{dev,prod}/` and `environments/pii-vault/{dev,prod}/` reduced to thin
+  wrappers: `backend.tf`, `providers.tf`, `variables.tf`, `main.tf` (single module call),
+  `outputs.tf` (passthrough), and `terraform.tfvars`.
+- Deleted per-environment files: `locals.tf`, `database.tf`, `database_users.tf`, `iam_vault.tf`,
+  `cloud_run.tf` (all logic now lives in the relevant stack).
+- `moved.tf` files added to each environment to migrate Terraform state without destroy/recreate.
+- CI updated: `stacks/**` added to path triggers in `terraform-prod.yml`.
+
+**Documentation updated (same PR):**
+
+- `infra/README.md` — rewrote "Repository Layout" section to describe the stacks pattern.
+- `infra/docs/README.md` — fixed stale `environments/dev/` path (now `environments/app/dev/`).
+- `infra/docs/iap_manual.md` — added note that IAP logic lives in `stacks/app/`, not env wrappers.
+- `infra/environments/pii-vault/README.md` — noted stacks pattern and thin-wrapper role.
+- `core/docs/cookbooks/github_actions_setup.md` — updated WIF edit instructions to point to
+  `stacks/app/main.tf` (the unified stack) instead of old per-environment `main.tf` files.
+- `core/docs/runbooks/dossiers_deployment_checklist.md` — fixed two stale path references
+  (`environments/{dev,prod}/` → `environments/app/{dev,prod}/`).
+
+**Deferred (optional cleanup):**
+
+- Remove `moved.tf` files from all 4 environments after confirming state stability in both
+  dev and prod (safe to delete once apply runs cleanly post-migration).
+- Delete any `.backup/` directories from environment folders if still present.
+
+---
 
 ## 2026-03-07 — eCX Integration: Module Wrap-Up
 
