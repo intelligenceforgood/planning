@@ -1,6 +1,46 @@
 # Planning Change Log (active items only)
 
-Last updated: 11 Mar 2026
+Last updated: 12 Mar 2026
+
+## 2026-03-12 — TIFAP Sprint 1: Data Foundation (core/ + ssi/)
+
+Completed Sprint 1 of the Threat Intelligence & Fraud Analytics Platform (TIFAP).
+
+### Schema & Migrations
+
+- **7 new tables**: `threat_campaigns`, `threat_campaign_cases`, `intake_indicator_links`, `entity_stats`, `indicator_stats`, `campaign_stats`, `platform_kpis`.
+- **3 new columns**: `cases.ingestion_batch_id`, `intake_records.loss_currency`, `intake_records.victim_country`.
+- **Alembic migration** `20260312_01_add_tifap_tables` — idempotent with full downgrade support.
+
+### Stores & Factories
+
+- `ThreatCampaignStore` — campaign CRUD, merge, split, case linking.
+- `AnalyticsStore` — read-only queries for pre-computed aggregate tables.
+- `IntakeStore` — new `intake_indicator_links` methods (`link_indicator`, `get_indicator_links`, `get_intakes_for_indicator`).
+- Factory functions `build_threat_campaign_store()` and `build_analytics_store()` in `services/factories.py`.
+
+### Jobs
+
+- **Analytics Aggregation** (`i4g jobs analytics`) — pre-computes entity_stats, indicator_stats, campaign_stats, and platform_kpis. Includes campaign risk scoring (PRD §7.5), lifecycle transitions (PRD §7.3), taxonomy rollup, and PII soft-anonymization.
+- **Linkage Extraction** (`i4g jobs linkage-extract`) — LLM-driven extraction of financial indicators from intake narratives with confidence scoring. Supports `--backfill`.
+
+### Settings
+
+- New `AnalyticsSettings` section with `refresh_interval_minutes`, `loss_linkage_confidence_threshold`, and `campaign_risk_weights`.
+
+### SSI Integration
+
+- Migrated `CampaignCorrelator` to write to `threat_campaigns` / `threat_campaign_cases` instead of `cases.campaign_id`. Added table stubs to SSI's `CORE_METADATA`.
+
+### Tests
+
+- 43 new unit tests across 5 test files: settings (3), threat_campaign_store (9), analytics_store (7), analytics_aggregation (14), linkage_extract (10). All passing.
+
+### Documentation
+
+- Created TDD: `core/docs/design/threat_intelligence_analytics_tdd.md`.
+- Updated `data_model.md`, `jobs.md`, `storage.md`, `dev_guide.md`.
+- Updated settings manifests (`settings_manifest.yaml`, `settings_manifest.json`) and `docs/config/README.md`.
 
 ## 2026-03-11 — Terraform DRY Refactor: Stacks Pattern (infra/)
 
