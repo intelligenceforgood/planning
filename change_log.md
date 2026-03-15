@@ -1,6 +1,300 @@
 # Planning Change Log (active items only)
 
-Last updated: 12 Mar 2026
+Last updated: 14 Mar 2026
+
+## 2026-03-14 — TIFAP Sprint 6: External Integrations, Hardening & Documentation (core/ + ui/ + docs/ + ssi/)
+
+Completed Sprint 6 — the final sprint of the Threat Intelligence & Fraud Analytics Platform (TIFAP). All PRD features F-00a through F-52 are implemented or deferred with rationale.
+
+### Blockchain Analytics (S6-01 to S6-05)
+
+- Created `src/i4g/services/blockchain_enrichment.py` — vendor-agnostic blockchain analytics integration (Chainalysis, Elliptic, TRM Labs, or mock). Returns wallet labels, risk scores, transaction amounts, exchange attribution.
+- Added `blockchain_vendor` and `blockchain_api_key` to `EnrichmentSettings`.
+- Added wallet cluster edge type to `GraphService` — blockchain-derived wallet groupings appear as gold thick edges in the network graph.
+- Added blockchain enrichment data to entity detail views for wallet entities.
+
+### LEA Referral Tracking (S6-06 to S6-08)
+
+- Added `POST /cases/{id}/lea-referral` and `GET /cases/{id}/lea-referral` endpoints to `cases.py`.
+- LEA referral status aggregated in campaign detail view (which member cases have been referred).
+
+### Partner Indicator Feed (S6-09 to S6-11)
+
+- Created `src/i4g/api/partner_feed.py` — machine-readable indicator feed with STIX 2.1 + CSV export at `GET /feeds/indicators`.
+- Dedicated API key authentication (`X-Partner-API-Key` header) via `partner_api_keys` table, SHA-256 key hashing.
+- In-memory rate limiting per partner key with configurable `rate_limit_per_minute`.
+- Audit logging to `partner_feed_audit` table for all feed access.
+- Wired router into `app.py`.
+
+### Mobile Dashboard (S6-12 to S6-13)
+
+- Created `kpi-sparkline-card.tsx` — responsive KPI card component with inline Recharts sparkline.
+- Created `campaign-alerts.tsx` — mobile-friendly campaign alert list using `ThreatCampaign` SDK type.
+- Made Impact Dashboard responsive: 2-column KPI grid on mobile, responsive chart heights (`h-60 sm:h-80`).
+
+### Hardening & Performance (S6-14 to S6-18)
+
+- Added 9 database indexes to `sql.py` for analytics query optimization (cases, entities, intake_records, indicator_stats, campaign_stats).
+- Created `performance_audit.md`, `security_audit.md`, `accessibility_audit.md` design docs.
+
+### Testing (S6-19 to S6-24)
+
+- 34 unit tests across 6 test files — all pass.
+- Coverage: blockchain enrichment (mock vendor, cluster, unknown vendor, dataclass fields), LEA referral API (POST/GET), partner feed (models, hashing, rate limiting, audit), performance (index coverage), security (auth enforcement, PII leakage, audit tables), E2E regression (user journeys).
+
+### Documentation (S6-25 to S6-43)
+
+- Updated TDD (`threat_intelligence_analytics_tdd.md`) — version 1.3, blockchain integration + partner feed file inventory.
+- Created `docs/book/architecture/threat-intelligence.md` — full TIFAP architecture overview.
+- Updated `docs/book/architecture/security-model.md` — Sprint 6 security sections.
+- Updated `core/docs/design/campaign_governance_bridge.md` — reconciled with threat campaigns model.
+- Created `docs/book/guides/admin/partner_feed.md` — partner feed admin guide.
+- Updated `docs/book/guides/law-enforcement.md` — LEA referral tracking, blockchain enrichment in dossiers.
+- Created `core/docs/runbooks/analytics_operations.md` — aggregation + enrichment ops runbook.
+- Updated `core/docs/cookbooks/smoke_test.md` — analytics smoke test procedures.
+- Updated `core/docs/design/architecture.md` — TIFAP components in router table + future architecture.
+- Updated `docs/book/api/taxonomy_reference.md` — analytics usage (Sankey, heatmap, trend views).
+- Updated `ui/docs/developer-guide.md` — TIFAP frontend development guide.
+- Updated `ui/docs/ui_architecture.md` — final nav map with Intelligence, Impact, Reports sections.
+- Updated `ui/docs/user-guide.md` — Intelligence Hub, Impact Dashboard enhancements, Reports.
+- Created `core/docs/runbooks/console/partner_feed_monitoring.md` — partner feed ops runbook.
+- Updated `docs/book/SUMMARY.md` — added partner feed and threat intelligence entries.
+- Updated `docs/book/api/sdk_endpoint_coverage.md` — Sprint 6 endpoints.
+- Updated `docs/config/settings_manifest.yaml` and `settings_manifest.json` — blockchain + partner_feed settings.
+- Updated `ssi/docs/tdd.md` — CampaignCorrelator migration to threat_campaigns model.
+- Updated `docs/book/ssi/ecrimex-integration.md` — analytics view of eCX submissions and enrichment.
+
+### Settings Added
+
+- `I4G_ENRICHMENT__BLOCKCHAIN_VENDOR` (default: `mock`)
+- `I4G_ENRICHMENT__BLOCKCHAIN_API_KEY` (default: empty)
+- `I4G_PARTNER_FEED__ENABLED` (default: `false`)
+- `I4G_PARTNER_FEED__RATE_LIMIT_PER_MINUTE` (default: `60`)
+- `I4G_PARTNER_FEED__DEFAULT_PAGE_SIZE` (default: `100`)
+- `I4G_PARTNER_FEED__MAX_PAGE_SIZE` (default: `1000`)
+
+### Not in Scope
+
+- S6-06 (LEA referral UI) — backend API implemented, frontend wiring deferred to UI sprint.
+- S6-05 (wallet cluster edge UI rendering) — backend API implemented, frontend gold-edge rendering deferred to UI sprint.
+
+## 2026-03-14 — TIFAP Sprint 5: Automation + Advanced Features (core/ + docs/)
+
+Completed Sprint 5 of the Threat Intelligence & Fraud Analytics Platform (TIFAP).
+
+### Graph — Advanced (S5-01, S5-02, S5-09)
+
+- **Temporal animation**: `GraphService.get_temporal_snapshots()` generates time-sliced graph snapshots for date-slider animation. API endpoint `GET /intelligence/graph/temporal`.
+- **Louvain clustering**: `GraphService.detect_clusters()` uses `networkx.community.louvain_communities` with configurable resolution. Returns cluster ID, size, members, density, avg risk score, entity type breakdown. `enrich_with_clusters()` writes cluster membership to nodes.
+- **Infrastructure edges**: `GraphService.add_infrastructure_edges()` loads shared-hosting relationships into the graph with `relationship="infrastructure"` metadata.
+
+### Watchlist & Alerts (S5-04, S5-05, S5-06)
+
+- Created `WatchlistStore` (`store/watchlist_store.py`) — full CRUD for watchlist items and alerts with duplicate detection.
+- Added watchlist API endpoints to `intelligence.py` — item CRUD, alert listing, mark-read.
+- Created `worker/jobs/watchlist_check.py` — scheduled job checking pinned entities for new case activity and loss threshold breaches.
+
+### Infrastructure Clustering (S5-08)
+
+- Created `worker/jobs/infrastructure_clustering.py` — discovers shared-hosting edges via entity co-occurrence across cases. Edge types: shared_ip, shared_registrar, shared_hosting, shared_case.
+- Added `infrastructure_edges` table to `sql.py`.
+
+### External Enrichment (S5-11, S5-12, S5-13)
+
+- Created `services/enrichment/passive_dns.py` — SecurityTrails API integration for historical DNS resolution.
+- Created `services/enrichment/asn_lookup.py` — RDAP bootstrap for IP→ASN lookup (no API key).
+- Created `worker/jobs/takedown_check.py` — periodic URL reachability check, sets `taken_down_at` on `entity_stats`.
+
+### Scheduled Reports (S5-14)
+
+- Created `worker/jobs/scheduled_reports.py` — configurable auto-generation of recurring reports (daily/weekly/monthly) with CRUD helpers.
+- Added `scheduled_reports` table to `sql.py`.
+
+### Embeddable Charts (S5-17, S5-18)
+
+- Added `POST /intelligence/charts/share` — creates time-limited read-only share tokens.
+- Added `GET /intelligence/charts/{token_id}/embed` — retrieves chart config for embedding.
+- Added `chart_share_tokens` table to `sql.py`.
+
+### Researcher Access (S5-19, S5-20, S5-21)
+
+- Created `services/anonymizer.py` — PII hashing (SHA-256 prefix), loss rounding, batch anonymization.
+- Added `GET /exports/researcher/entities` — anonymized entity export (CSV/JSON) for researcher role.
+
+### Victim Analytics (S5-22, S5-23)
+
+- Added `GET /impact/victims` — aggregate victim demographics (age range, country, contact channel) from intake records.
+
+### Settings & Config (S5-24, S5-25)
+
+- Extended `AnalyticsSettings` with `watchlist_check_interval_minutes`, `infrastructure_clustering_interval_hours`, `scheduled_report_check_interval_minutes`.
+- Created `EnrichmentSettings` with `securitytrails_api_key`, `takedown_check_interval_hours`, `takedown_max_urls_per_run`.
+- Added `[enrichment]` section to `settings.default.toml`.
+- 10 unit tests for new settings — all pass.
+
+### Testing (S5-26 to S5-32)
+
+- 48 unit tests across 9 test files — all pass.
+- Coverage: temporal graph, Louvain clustering, watchlist CRUD/alerts, infrastructure edge classification, watchlist check helpers, scheduled report cadence, passive DNS/ASN enrichment, PII anonymization, settings overrides.
+
+### Documentation (S5-35 to S5-46)
+
+- Updated TDD (`threat_intelligence_analytics_tdd.md`) with Sections 20–26: clustering, infrastructure edges, watchlist architecture, scheduled reports, external enrichment, researcher anonymization.
+- Created `docs/book/guides/analyst/watchlist.md` — watchlist user guide.
+- Updated `docs/book/guides/analyst/network_graph.md` — temporal animation, cluster visualization, infrastructure edges.
+- Created `docs/book/guides/admin/scheduled_reports.md` — scheduled reports admin guide.
+- Updated `core/docs/design/jobs.md` — added watchlist check, infrastructure clustering, takedown check, scheduled reports jobs.
+- Updated `docs/config/settings_manifest.yaml` and `settings_manifest.json` — added all Sprint 5 `I4G_ANALYTICS__*` and `I4G_ENRICHMENT__*` env vars.
+- Created `core/docs/cookbooks/external_enrichment.md` — passive DNS, ASN, takedown verification setup and troubleshooting.
+- Created `core/docs/runbooks/console/watchlist_alerts.md` — watchlist job monitoring and alert triage.
+- Updated `docs/book/guides/user-guide.md` — added researcher access section.
+- Updated `docs/book/SUMMARY.md` — added watchlist, scheduled reports entries.
+- Updated `docs/book/architecture/data-pipeline.md` — added enrichment sources and automation jobs.
+
+### CLI Commands Added
+
+- `i4g jobs watchlist-check`
+- `i4g jobs infrastructure-clustering`
+- `i4g jobs takedown-check`
+- `i4g jobs scheduled-reports`
+
+### Not in Scope (Frontend / Email)
+
+- S5-03, S5-07, S5-10, S5-15 (UI components) — deferred to frontend sprint.
+- S5-16 (email delivery for scheduled reports) — deferred pending SMTP/SendGrid integration.
+- S5-33 (frontend component tests), S5-34 (E2E smoke) — deferred to frontend sprint.
+
+### Post-Review Hardening (2026-03-14)
+
+- **Scheduled report execution contract fixed**: report builder now sends schedule scope as `date_range` (not `range`), and API normalizes legacy payloads for backward compatibility.
+- **One-time cadence corrected**: schedules with `cadence="once"` now deactivate after first run (`is_active=false`, `next_run_at=null`) instead of recurring.
+- **Email delivery safety**: scheduled-report emails send only when a report artifact is confirmed on disk, and include the generated artifact as an attachment.
+- **Dashboard resiliency**: Intelligence Dashboard no longer fails when watchlist alerts fetch fails; alerts now degrade to an empty list.
+- **Regression tests added**: unit tests now cover one-time cadence deactivation and email-after-artifact semantics for scheduled reports.
+
+## 2026-03-14 — TIFAP Sprint 4: Graph, Taxonomy, Geography, Timeline (core/ + ui/ + docs/)
+
+Completed Sprint 4 of the Threat Intelligence & Fraud Analytics Platform (TIFAP).
+
+### Schema Migrations (S4-01 to S4-04)
+
+- Added `taken_down_at` TIMESTAMP to `site_scans`.
+- Added `lea_referred_at`, `lea_agency`, `lea_case_number` to `cases`.
+- Added `victim_age_range` TEXT to `intake_records`.
+- Split `contact_handle` into `contact_channel` + `contact_identifier` on `intake_records`.
+
+### Backend APIs (S4-05 to S4-22)
+
+- **Network Graph** — `GET /intelligence/graph` (seed, hops, filters → `GraphPayload`), `GET /intelligence/graph/export` (PNG/SVG), `GraphService` with spring layout for >500 nodes.
+- **Taxonomy Explorer** — `GET /impact/taxonomy/sankey`, `/heatmap`, `/trend` — category flow, heatmap grid, time-series.
+- **Geographic Analysis** — `GET /impact/geography` (country summary), `GET /impact/geography/{country}` (detail with records).
+- **Timeline** — `GET /intelligence/timeline` (multi-track activity with period/granularity).
+- **Entity Annotations** — full CRUD at `/intelligence/annotations`.
+- **Entity Status** — `PUT /intelligence/entities/{type}/{value}/status` with status transitions.
+- **Bulk Actions** — `POST /intelligence/entities/bulk-actions` for export/tag/status_update.
+
+### Frontend (S4-23 to S4-38)
+
+- **Network Graph** — canvas-based force-directed graph with seed input, hop selector, entity-type color coding, zoom, and PNG/SVG export.
+- **Taxonomy Explorer** — three view modes (Sankey flow diagram, heatmap grid, trend sparklines) with period controls.
+- **Geographic Heatmap** — country summary cards, ranked country list with bar chart, drill-down detail panel.
+- **Timeline** — multi-track bar charts for cases/indicators/campaigns with period and granularity controls.
+- **SDK types** — `GraphPayload`, `GraphNode`, `GraphEdge`, `SankeyResponse`, `HeatmapCell`, `TaxonomyTrendPoint`, `GeographySummary`, `CountryDetailResponse`, `TimelineResponse`, `AnnotationResponse`.
+
+### Testing (S4-39 to S4-48)
+
+- 75 backend unit tests covering graph, taxonomy, geography, timeline, annotation, entity status, and bulk action APIs.
+- 15 frontend unit tests covering network graph, timeline, taxonomy explorer, and geography components.
+- E2E smoke test for graph seed/expand, timeline, taxonomy, and geography views.
+- Bug fixes discovered via testing: `classification` column (not `category`), `victim_country` (not `country`), `sql_schema.entity_stats` reference pattern, `GraphService` local import patch path, layout dict format.
+
+### Documentation (S4-49 to S4-60)
+
+- Updated TDD with Sections 14–19 (graph, taxonomy, geography, timeline, annotations, key files).
+- Updated system topology with GraphService and analytics aggregation job.
+- Created analyst guides: network graph, taxonomy explorer, geographic heatmap, timeline.
+- Created ops runbook for graph performance monitoring.
+- Created analytics aggregation cookbook.
+- Updated SUMMARY.md and sample-requests.md with Sprint 4 entries.
+
+## 2026-03-13 — TIFAP Sprint 3: Impact Analytics + Campaigns + Reports (core/ + ui/ + docs/)
+
+Completed Sprint 3 of the Threat Intelligence & Fraud Analytics Platform (TIFAP).
+
+### Backend APIs
+
+- **Impact router** (`src/i4g/api/impact.py`) — 5 endpoints: KPI dashboard with vs-prior-period trends, loss-by-taxonomy treemap, detection velocity, pipeline funnel, cumulative indicators.
+- **Campaign intelligence** — 6 new endpoints in `intelligence.py`: campaign list/detail/manage/timeline/graph, LEA referral suggestions.
+- **Report generation** — 3 new endpoints in `reports.py`: generate (with TLP labeling), library listing, download.
+- **LEA referral engine** (`src/i4g/services/lea_referral.py`) — scores entities and campaigns by loss, case count, and risk for LEA referral suggestions.
+- **Export adapters** (`src/i4g/services/export_adapters.py`) — protocol-based CSV/XLSX/STIX adapters with `get_adapter()` factory.
+
+### Report Templates
+
+- **Executive Summary** (`templates/reports/executive_summary.md.j2`) — KPI table, loss distribution, detection velocity, pipeline throughput.
+- **LEA Dossier** (`templates/reports/lea_dossier.md.j2`) — cover sheet, indicator declarations, evidence exhibits, integrity manifest.
+- **Chart rendering** — `ReportChartRenderer` in `dossier_visuals.py` for PIL-based bar/line/funnel charts.
+- **Chain-of-custody** — `compute_aggregate_hash()` and `hash_content()` in `dossier_signatures.py` for two-tier hashing.
+
+### Frontend (ui/)
+
+- **Impact Dashboard** — KPI cards, loss-by-taxonomy bar chart, detection velocity line, pipeline funnel, cumulative indicators (recharts).
+- **Campaign Intelligence** — campaign list with status badges, detail page with KPI cards and timeline bar chart, entity network summary.
+- **Reports** — Report Library table and Report Builder form (template, scope, TLP selector).
+- **LEA suggestions** — Intelligence Dashboard shows referral suggestion cards with risk scores.
+- **Navigation** — Reports section added with dossiers, library, builder sub-nav.
+
+### Tests
+
+- Backend: 42 tests across 6 files (impact API, TLP labeling, export adapters, LEA referral, chain-of-custody, report charts).
+- Frontend: 8 component tests (impact charts, campaign timeline).
+
+### Documentation
+
+- TDD updated with Sprint 3 sections (impact API, campaign intelligence, report generation, export adapters).
+- Data pipeline guide updated with analytics aggregation stage.
+- New user guides: campaigns, impact dashboard, reports.
+- Law enforcement guide updated with LEA dossier generation and chain-of-custody.
+- New runbooks: intelligence dashboard, campaign management.
+- Reports runbook updated with Executive Summary and LEA Dossier procedures.
+- SUMMARY.md and sample-requests.md updated.
+
+## 2026-03-12 — TIFAP Sprint 2: Core Intelligence UI (core/ + ui/)
+
+Completed Sprint 2 of the Threat Intelligence & Fraud Analytics Platform (TIFAP).
+
+### Backend APIs
+
+- **Intelligence router** (`src/i4g/api/intelligence.py`) — 10 endpoints: entity list/detail/activity/neighbors, indicator list/detail, dashboard widgets, search facets. Role-based access with researcher anonymization (canonical values masked to `***` + last 4 chars).
+- **Exports router** (`src/i4g/api/exports.py`) — CSV/XLSX entity and indicator exports with bank account masking for non-analyst roles. STIX 2.1 bundle export for indicators. Audit logging on every export.
+- **GraphService** (`src/i4g/services/graph_service.py`) — NetworkX co-occurrence graph with `get_neighbors` (1-hop), `get_subgraph`, `detect_clusters`, `compute_layout` (spring layout for ≥500 nodes), `serialize`.
+- **Role hierarchy** expanded to 5 roles: `researcher < user < analyst < leo ≤ admin`.
+
+### Frontend (ui/)
+
+- **Navigation restructure** — sidebar split into Intelligence (Entity Explorer, Indicator Registry, Intelligence Dashboard) and Impact (Dashboard, Search, Cases, Taxonomy, Analytics) groups.
+- **Entity Explorer** — paginated table with search, filter sidebar, sort, entity detail panel with activity sparkline and co-occurrence graph.
+- **Indicator Registry** — segmented list with category tabs, bulk actions, confidence filters, STIX export.
+- **Intelligence Dashboard** — widget grid with entity, indicator, campaign, and platform KPI cards plus trend sparklines.
+- **Global Search** — command palette (Ctrl/⌘+K) for cross-entity search.
+
+### SDK
+
+- 9 new methods in `@i4g/sdk`: `getEntities`, `getEntity`, `getEntityActivity`, `getEntityNeighbors`, `getIndicators`, `getIndicator`, `getDashboardWidgets`, `exportEntities`, `exportIndicators`.
+- Zod schemas for all intelligence response types.
+
+### Tests
+
+- 4 backend test files: `test_intelligence.py` (13 tests), `test_graph_service.py` (17 tests), `test_exports.py` (8 tests), `test_role_access.py` (12 tests).
+- 2 frontend unit test files: `entity-explorer.test.tsx` (8 tests), `indicator-registry.test.tsx` (9 tests).
+- 1 Playwright smoke test: `intelligence-smoke.spec.ts` (5 tests).
+
+### Documentation
+
+- Updated: TDD, IAM, sample requests, SDK coverage, field name translation, UI architecture, API reference, analyst guide index, SUMMARY.md.
+- New guides: Entity Explorer, Indicator Registry.
+
+---
 
 ## 2026-03-12 — TIFAP Sprint 1: Data Foundation (core/ + ssi/)
 
