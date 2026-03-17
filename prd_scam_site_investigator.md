@@ -15,7 +15,7 @@ The key differentiator: SSI does not just _scan_ the site — it **interacts** w
 
 **Current State**: The SSI–AWH (Agentic Wallet Harvester) merge is complete. SSI now includes wallet extraction, a playbook engine, a state machine-based browser agent (zendriver), real-time WebSocket monitoring, and a Next.js analyst UI. Deployed to `i4g-dev` on GCP Cloud Run. 599 tests passing (575 unit + 24 integration).
 
-**Deployment**: Standalone Python package (`ssi`) in the `ssi/` repo within the i4g workspace. Runs locally via `ssi` CLI or FastAPI on port 8100. Deployed to GCP Cloud Run (API service + investigation job) via Terraform.
+**Deployment**: Standalone Python package (`ssi`) in the `ssi/` repo within the i4g workspace. Runs locally via `ssi` CLI or FastAPI on port 8100. Deployed to GCP Cloud Run as a persistent Service (`ssi-svc`) via Terraform.
 
 ---
 

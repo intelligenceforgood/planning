@@ -1,6 +1,60 @@
 # Planning Change Log (active items only)
 
-Last updated: 14 Mar 2026
+Last updated: 15 Jul 2025
+
+## 2025-07-15 — SSI ↔ Cases Deep Integration (Phases 1–5)
+
+Completed the full SSI ↔ Cases deep integration across five phases. Cases and SSI investigations are now bidirectionally linked, with auto-investigation of URLs found in case narratives and evidence stored under a UUID-prefix sharding scheme.
+
+### Database & Schema (Phase 1)
+
+- Added `case_investigations` join table for one-to-many case↔investigation linking (`trigger_type`: manual, auto, case_created)
+- Added `site_scans.normalized_url` column with URL dedup at trigger time
+- Backfill scripts: `backfill_case_investigations.py`, `backfill_normalized_urls.py`
+
+### Auto-Investigation Job (Phase 2)
+
+- New `auto_investigate` worker job: queries URL indicators from batch cases, applies domain blocklist + dedup, triggers SSI investigations via Cloud Run
+- Extended `linkage_extract` with `mode="cases"` to extract URL indicators from case narratives via LLM
+- URL dedup via `check_url_duplicate()` with configurable staleness window
+- Domain blocklist support via `is_domain_blocked()` with merged blocklist
+
+### API & Backend (Phase 3)
+
+- New endpoints: `GET /cases/{id}/activity`, `POST /cases/{id}/investigate`
+- Case detail response (`GET /cases/{id}`) includes `investigations` array
+- Scan detail response (`GET /investigations/ssi/{id}`) includes `linkedCases` array
+- SSI evidence API with GCS signed URL generation and dual-path resolution
+
+### UI (Phase 4)
+
+- Activity bar on case detail showing running/completed SSI investigations
+- URL investigation status panel with dedup warnings
+- Investigation history on case detail
+
+### Evidence Migration & Docs (Phase 5)
+
+- Evidence storage migrated to UUID-prefix sharding (`scans/{hex[:2]}/{hex[2:4]}/{scan_id}/`)
+- Per-scan evidence manifests (`metadata.json`) with SHA-256 integrity hashes
+- Migration script: `scripts/migrate_evidence_paths.py` (local + GCS, dry-run support)
+- Manifest generation script: `scripts/generate_evidence_manifests.py`
+
+### Settings
+
+- New `auto_investigate` section: `enabled`, `staleness_days`, `max_concurrent`, `domain_blocklist`
+- Settings manifests regenerated (YAML, JSON, README.md, docs book)
+
+### Tests
+
+- E2E smoke test: `tests/adhoc/test_ssi_case_integration_e2e.py` (5 tests covering full flow)
+- Unit tests for migration and manifest scripts
+
+### Documentation
+
+- Updated `docs/book/architecture/ssi-architecture.md` with case↔investigation linking, auto-investigation, evidence storage sections
+- Created `docs/book/guides/auto-investigation.md` analyst guide
+- Created `docs/book/architecture/evidence-storage.md` design doc (sharding, manifests, resolution strategy)
+- Updated `docs/book/SUMMARY.md` with new pages
 
 ## 2026-03-14 — TIFAP Sprint 6: External Integrations, Hardening & Documentation (core/ + ui/ + docs/ + ssi/)
 
