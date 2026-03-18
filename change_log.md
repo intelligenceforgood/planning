@@ -1,6 +1,55 @@
 # Planning Change Log (active items only)
 
-Last updated: 15 Jul 2025
+Last updated: 17 Mar 2026
+
+## 2026-03-17 — Unify SSI Investigation Routing Through Core
+
+### Design Decision: Eliminate Dual-Path SSI Investigation Routing
+
+Removed the `if (SSI_API_URL) → proxyToSsi() else → proxyToCore()` branch from the investigation trigger and status-polling routes. All investigation lifecycle requests now **always** route through Core API, regardless of environment.
+
+**Rationale:**
+
+- SSI investigation is a 3-party interaction (core-svc, ssi-svc, i4g-console). Core manages the database, task status, and audit log — it must be in the loop.
+- Two trigger paths exist: manual (UI `/investigate`) and automated (case-intake URL detection). The automated path is definitively UI → Core → SSI. Unifying gives both triggers the same orchestration code.
+- Eliminates circular service dependency (SSI no longer needs to call back to Core for task/audit).
+- Single auth direction: Core → SSI (OIDC). No bidirectional service-to-service auth needed.
+- eCX routes remain direct-to-SSI (stateless reads, Core has no role).
+
+**Files changed:**
+
+- `ui/apps/web/src/app/api/ssi/investigate/route.ts` — removed `proxyToSsi()`, always calls Core
+- `ui/apps/web/src/app/api/ssi/investigate/[id]/route.ts` — removed `proxyToSsi()`, always polls Core
+- `ui/apps/web/src/lib/server/ssi-proxy.ts` — updated docs (eCX-only helper)
+- `ui/apps/web/tests/unit/ssi-dedup-proxy.test.ts` — removed SSI-direct test suite, added "routes through core even when SSI_API_URL set" test
+- `core/.github/architecture-cheatsheet.instructions.md` — updated routing tables, pitfall #4
+- `planning/proposals/ssi_routing_unification.md` — design decision + consistency checklist
+
+See `planning/proposals/ssi_routing_unification.md` for the full design record and post-sprint consistency checklist.
+
+## 2026-03-17 — Bug Fixes: eCX 502 on Redeploy + EvidenceStorageClient API
+
+### eCX 502 on Cloud Run Redeploy (Root Cause + Fix)
+
+**Root cause:** The UI's eCX proxy routes (`/api/ssi/ecx/*`) use `resolveSsiUrl()` which reads `SSI_API_URL`. In cloud, this env var was **not set** on the i4g-console service — the original comment said "SSI_API_URL is local-dev-only." The investigate/poll routes had a core-API fallback (`if (process.env.SSI_API_URL) { proxyToSsi() } else { proxyToCore() }`), but the eCX routes added in Phase 2/3 did not. Without `SSI_API_URL`, all eCX requests fell back to `http://localhost:8100` on the console container, returning 502.
+
+Each "fix" was likely someone manually adding `SSI_API_URL` to the Cloud Run service via GCP console, which Terraform overwrote on the next `terraform apply`.
+
+**Fix:** Added `SSI_API_URL = module.run_ssi_service[0].uri` to the console env vars in `infra/stacks/app/main.tf`, gated by `var.ssi_service_enabled`. This persists across all deploys. Updated the architecture cheatsheet to document the eCX proxy routes and their SSI-direct dependency.
+
+**Files changed:**
+
+- `infra/stacks/app/main.tf` — added `SSI_API_URL` to console env vars
+- `core/.github/architecture-cheatsheet.instructions.md` — added eCX proxy routes table
+
+### EvidenceStorageClient.\_sharded_subpath → sharded_subpath
+
+Promoted `_sharded_subpath` from private to public. The method is a static utility called from `orchestrator.py` to construct GCS evidence paths — accessing a private method from outside the class violated the API contract.
+
+**Files changed:**
+
+- `ssi/src/ssi/evidence/storage.py` — renamed `_sharded_subpath` → `sharded_subpath`
+- `ssi/src/ssi/investigator/orchestrator.py` — updated call site
 
 ## 2025-07-15 — SSI ↔ Cases Deep Integration (Phases 1–5)
 
