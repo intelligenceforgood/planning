@@ -1,6 +1,63 @@
 # Planning Change Log (active items only)
 
-Last updated: 17 Mar 2026
+Last updated: 18 Mar 2026
+
+## 2026-03-18 — PII Vault Simplification: Sprint 3 (Documentation Cleanup)
+
+Completed Sprint 3 of `tasks/pii_vault_simplification.md` — systematic removal of all PII vault/tokenization references from documentation.
+
+**Core design docs (core/docs/):**
+
+- Rewrote `pii_vault.md` — now covers intake Fernet encryption, encrypted fields, audit-logged decryption, victim-contact redaction
+- Deleted `pii_vault_redesign.md` (superseded)
+- Updated `architecture.md` (~22 edits): removed TokenVault/VaultService from diagrams, updated exec summary, component tables, data flows, SA table, encryption sections, metrics, alerting, disaster recovery
+- Updated `data_model.md`, `jobs.md`, `storage.md`, `iam.md`, `security_audit.md`, `compliance.md`, `tdd.md`, `glossary.md`
+
+**Cookbooks (core/docs/cookbooks/):**
+
+- Updated `bootstrap_environments.md`, `smoke_test.md`, `cloud_sql_primer.md`, `github_actions_setup.md`
+
+**Config reference (core/docs/config/):**
+
+- Removed 9 `pii.*` entries + 2 vault password entries from `README.md`, `settings_manifest.yaml`, `settings_manifest.json`
+- Updated `crypto.pii_key` description, renamed `detokenization_alert_threshold` → `contact_decrypt_alert_threshold`
+
+**Gitbook docs (docs/book/):**
+
+- Updated `sdk_endpoint_coverage.md`, `authentication.md`, `sample-requests.md`
+- Rewrote `secrets-reference.md` (removed tokenization-pepper, pii-tokenization-key, KMS vault key; added crypto-pii-key)
+- Updated `settings.md` (removed pii/vault rows), `slo_definitions.md` (removed Detokenize latency, PII Vault Access)
+- Rewrote `security-model.md` mermaid diagram (removed VaultZone subgraph) and safeguards text
+
+**Planning docs:**
+
+- Updated `status_updates/2026-01-05.md` link and description
+
+**Utility scripts:**
+
+- Updated `check_settings_drift.py` — removed vault password entries from allowlists
+
+## 2026-03-18 — PII Vault Simplification: Sprint 1 Leftovers + Sprint 2 Complete
+
+Completed all remaining Sprint 1 tasks and all Sprint 2 tasks from `tasks/pii_vault_simplification.md`.
+
+**Sprint 1 leftovers (core/):**
+
+- Added `audit_log` table to main `METADATA` in `sql.py` (victim-contact access tracking)
+- Added `IntakeStore.get_contact()` with Fernet decryption + audit logging
+- Added `GET /intakes/{id}/contact` API endpoint with `IntakeContactResponse` model
+- Added `redact_victim_contact()` to ingest pipeline — replaces victim email/phone with `[VICTIM_EMAIL]`/`[VICTIM_PHONE]` markers before storing case text
+- Added 8 new unit tests (5 redaction, 3 contact+audit)
+
+**Sprint 2 (infra/):**
+
+- Deleted `stacks/pii-vault/`, `environments/pii-vault/`, `modules/iam/pii_vault_access/`, `stacks/app/iam_vault.tf`
+- Cleaned all vault references from app stack locals, variables, tfvars (dev+prod), moved blocks
+- Migrated `I4G_CRYPTO__PII_KEY` secret path from vault project (`i4g-pii-vault-{env}`) → main project (`i4g-{env}`)
+- Removed `I4G_PII__PEPPER` from all jobs; removed `sa-vault` service account
+- Renamed monitoring: `pii_access_alert` → `victim_contact_access_alert`, `detokenization_threshold` → `victim_contact_access_threshold`
+
+**Validation:** 1255 tests passed, pre-commit clean double-pass.
 
 ## 2026-03-17 — Unify SSI Investigation Routing Through Core
 
