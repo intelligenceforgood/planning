@@ -1411,3 +1411,13 @@ These conventions were established during earlier sprints and remain in effect:
 - **Review queue statuses:** `new` → `in_review` → `awaiting_input` → `accepted` / `rejected` / `closed`.
 - **Builtin generics:** 100% of production files use builtin generics (`dict`, `list`, `X | None`). No legacy `Dict`/`List`/`Optional`.
 - **SSI architecture:** Single gateway (~20 routers), shared Cloud SQL, one Cloud Run Job. See `archive/ssi_development_summary.md`.
+
+## 2026-03-19 — Copilot System Structural Cleanup
+
+- **Slimmed all product repo instructions:** Replaced bloated 16-point `copilot-instructions.md` in `ui/`, `ssi/`, `infra/`, `planning/`, `docs/`, and `mobile/` with focused, repo-specific-only content (20–40 lines each). Removed ~500 lines of duplicate shared context from product repos.
+- **Removed deprecated stubs:** Deleted `core/.github/general-coding.instructions.md`, `core/.github/architecture-cheatsheet.instructions.md`, and `core/.github/pre-merge-review.instructions.md` (backward-compat stubs that are now unused).
+- **Fixed stale cross-references:** Updated all remaining references to `core/.github/` shared files to point to `copilot/.github/shared/` (canonical location) across `core/`, prompt files, and the pre-merge checklist.
+- **Removed orphaned guide:** Deleted `docs/book/guides/copilot-workflow-guide.md` (deprecated, not in SUMMARY, content superseded by `copilot/docs/`).
+- **Updated repo template:** Added `Coding Standards` section to `copilot/.github/repo-templates/copilot-instructions.template.md`.
+- **Fixed cookbook typo:** "Sprint Wraup" → "Sprint Wrapup".
+- **Entry point:** `copilot/docs/README.md` is the single entry point to the full Copilot intelligence system.
