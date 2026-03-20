@@ -1463,7 +1463,30 @@ Executed Phase 0, Phase 1, Phase 2.3 / 2.4, and Phase 5 of the doc revamp sprint
 
 **Remaining sprint work (for next session):**
 
-- Phase 2.1: Fix `core/docs/design/architecture.md` — add SSI to topology diagrams, add TIFAP + PII vault sections, Last Verified date
-- Phase 2.2: Restructure `core/docs/development/tdd.md` as master TDD with subsystem index
-- Phase 3: Component doc repairs (core design docs, SSI doc validation, UI architecture rewrite, infra docs creation)
-- Phase 4: End-user GitBook coherence pass
+- ~~Phase 2.1: Fix `core/docs/design/architecture.md` — add SSI to topology diagrams, add TIFAP + PII vault sections, Last Verified date~~ **DONE 2026-03-20**
+- ~~Phase 2.2: Restructure `core/docs/development/tdd.md` as master TDD with subsystem index~~ **DONE 2026-03-20**
+- ~~Phase 3: Component doc repairs (core design docs, SSI doc validation, UI architecture rewrite, infra docs creation)~~ **DONE 2026-03-20** (all items confirmed present from prior session)
+- ~~Phase 4: End-user GitBook coherence pass~~ **DONE 2026-03-20**
+
+## 2026-03-20 — Phases 2.2, 3, 4: Doc sprint completion
+
+**Phase 2.2 — TDD restructure:**
+
+- `core/docs/development/tdd.md` (v3.0 → v3.1): Removed ~800 lines of legacy appended content (API samples, OAuth code, DB schemas, CI/CD YAML, deployment scripts, test examples, disaster recovery). Master TDD sections 1–13 retained as the clean subsystem index.
+- Updated all 13 subsystem Last Verified dates from `?` to `March 2026`.
+
+**Phase 3 — Component doc repairs (audit results):**
+
+- `core/docs/development/glossary.md` — already has SSI, TIFAP, Fraud Taxonomy, and Infrastructure sections (confirmed)
+- `ui/docs/ui_architecture.md` — already has API Proxy Layer, Authentication Flow, and State Management sections (confirmed)
+- `infra/docs/README.md` — already indexes service_catalog, scheduler_inventory, module_reference (confirmed)
+- `infra/docs/service_catalog.md`, `scheduler_inventory.md`, `module_reference.md` — all exist with March 2026 Last Verified dates (confirmed)
+- `ssi/docs/ops_runbook.md` — exists with March 2026 Last Verified (confirmed)
+- `core/docs/api_reference.md` — exists (confirmed)
+- No new files needed; all Phase 3 items were completed in the prior doc session.
+
+**Phase 4 — GitBook coherence pass:**
+
+- Created `docs/book/guides/admin/index.md` — Admin Guide landing page linking CLI, Scheduled Reports, Partner Feed
+- Fixed `docs/book/SUMMARY.md` — Admin Guide entry now links to `guides/admin/index.md` (was bare text, no file path)
+- All other SUMMARY.md page references verified: all files exist across overview/, guides/, architecture/, api/, ssi/, security/
