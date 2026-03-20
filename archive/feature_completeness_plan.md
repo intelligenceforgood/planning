@@ -1,5 +1,8 @@
 # Feature Completeness Plan — 5-Week Sprint
 
+> **ARCHIVED** — This sprint concluded in February/March 2026. Tasks have been completed or carried forward.
+> See [`../change_log.md`](../change_log.md) for a record of what shipped.
+
 > **Goal:** Close the functional gaps between PRD/TDD specifications and the
 > current implementation. The prior two sprints (Debt Remediation + Quality
 > Elevation) focused on design coherency and implementation quality. This
@@ -31,17 +34,17 @@
 
 ## Summary
 
-| #    | Work Stream                            | Items  | HIGH   | MED    | LOW   | Est. Days | Week | Status      |
-| ---- | -------------------------------------- | ------ | ------ | ------ | ----- | --------- | ---- | ----------- |
-| WS-1 | PII Tokenization Verification          | 8      | 4      | 3      | 1     | 3–4       | 1    | COMPLETE    |
-| WS-2 | RAG Pipeline Completeness              | 6      | 3      | 2      | 1     | 3–4       | 1–2  | COMPLETE    |
-| WS-3 | Classification & Risk Scoring          | 7      | 2      | 4      | 1     | 3–4       | 2    | COMPLETE    |
-| WS-4 | Context-Sensitive Help System          | 8      | 2      | 4      | 2     | 4–5       | 2–3  | COMPLETE    |
-| WS-5 | RBAC & Role Enforcement                | 7      | 3      | 3      | 1     | 3–5       | 3–4  | COMPLETE    |
-| WS-6 | Data Retention & Compliance Automation | 6      | 2      | 3      | 1     | 3–4       | 4    | COMPLETE    |
-| WS-7 | Evidence & Attachment Integrity        | 5      | 1      | 3      | 1     | 2–3       | 4–5  | COMPLETE    |
-| WS-8 | Observability & Alerting               | 6      | 1      | 4      | 1     | 2–3       | 5    | COMPLETE    |
-|      | **Totals**                             | **53** | **18** | **26** | **9** | **23–32** |      |             |
+| #    | Work Stream                            | Items  | HIGH   | MED    | LOW   | Est. Days | Week | Status   |
+| ---- | -------------------------------------- | ------ | ------ | ------ | ----- | --------- | ---- | -------- |
+| WS-1 | PII Tokenization Verification          | 8      | 4      | 3      | 1     | 3–4       | 1    | COMPLETE |
+| WS-2 | RAG Pipeline Completeness              | 6      | 3      | 2      | 1     | 3–4       | 1–2  | COMPLETE |
+| WS-3 | Classification & Risk Scoring          | 7      | 2      | 4      | 1     | 3–4       | 2    | COMPLETE |
+| WS-4 | Context-Sensitive Help System          | 8      | 2      | 4      | 2     | 4–5       | 2–3  | COMPLETE |
+| WS-5 | RBAC & Role Enforcement                | 7      | 3      | 3      | 1     | 3–5       | 3–4  | COMPLETE |
+| WS-6 | Data Retention & Compliance Automation | 6      | 2      | 3      | 1     | 3–4       | 4    | COMPLETE |
+| WS-7 | Evidence & Attachment Integrity        | 5      | 1      | 3      | 1     | 2–3       | 4–5  | COMPLETE |
+| WS-8 | Observability & Alerting               | 6      | 1      | 4      | 1     | 2–3       | 5    | COMPLETE |
+|      | **Totals**                             | **53** | **18** | **26** | **9** | **23–32** |      |          |
 
 ---
 

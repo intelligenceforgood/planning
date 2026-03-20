@@ -1,8 +1,8 @@
 # Architecture Visualization Strategy
 
-> **DEFERRED** — The `arch-viz` repo proposed here was not created as of March 2026. This document has been archived at
-> [`../archive/visualization_strategy_deferred.md`](../archive/visualization_strategy_deferred.md).
-> Inline Mermaid diagrams are the current approach. Revisit when the doc corpus stabilizes.
+> **DEFERRED** — The `arch-viz` repo proposed here was not created as of March 2026.
+> Inline Mermaid diagrams are the current approach. See `planning/architecture/system_narrative.md` for current topology diagrams.
+> Revisit when the doc corpus stabilizes.
 
 ## Executive Summary
 

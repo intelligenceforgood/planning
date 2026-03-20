@@ -1,8 +1,9 @@
-# Product Requirements Document (PRD) - Prototype Phase
+> **ARCHIVED** — The Streamlit prototype described here was retired in Phase 1 (2025).
+> This document is preserved for historical context. See `prd_production.md` for the current platform.
 
-> **ARCHIVED** — This file has been moved to [`archive/prd_prototype_streamlit.md`](archive/prd_prototype_streamlit.md).
-> The Streamlit prototype described here was retired in Phase 1 (2025).
-> See [`prd_production.md`](prd_production.md) for the current platform.
+---
+
+# Product Requirements Document (PRD) - Prototype Phase
 
 > [!IMPORTANT]
 > **PROTOTYPE DOCUMENTATION** - This PRD describes the initial prototype phase of i4g.

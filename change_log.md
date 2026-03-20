@@ -1421,3 +1421,49 @@ These conventions were established during earlier sprints and remain in effect:
 - **Updated repo template:** Added `Coding Standards` section to `copilot/.github/repo-templates/copilot-instructions.template.md`.
 - **Fixed cookbook typo:** "Sprint Wraup" → "Sprint Wrapup".
 - **Entry point:** `copilot/docs/README.md` is the single entry point to the full Copilot intelligence system.
+
+## 2026-03-19 — Documentation Revamp Sprint
+
+Executed Phase 0, Phase 1, Phase 2.3 / 2.4, and Phase 5 of the doc revamp sprint defined in `planning/proposals/doc_revamp_plan.md`.
+
+**Phase 0 — Hot Fixes (actively misleading content corrected):**
+
+- Archived `planning/prd_prototype.md` → `planning/archive/prd_prototype_streamlit.md` (ARCHIVED banner added; original file now redirects to archive)
+- Removed stale Streamlit reference from `planning/mobile/prd.md` (line: "remain on web/Streamlit" → "web-only (analyst console)")
+- Added ARCHIVED banner to `core/docs/cookbooks/azure_legacy_data.md` (Azure migration complete 2025)
+- Added consolidation-pending cross-reference banner to `core/docs/policies/detokenization_sop.md` (pii_vault.md does not yet contain SOP content; consolidation deferred)
+- Fixed broken link in `core/docs/design/architecture.md`: `storage_architecture.md` → `storage.md`
+- Rewrote stale guiding objective in `core/docs/design/architecture.md`: "Maintain feature parity with the retired Azure stack" → "Extend and differentiate" direction
+- Archived `planning/architecture/visualization_strategy.md` → `planning/archive/visualization_strategy_deferred.md` (arch-viz repo deferred; inline Mermaid is current approach)
+- Added pending-documentation note to `core/docs/testing/README.md`
+- Added change-log reference note to `core/docs/release/README.md`
+- Added ARCHIVED banner to `planning/archive/feature_completeness_plan.md` (sprint concluded Feb/Mar 2026)
+
+**Phase 1 — System Narrative (created):**
+
+- Created `planning/architecture/system_narrative.md` — 8 sections covering: Mission and Scope, Component Inventory (table of all deployed components), System Integration Map (Mermaid diagram), Data Ownership, Authentication and Identity Topology, Deployment Environments, Repository Map, Version and Release Policy
+- Written from code and config (pyproject.toml, app.py, Terraform, settings.toml, Dockerfiles) — not from existing docs
+- Includes verification-needed banners for items that require confirmation in code
+
+**Phase 2 — Architecture and Integration Documents (created/in progress):**
+
+- Created `planning/architecture/integration_contracts.md` — documents all 8 cross-service integration contracts: UI→Core proxy (auth headers, catch-all route), UI→SSI (eCX direct, investigations through core), Core→SSI (OIDC trigger), SSI→Core (push results, live events, guidance poll), TIFAP→Core (internal DB, no HTTP), Scheduler→Jobs (cron inventory), Ingestion pipeline sequence
+- Created `planning/architecture/doc_audit_matrix.md` — complete inventory of ~90 documents across all repos with Tier, Status, Issues, and Owner for each
+
+**Phase 5 — Governance and Sustainability (created):**
+
+- Created `copilot/.github/shared/tdd-template.md` — 11-section template for new and existing TDDs; required sections include architecture diagram, component index, key design decisions, API surface, data model, config reference, environment behavior, development workflow
+- Created `copilot/.github/shared/doc-governance.instructions.md` — documentation governance policy: definition of done (PR checklist), ownership matrix by tier, staleness detection (Last Verified convention + 90-day rule), quarterly review cadence, new component checklist
+- Created `planning/architecture/adr/` directory with README and first 5 ADRs:
+  - ADR-001: Azure to GCP migration (2025)
+  - ADR-002: FastAPI + Pydantic v2 as core API framework (2025)
+  - ADR-003: SSI as a separate Cloud Run service, not embedded in core (2025)
+  - ADR-004: PII vault — Fernet encryption + audit-logged decryption (March 2026)
+  - ADR-005: Chroma vs. pgvector for vector storage (2025, under review)
+
+**Remaining sprint work (for next session):**
+
+- Phase 2.1: Fix `core/docs/design/architecture.md` — add SSI to topology diagrams, add TIFAP + PII vault sections, Last Verified date
+- Phase 2.2: Restructure `core/docs/development/tdd.md` as master TDD with subsystem index
+- Phase 3: Component doc repairs (core design docs, SSI doc validation, UI architecture rewrite, infra docs creation)
+- Phase 4: End-user GitBook coherence pass
