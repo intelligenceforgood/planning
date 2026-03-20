@@ -1,8 +1,7 @@
 # I4G Machine Learning Strategy & Roadmap
 
-**Author:** Cross-functional task force (CTO / CPO / Chief Architect)
-**Date:** March 2026
-**Horizon:** 6–12 months
+**Date:** March 2026</br>
+**Horizon:** 6–12 months</br>
 **Status:** Draft — drives PRD creation for individual tracks
 
 ---
@@ -218,252 +217,55 @@ This table becomes the **single source of truth** for all human feedback. Every 
 
 ---
 
-## 6. ML Infrastructure Roadmap
+## 6. ML Infrastructure & Inference Framework (Summary)
 
-This is the core deliverable. The infrastructure must support the full lifecycle:
+The ML platform must support the full lifecycle — from data collection through training, evaluation, deployment, serving, and monitoring — with a feedback loop from analyst corrections back into the pipeline.
 
-```
-Data Collection → Processing → Training → Evaluation → Deployment → Serving → Monitoring
-       ↑                                                                          │
-       └──────────────────── Feedback Loop ────────────────────────────────────────┘
-```
+The platform has four layers:
 
-### 6.1 Architecture Overview
+- **Data layer** — label database (analyst corrections), dataset registry (versioned JSONL snapshots), feature store, and export pipeline for train/eval/test splits
+- **Training layer** — experiment tracking (W&B or MLflow), reproducible training pipelines, evaluation suite with golden test sets, and baseline benchmarks of current few-shot performance
+- **Serving layer** — model registry (GCS artifacts with stage management), unified inference framework (`ModelClient` protocol that transparently routes to LLM API or custom model), A/B traffic router, and shadow mode for risk-free comparison
+- **Monitoring** — accuracy tracking (model vs. analyst labels), cost dashboard (per-capability attribution), drift detection (distribution shift alerts), and latency tracking
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        ML PLATFORM                                  │
-│                                                                     │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐               │
-│  │  Data Layer  │  │  Training    │  │  Serving     │               │
-│  │             │  │  Layer       │  │  Layer       │               │
-│  │ • Label DB  │  │ • Pipelines  │  │ • Registry   │               │
-│  │ • Feature   │  │ • Experiment │  │ • Endpoints  │               │
-│  │   Store     │  │   Tracking   │  │ • A/B Router │               │
-│  │ • Dataset   │  │ • Eval Suite │  │ • Shadow     │               │
-│  │   Registry  │  │              │  │   Mode       │               │
-│  └──────┬──────┘  └──────┬───────┘  └──────┬───────┘               │
-│         │                │                  │                       │
-│  ┌──────┴──────────────────┴──────────────────┴───────┐             │
-│  │                   Monitoring                        │             │
-│  │  • Accuracy drift  • Cost tracking  • Latency      │             │
-│  │  • Label distribution shift  • Alerting             │             │
-│  └─────────────────────────────────────────────────────┘             │
-└─────────────────────────────────────────────────────────────────────┘
-```
+The **inference framework** is designed so application code (classifier, NER, RAG) doesn't know or care whether it's calling a Gemini API or a custom fine-tuned model. A `build_model_client(capability=...)` factory checks the model registry, applies A/B routing policy, and falls back to the LLM provider.
 
-### 6.2 Component Breakdown
+Custom models can be served via Vertex AI Endpoints (production), Cloud Run + FastAPI (lightweight), or Ollama (local testing).
 
-#### A. Data Layer
-
-| Component                | Purpose                                             | Implementation                                                                                                  |
-| ------------------------ | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| **Label database**       | Store all human feedback                            | Alembic migration for `analyst_labels` table (see §5.4)                                                         |
-| **Dataset registry**     | Version and snapshot training/eval datasets         | File-based (JSONL in GCS) + metadata table. Each dataset is immutable, referenced by ID.                        |
-| **Feature store**        | Pre-computed case features for training             | Materialized view or dedicated table: text features, entity counts, structural features, classification history |
-| **Data export pipeline** | Extract train/eval/test splits from production data | CLI command: `i4g ml export-dataset --label-type classification --split 80/10/10 --min-corrections 1`           |
-
-#### B. Training Layer
-
-| Component               | Purpose                                           | Implementation                                                                                                                          |
-| ----------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| **Experiment tracker**  | Track hyperparameters, metrics, artifacts per run | Weights & Biases (cloud) or MLflow (self-hosted). Start with W&B for speed.                                                             |
-| **Training pipelines**  | Reproducible model training                       | Python scripts under `core/src/i4g/ml/training/`. Initially: fine-tune classification model, fine-tune NER model, fine-tune embeddings. |
-| **Evaluation suite**    | Standardized accuracy measurement                 | Per-capability eval scripts. Golden test set (frozen, never trained on). Metrics: precision, recall, F1 per axis, calibration error.    |
-| **Baseline benchmarks** | Measure current few-shot performance              | Run current prompts against eval set. This becomes the bar to beat.                                                                     |
-
-#### C. Serving Layer
-
-| Component               | Purpose                                                    | Implementation                                                                                                          |
-| ----------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **Model registry**      | Version, stage, promote models                             | GCS bucket structure: `gs://i4g-ml-models/{capability}/{version}/`. Metadata in DB. Stages: dev → staging → production. |
-| **Inference framework** | Unified interface to call LLM or custom model              | Extend existing `LLMClient` protocol with a `ModelClient` that routes to either LLM API or custom model endpoint.       |
-| **A/B router**          | Split traffic between model versions                       | Request-level routing based on case_id hash. Log which model version served each prediction.                            |
-| **Shadow mode**         | Run new model alongside production without affecting users | New model produces predictions stored for comparison but not surfaced. Analyst sees only production model output.       |
-
-#### D. Monitoring
-
-| Component            | Purpose                                           | Implementation                                                                                           |
-| -------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| **Accuracy tracker** | Compare model predictions vs. analyst corrections | Daily job: for cases with analyst labels, compute agreement rate per axis. Alert on drops.               |
-| **Cost dashboard**   | Per-capability, per-model cost tracking           | Extend `CostTracker` to all core LLM calls. Aggregate in `platform_kpis`.                                |
-| **Drift detector**   | Detect shifts in input or output distribution     | Monitor label distribution, confidence distribution, entity type frequency. Statistical tests (PSI, KS). |
-| **Latency tracker**  | Model response time by provider and capability    | Already have token counts; add wall-clock latency. Alert on P95 spikes.                                  |
+> **Full details:** See `planning/prd_ml_infrastructure.md` for component designs, phased delivery plan, architecture decisions, and sprint-level deliverables.
 
 ---
 
-## 7. Inference Framework: Using Our Own Models
+## 7. Phased Roadmap (Summary)
 
-### 7.1 Design Principle
+| Phase                               | Horizon   | Focus                                                 | Key deliverables                                                                                               |
+| ----------------------------------- | --------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Phase 0: Foundation**             | Now       | Infrastructure skeleton + baselines                   | Evaluation harness, prompt versioning, cost tracking, label storage schema, inference framework skeleton       |
+| **Phase 1: Data Collection**        | Near-term | Analyst labeling + bootstrap datasets                 | Classification correction UI, risk score override UI, dataset export CLI, baseline benchmarks                  |
+| **Phase 2: Training Pipeline**      | Mid-term  | First custom model (even if it doesn't beat few-shot) | Experiment tracking, fine-tuning scripts, model registry, shadow mode, eval pipeline                           |
+| **Phase 3: Serving & Optimization** | Mid-term  | Custom models serve real traffic                      | A/B testing framework, model deployment, promotion workflow, OCR upgrade, confidence calibration               |
+| **Phase 4: Advanced Capabilities**  | Long-term | New ML-powered features                               | Auto-summarization, duplicate detection, predictive escalation, image similarity, custom NER, drift monitoring |
 
-The inference framework should make switching between a foundation model (Gemini) and a custom fine-tuned model **transparent to the application code**. The classifier, NER extractor, and RAG pipeline should not know or care whether they're calling an API or a local model.
+Each phase has explicit exit criteria before the next begins. Few-shot prompting remains the baseline and fallback at every phase.
 
-### 7.2 Architecture
-
-```python
-# Current: all paths lead to LLM API
-classifier = FraudClassifier(llm_client=build_llm_client(settings))
-
-# Target: router picks best available model
-classifier = FraudClassifier(model_client=build_model_client(
-    capability="fraud_classification",
-    settings=settings,
-))
-
-# build_model_client() checks:
-# 1. Is there a custom model registered for this capability? → use it
-# 2. Is A/B testing active? → route based on policy
-# 3. Fallback → use LLM provider (current behavior)
-```
-
-### 7.3 Model Client Protocol
-
-```python
-class ModelClient(Protocol):
-    """Unified interface for any model — LLM API or custom."""
-
-    async def predict(
-        self,
-        input_text: str,
-        *,
-        output_schema: type[BaseModel] | None = None,
-        metadata: dict | None = None,
-    ) -> ModelResult: ...
-
-@dataclass
-class ModelResult:
-    output: str | dict           # Raw or parsed output
-    model_id: str                # Registry ID (e.g., "fraud-classifier-v3" or "gemini-2.5-flash")
-    model_type: str              # "llm_api" | "custom" | "shadow"
-    latency_ms: float
-    tokens_in: int | None
-    tokens_out: int | None
-    cost_usd: float | None
-```
-
-### 7.4 Custom Model Serving Options
-
-| Option                   | When to use                         | How it works                                                                             |
-| ------------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------- |
-| **Vertex AI Endpoints**  | Production custom models            | Upload model artifact → create endpoint → serve via predict API. Auto-scales.            |
-| **Cloud Run + FastAPI**  | Lightweight models, quick iteration | Containerized model behind a FastAPI `/predict` endpoint. Same infra pattern as ssi-svc. |
-| **Ollama custom models** | Local development, testing          | `ollama create` with GGUF or safetensors. Already have Ollama integration.               |
-
-For the **testing-only** phase, Ollama custom models are sufficient. Production deployment via Vertex AI Endpoints.
+> **Full details:** See `planning/prd_ml_infrastructure.md` for sprint-level deliverables, exit criteria, and sequencing.
 
 ---
 
-## 8. Phased Roadmap
+## 8. PRDs from This Strategy
 
-### Phase 0: Foundation (Now — Sprint 1–2)
-
-**Goal:** Infrastructure skeleton + baseline measurements. No custom models yet.
-
-| #   | Deliverable                      | Details                                                                                                                                                                 |
-| --- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0.1 | **Evaluation harness**           | Golden test set for classification (50–100 cases, manually verified). Eval script that runs current few-shot prompts and reports P/R/F1 per axis. This is the baseline. |
-| 0.2 | **Prompt versioning**            | Add version headers to all prompt templates. Log prompt version with every LLM call.                                                                                    |
-| 0.3 | **Cost tracking (core)**         | Extend SSI's `CostTracker` pattern to all core LLM calls. Store in `llm_usage_log` table.                                                                               |
-| 0.4 | **Label storage schema**         | Alembic migration for `analyst_labels` table. API endpoints for CRUD.                                                                                                   |
-| 0.5 | **Inference framework skeleton** | `ModelClient` protocol + `build_model_client()` factory. Initially always routes to LLM provider.                                                                       |
-
-**Exit criteria:** We can measure current model accuracy. We can record analyst corrections. We can track LLM costs across the platform.
-
-### Phase 1: Data Collection (Sprints 3–4)
-
-**Goal:** Analysts start generating labeled data. Bootstrap datasets from existing records.
-
-| #   | Deliverable                      | Details                                                                                                      |
-| --- | -------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| 1.1 | **Classification correction UI** | Widget on case detail page: shows auto-classification per axis, allows override. Writes to `analyst_labels`. |
-| 1.2 | **Risk score override UI**       | Slider or input on case detail: shows computed risk score, allows analyst adjustment.                        |
-| 1.3 | **Bootstrap dataset export**     | CLI command to export existing DB records as training data (treat current classifications as ground truth).  |
-| 1.4 | **Dataset registry**             | GCS-based dataset storage with metadata table. Immutable snapshots. Train/eval/test split tooling.           |
-| 1.5 | **Baseline benchmarks**          | Run eval harness on bootstrap dataset. Document accuracy per axis as the number to beat.                     |
-
-**Exit criteria:** Analysts can correct classifications in the UI. We have a versioned dataset. We know exact accuracy of current few-shot approach.
-
-### Phase 2: Training Pipeline (Sprints 5–7)
-
-**Goal:** End-to-end training pipeline works. First custom model (even if it doesn't beat few-shot).
-
-| #   | Deliverable                           | Details                                                                                                      |
-| --- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| 2.1 | **Experiment tracking**               | W&B or MLflow integration. Every training run logged with hyperparams, metrics, artifacts.                   |
-| 2.2 | **Classification fine-tuning script** | Fine-tune a small model (e.g., Gemma 2B or Mistral 7B) on bootstrap classification data.                     |
-| 2.3 | **Model registry**                    | GCS-based artifact store. Stage management (dev → staging → prod). `i4g ml register-model` CLI.              |
-| 2.4 | **Shadow mode**                       | Run custom model alongside Gemini. Both predict, only Gemini output shown to analysts. Compare accuracy.     |
-| 2.5 | **Evaluation pipeline**               | Automated: on model registration, run eval suite against frozen test set. Block promotion if accuracy drops. |
-
-**Exit criteria:** We have trained a custom model. It's running in shadow mode. We can compare its accuracy to the production LLM.
-
-### Phase 3: Serving & Optimization (Sprints 8–10)
-
-**Goal:** Custom models serve real traffic. A/B testing validates improvements.
-
-| #   | Deliverable                        | Details                                                                                                                       |
-| --- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 3.1 | **A/B testing framework**          | Case-ID-based traffic splitting. Outcome tracking (analyst corrections as ground truth). Statistical significance calculator. |
-| 3.2 | **Custom model deployment**        | Vertex AI Endpoints (cloud) or Cloud Run (lightweight). Auto-scaling, health checks.                                          |
-| 3.3 | **Model promotion workflow**       | Shadow → A/B → canary → full rollout. Requires eval gate + human approval.                                                    |
-| 3.4 | **OCR upgrade**                    | Document AI integration with Tesseract fallback. A/B test on extraction accuracy.                                             |
-| 3.5 | **Embedding evaluation & upgrade** | Evaluate cloud embeddings (text-embedding-005) vs. current Ollama. Benchmark on search relevance.                             |
-| 3.6 | **Confidence calibration**         | Calibration curve from analyst corrections. Apply scaling to raw confidence scores.                                           |
-
-**Exit criteria:** Custom model serves a percentage of production traffic. A/B tests prove it matches or exceeds LLM accuracy. Calibrated confidence scores.
-
-### Phase 4: Advanced Capabilities (Sprints 11+, Long-Term)
-
-**Goal:** New ML-powered features enabled by infrastructure maturity.
-
-| #   | Deliverable                 | Details                                                                                            |
-| --- | --------------------------- | -------------------------------------------------------------------------------------------------- |
-| 4.1 | **Case auto-summarization** | LLM-generated summaries for analyst queue. Quality-gated by report quality feedback.               |
-| 4.2 | **Duplicate detection**     | Embedding similarity pipeline on case ingestion. Threshold-based alerting.                         |
-| 4.3 | **Predictive escalation**   | Supervised model on case features → escalation probability. Requires disposition labels (Phase 1). |
-| 4.4 | **Image similarity**        | Screenshot embeddings (CLIP/SigLIP) for brand impersonation detection across scam sites.           |
-| 4.5 | **Custom NER model**        | Fine-tuned entity extractor on analyst-corrected entities. Lower latency than LLM-based NER.       |
-| 4.6 | **Drift monitoring**        | Automated detection of distribution shifts in inputs and outputs. Triggers re-training.            |
+| PRD                              | Scope                                                                                              | Priority                                            |
+| -------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| **ML Infrastructure & Pipeline** | Eval harness, cost tracking, prompt versioning, model registry, inference framework, label storage | **Immediate** — `planning/prd_ml_infrastructure.md` |
+| **Analyst Feedback Loop**        | Classification correction UI, risk score override, entity correction, label export                 | **Next**                                            |
+| **Custom Model Training**        | Training pipeline, experiment tracking, shadow mode, eval pipeline                                 | After data collection                               |
+| **A/B Testing & Model Serving**  | Traffic splitting, outcome tracking, Vertex AI Endpoints, promotion workflow                       | After first custom model                            |
+| **OCR Modernization**            | Document AI integration, accuracy benchmarking, Tesseract fallback                                 | Can run in parallel                                 |
+| **Advanced ML Capabilities**     | Summarization, dedup, predictive escalation, image similarity                                      | Long-term                                           |
 
 ---
 
-## 9. Immediate Priorities: What to Build Right Now
-
-Given current resources and constraints, the **two most impactful tracks** are:
-
-### Track A: ML Infrastructure (PRD candidate)
-
-Build the skeleton that every future ML capability depends on:
-
-1. **Evaluation harness** — without measurement, every improvement is a guess
-2. **Label storage** — without feedback, we'll never have training data
-3. **Inference framework** — without abstraction, switching models is a code change
-4. **Cost tracking** — without visibility, we can't optimize spend
-
-This is Phase 0 above. It touches core only, no UI changes, and can ship incrementally.
-
-### Track B: Analyst Feedback Loop (PRD candidate)
-
-The highest-leverage data collection mechanism:
-
-1. **Classification correction widget** in the case detail UI
-2. **Risk score override** in the case detail UI
-3. Backend writes to `analyst_labels` table
-4. Export pipeline to create training datasets from corrections
-
-This is Phase 1 items 1.1–1.3. It requires coordinated core + UI work.
-
-### Sequencing
-
-```
-Sprint 1–2:  Track A (infrastructure)
-Sprint 3–4:  Track B (data collection) — depends on label storage from Track A
-Sprint 5+:   Training pipeline, shadow mode, A/B testing
-```
-
----
-
-## 10. Risk Assessment
+## 9. Risk Assessment
 
 | Risk                          | Impact                                                    | Mitigation                                                                                                                         |
 | ----------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -476,7 +278,7 @@ Sprint 5+:   Training pipeline, shadow mode, A/B testing
 
 ---
 
-## 11. Success Metrics
+## 10. Success Metrics
 
 | Metric                             | Phase 0 Target                | Phase 2 Target          | Phase 3 Target                         |
 | ---------------------------------- | ----------------------------- | ----------------------- | -------------------------------------- |
@@ -489,7 +291,7 @@ Sprint 5+:   Training pipeline, shadow mode, A/B testing
 
 ---
 
-## 12. Technical Decisions & Open Questions
+## 11. Technical Decisions & Open Questions
 
 ### Decided
 
@@ -506,19 +308,6 @@ Sprint 5+:   Training pipeline, shadow mode, A/B testing
 3. **Real-time vs. batch inference?** Current classification is synchronous (on ingestion). Custom models may have different latency profiles. Do we need a batch fallback?
 4. **Privacy constraints on training data?** Can case narratives (which contain victim PII) be used for training? May need anonymization pipeline before export.
 5. **Partner data sharing?** Could law enforcement partners contribute labeled data? Legal and privacy framework needed before this is feasible.
-
----
-
-## 13. PRDs to Produce from This Strategy
-
-| PRD                              | Scope                                                                                              | Source sections          | Priority                 |
-| -------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------ | ------------------------ |
-| **ML Infrastructure & Pipeline** | Eval harness, cost tracking, prompt versioning, model registry, inference framework, label storage | §6 (all), §7, §8 Phase 0 | **Immediate**            |
-| **Analyst Feedback Loop**        | Classification correction UI, risk score override, entity correction, label export                 | §5, §8 Phase 1           | **Next**                 |
-| **Custom Model Training**        | Training pipeline, experiment tracking, shadow mode, eval pipeline                                 | §8 Phase 2               | After data collection    |
-| **A/B Testing & Model Serving**  | Traffic splitting, outcome tracking, Vertex AI Endpoints, promotion workflow                       | §8 Phase 3               | After first custom model |
-| **OCR Modernization**            | Document AI integration, accuracy benchmarking, Tesseract fallback                                 | §3.1                     | Can run in parallel      |
-| **Advanced ML Capabilities**     | Summarization, dedup, predictive escalation, image similarity                                      | §4, §8 Phase 4           | Long-term                |
 
 ---
 
