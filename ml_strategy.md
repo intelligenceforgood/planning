@@ -217,22 +217,22 @@ This table becomes the **single source of truth** for all human feedback. Every 
 
 ---
 
-## 6. ML Infrastructure & Inference Framework (Summary)
+## 6. ML Platform Architecture (Summary)
 
-The ML platform must support the full lifecycle — from data collection through training, evaluation, deployment, serving, and monitoring — with a feedback loop from analyst corrections back into the pipeline.
+The ML Platform is a **standalone system** — separate codebase (`ml/`), separate GCP project (`i4g-ml`) — that i4g consumes as an external service through REST APIs. It is not embedded in core's business logic layer.
 
 The platform has four layers:
 
-- **Data layer** — label database (analyst corrections), dataset registry (versioned JSONL snapshots), feature store, and export pipeline for train/eval/test splits
-- **Training layer** — experiment tracking (W&B or MLflow), reproducible training pipelines, evaluation suite with golden test sets, and baseline benchmarks of current few-shot performance
-- **Serving layer** — model registry (GCS artifacts with stage management), unified inference framework (`ModelClient` protocol that transparently routes to LLM API or custom model), A/B traffic router, and shadow mode for risk-free comparison
-- **Monitoring** — accuracy tracking (model vs. analyst labels), cost dashboard (per-capability attribution), drift detection (distribution shift alerts), and latency tracking
+- **Data layer** — ETL pipelines (i4g Cloud SQL → BigQuery), feature engineering (BigQuery SQL + Spark), versioned dataset management, data quality validation, PII redaction
+- **Training layer** — Vertex AI Training (multi-framework: PyTorch, TF, XGBoost, Spark ML, HuggingFace), Vertex AI Pipelines (orchestration), Vertex AI Experiments + TensorBoard, Vertex AI Workbench (notebooks), hyperparameter tuning (Vizier)
+- **Serving layer** — Vertex AI Endpoints (auto-scaling, scale-to-zero), prediction logging (features + model version + result → BigQuery), outcome logging (analyst corrections), batch prediction
+- **Monitoring & continuous learning** — Vertex AI Model Monitoring (drift, skew), accuracy tracking (predictions vs outcomes), cost attribution, automated retraining triggers
 
-The **inference framework** is designed so application code (classifier, NER, RAG) doesn't know or care whether it's calling a Gemini API or a custom fine-tuned model. A `build_model_client(capability=...)` factory checks the model registry, applies A/B routing policy, and falls back to the LLM provider.
+Integration with i4g is through a thin `MLPlatformClient` HTTP client in core that calls prediction endpoints and sends feedback. A `build_inference_client()` factory routes to the ML platform or falls back to LLM.
 
-Custom models can be served via Vertex AI Endpoints (production), Cloud Run + FastAPI (lightweight), or Ollama (local testing).
-
-> **Full details:** See `planning/prd_ml_infrastructure.md` for component designs, phased delivery plan, architecture decisions, and sprint-level deliverables.
+> **Full details:** See `planning/prd_ml_infrastructure.md` for platform architecture, GCP resource design, integration contracts, and phased delivery.
+>
+> **Technical design:** See [ML Platform TDD](../core/docs/design/ml_infrastructure_tdd.md) for BigQuery schemas, pipeline specifications, Terraform modules, API contracts, and implementation details.
 
 ---
 
@@ -254,14 +254,14 @@ Each phase has explicit exit criteria before the next begins. Few-shot prompting
 
 ## 8. PRDs from This Strategy
 
-| PRD                              | Scope                                                                                              | Priority                                            |
-| -------------------------------- | -------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| **ML Infrastructure & Pipeline** | Eval harness, cost tracking, prompt versioning, model registry, inference framework, label storage | **Immediate** — `planning/prd_ml_infrastructure.md` |
-| **Analyst Feedback Loop**        | Classification correction UI, risk score override, entity correction, label export                 | **Next**                                            |
-| **Custom Model Training**        | Training pipeline, experiment tracking, shadow mode, eval pipeline                                 | After data collection                               |
-| **A/B Testing & Model Serving**  | Traffic splitting, outcome tracking, Vertex AI Endpoints, promotion workflow                       | After first custom model                            |
-| **OCR Modernization**            | Document AI integration, accuracy benchmarking, Tesseract fallback                                 | Can run in parallel                                 |
-| **Advanced ML Capabilities**     | Summarization, dedup, predictive escalation, image similarity                                      | Long-term                                           |
+| PRD                             | Scope                                                                                                        | Priority                                            |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------- |
+| **ML Platform**                 | Standalone ML platform: data pipelines, training (multi-framework), serving, monitoring, continuous learning | **Immediate** — `planning/prd_ml_infrastructure.md` |
+| **Analyst Feedback Loop**       | Classification correction UI, risk score override, entity correction, label export                           | **Next**                                            |
+| **Custom Model Training**       | Training pipeline, experiment tracking, shadow mode, eval pipeline                                           | After data collection                               |
+| **A/B Testing & Model Serving** | Traffic splitting, outcome tracking, Vertex AI Endpoints, promotion workflow                                 | After first custom model                            |
+| **OCR Modernization**           | Document AI integration, accuracy benchmarking, Tesseract fallback                                           | Can run in parallel                                 |
+| **Advanced ML Capabilities**    | Summarization, dedup, predictive escalation, image similarity                                                | Long-term                                           |
 
 ---
 

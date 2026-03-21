@@ -1,6 +1,21 @@
 # Planning Change Log (active items only)
 
-Last updated: 18 Mar 2026
+Last updated: 20 Mar 2026
+
+## 2026-03-20 — ML Platform: Architecture Redesign (PRD v3 + TDD v2)
+
+Rewrote [ML Platform PRD](prd_ml_infrastructure.md) and [ML Platform TDD](../core/docs/design/ml_infrastructure_tdd.md) as a **standalone ML platform** — separate codebase (`ml/`), separate GCP project (`i4g-ml`), API-driven integration with i4g.
+
+- ML platform is an external service that i4g consumes (like Gemini), not code embedded in core
+- GCP-native stack: Vertex AI (Training, Pipelines, Endpoints, Model Registry, Experiments, Workbench, Model Monitoring), BigQuery, Cloud Storage
+- Pipeline orchestration: Vertex AI Pipelines (zero baseline cost), not Airflow/Prefect
+- Single `i4g-ml` GCP project with dev + prod serving endpoints
+- Full data platform: ETL pipelines, BigQuery warehouse, feature engineering, prediction/outcome logging
+- Multi-framework training: PyTorch, TensorFlow, XGBoost, Spark ML, HuggingFace
+- Continuous learning loop: predictions → outcomes → retraining
+- Four-phase delivery: Foundation → Data Maturity → Training Maturity → Advanced Capabilities
+
+**Next step:** Create `ml/` repo and `i4g-ml` GCP project to begin Phase 0.
 
 ## 2026-03-18 — PII Vault Simplification: Sprint 3 (Documentation Cleanup)
 
