@@ -1505,3 +1505,11 @@ Executed Phase 0, Phase 1, Phase 2.3 / 2.4, and Phase 5 of the doc revamp sprint
 - Created `docs/book/guides/admin/index.md` — Admin Guide landing page linking CLI, Scheduled Reports, Partner Feed
 - Fixed `docs/book/SUMMARY.md` — Admin Guide entry now links to `guides/admin/index.md` (was bare text, no file path)
 - All other SUMMARY.md page references verified: all files exist across overview/, guides/, architecture/, api/, ssi/, security/
+
+## 2026-03-21 — ML Platform Phase 0, Sprint 1
+
+- **infra/** — New Terraform modules: `modules/bigquery/dataset/`, `modules/vertex_ai/endpoint/`. Stack `stacks/ml/` composing BigQuery dataset (9 tables), Vertex AI endpoints (dev + prod), GCS bucket, service account, cross-project IAM. Environment `environments/ml/`. Bootstrap script `bootstrap/create_ml_project.sh`.
+- **ml/** — New repository scaffold: `src/ml/` package with data, training, serving, registry, monitoring sub-packages. `TrainingConfig` + `FeatureDefinition` Pydantic models with unit tests. Config system (`ml.config.get_settings()`).
+- **core/** — `analyst_labels` Alembic migration (FK → cases, indexed). `MlPlatformSettings` section with `inference_backend`, `platform_base_url`, `platform_auth_method`, `fallback_to_llm`. `MLPlatformClient` async httpx client. `build_inference_client()` factory routing. Unit tests for settings + factory.
+- **docs/** — Settings manifest updated with `ml.*` fields.
+- **planning/** — Task plan `tasks/ml_platform_phase0.md` with Sprint 1 tasks checked off.
