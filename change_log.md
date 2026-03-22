@@ -1,6 +1,47 @@
 # Planning Change Log (active items only)
 
-Last updated: 20 Mar 2026
+Last updated: 22 Mar 2026
+
+## 2026-03-22 — ML Platform: Phase 0 Complete
+
+Completed all 68 tasks across 2 sprints. The ML platform is end-to-end functional: data pipeline, training pipeline, model serving, and prediction logging all operational on `i4g-ml` GCP project.
+
+**Repos affected:** `ml/`, `core/`, `infra/`, `planning/`
+
+**Infrastructure (infra/):**
+
+- Terraform modules: `bigquery/dataset`, `vertex_ai/endpoint` — composed in `stacks/ml/`
+- GCP resources: BigQuery dataset (`i4g_ml` with 9 tables), Vertex AI Endpoints (`serving-dev`, `serving-prod`), GCS bucket, Artifact Registry, Cloud Run Job (`etl-ingest`)
+- Cross-project IAM: `sa-ml-platform` → `i4g-dev` (Cloud SQL reader), `sa-core` → `i4g-ml` (Vertex AI user)
+
+**ML Platform (ml/):**
+
+- ETL pipeline: watermark-based incremental sync from Cloud SQL → BigQuery `raw.*` tables
+- Feature engineering: BigQuery SQL view `v_case_features` + scheduled materialization
+- Dataset management: stratified split, validation, JSONL export to GCS, golden test set
+- Evaluation harness: per-axis P/R/F1, weighted overall, eval gate for promotion
+- Training containers: PyTorch (Gemma 2B + LoRA), XGBoost, serving (FastAPI)
+- KFP v2 training pipeline: prepare → train → evaluate → register → deploy
+- Model registry: stage transitions (experimental → candidate → champion)
+- Serving: `/predict/classify` (Vertex AI + direct format), `/feedback`, `/health`
+- Prediction + outcome logging to BigQuery (fire-and-forget)
+- Evaluation notebook: `notebooks/evaluation/classification_eval.ipynb` — metrics table, F1 bar chart, confusion matrices, baseline comparison
+
+**Core Integration (core/):**
+
+- `analyst_labels` Alembic migration with FK → cases, indexes
+- `MLPlatformClient` async httpx client (`classify`, `send_feedback`)
+- `build_inference_client()` factory: routes to ML platform or LLM based on settings
+- `[ml]` settings section: `inference_backend`, `platform_base_url`, `platform_auth_method`, `fallback_to_llm`
+- Unit tests: 5/5 passing (settings, factory, both backends)
+
+**Deferred to Phase 1:**
+
+- `/feedback` e2e test: Vertex AI predict route only proxies `/predict`; needs Cloud Run service fronting container
+- Core → Vertex AI integration test: same blocking issue; `MLPlatformClient` unit-tested against direct HTTP format
+- Real model training: stub model returns UNKNOWN; evaluation notebook skeleton ready for real metrics
+
+**Next step:** Phase 1 — train a real Gemma 2B + LoRA model on labeled data, deploy Cloud Run service for direct HTTP access, integrate Core → ML platform end-to-end.
 
 ## 2026-03-20 — ML Platform: Architecture Redesign (PRD v3 + TDD v2)
 

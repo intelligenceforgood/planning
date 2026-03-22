@@ -106,7 +106,7 @@ resource "google_storage_bucket" "ml_data" {
 resource "google_artifact_registry_repository" "ml_containers" {
   project       = var.project_id
   location      = var.region
-  repository_id = "ml-containers"
+  repository_id = "containers"
   format        = "DOCKER"
   description   = "Training and serving container images for ML platform"
 }
@@ -216,22 +216,13 @@ PARTITION BY DATE(_ingested_at)
 CLUSTER BY case_id;
 ```
 
-### raw_classification_results
+### ~~raw_classification_results~~ (REMOVED)
 
-```sql
-CREATE TABLE IF NOT EXISTS `i4g-ml.i4g_ml.raw_classification_results` (
-  result_id       STRING NOT NULL,
-  case_id         STRING NOT NULL,
-  axis            STRING NOT NULL,    -- INTENT, CHANNEL, etc.
-  label_code      STRING NOT NULL,    -- INTENT.ROMANCE, etc.
-  confidence      FLOAT64,
-  model_used      STRING,             -- gemini-2.5-flash, etc.
-  prompt_version  STRING,
-  created_at      TIMESTAMP,
-  _ingested_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP()
-)
-PARTITION BY DATE(_ingested_at)
-CLUSTER BY case_id, axis;
+> `classification_result` is a JSON column on the `cases` table, not a separate table.
+> Classification features are extracted from `raw_cases.classification_result` in the feature view.
+
+```
+(no BigQuery table — data lives in raw_cases.classification_result)
 ```
 
 ### raw_entities
@@ -383,14 +374,8 @@ TABLE_CONFIGS = [
         "source_table": "cases",
         "target_table": "raw_cases",
         "watermark_column": "updated_at",
-        "columns": ["id", "narrative", "case_type", "status", "created_at", "updated_at"],
-    },
-    {
-        "source_table": "classification_results",
-        "target_table": "raw_classification_results",
-        "watermark_column": "created_at",
-        "columns": ["id", "case_id", "axis", "label_code", "confidence",
-                     "model_used", "prompt_version", "created_at"],
+        "columns": ["case_id", "narrative", "case_type", "status",
+                     "classification_result", "created_at", "updated_at"],
     },
     {
         "source_table": "entities",
@@ -457,14 +442,17 @@ case_entities AS (
   FROM `i4g-ml.i4g_ml.raw_entities`
   GROUP BY case_id
 ),
+-- Classification features extracted from raw_cases.classification_result JSON
 case_classifications AS (
   SELECT
     case_id,
-    COUNT(DISTINCT axis) AS classification_axis_count,
-    ARRAY_AGG(STRUCT(axis, label_code, confidence)
-              ORDER BY created_at DESC LIMIT 1)[OFFSET(0)] AS latest
-  FROM `i4g-ml.i4g_ml.raw_classification_results`
-  GROUP BY case_id
+    (SELECT COUNT(DISTINCT axis) FROM UNNEST(['intent','channel','techniques','actions','persona']) AS axis
+     WHERE JSON_EXTRACT(classification_result, CONCAT('$.', axis)) IS NOT NULL
+       AND ARRAY_LENGTH(JSON_EXTRACT_ARRAY(classification_result, CONCAT('$.', axis))) > 0
+    ) AS classification_axis_count,
+    CAST(JSON_EXTRACT_SCALAR(classification_result, '$.risk_score') AS FLOAT64) / 100.0 AS current_classification_conf
+  FROM `i4g-ml.i4g_ml.raw_cases`
+  WHERE classification_result IS NOT NULL
 )
 SELECT
   t.case_id,
@@ -832,7 +820,7 @@ def register_model(
         display_name=model_id,
         artifact_uri=model_artifact_uri,
         serving_container_image_uri=(
-            f"{region}-docker.pkg.dev/{project}/ml-containers/serve:latest"
+            f"{region}-docker.pkg.dev/{project}/containers/serve:latest"
         ),
         labels={"stage": "experimental", "capability": "classification"},
     )
@@ -1493,7 +1481,7 @@ module "ml_bigquery" {
 resource "google_artifact_registry_repository" "ml_containers" {
   project       = var.project_id
   location      = var.region
-  repository_id = "ml-containers"
+  repository_id = "containers"
   format        = "DOCKER"
 }
 
@@ -1520,30 +1508,25 @@ module "serving_prod" {
 # ----- Cloud Run Job (ETL — data ingestion) -----
 
 resource "google_cloud_run_v2_job" "ml_etl_ingest" {
-  name     = "ml-etl-ingest"
+  name     = "etl-ingest"
   project  = var.project_id
   location = var.region
 
   template {
     template {
       containers {
-        image = "${var.region}-docker.pkg.dev/${var.project_id}/ml-containers/etl:latest"
+        image = "${var.region}-docker.pkg.dev/${var.project_id}/containers/etl:latest"
         env {
-          name  = "BQ_PROJECT"
-          value = var.project_id
+          name  = "I4G_ML_ETL__SOURCE_INSTANCE"
+          value = var.source_cloudsql_instance
         }
         env {
-          name  = "BQ_DATASET"
-          value = "i4g_ml"
+          name  = "I4G_ML_ETL__SOURCE_DB_NAME"
+          value = var.source_db_name
         }
         env {
-          name = "SOURCE_DB_CONNECTION"
-          value_source {
-            secret_key_ref {
-              secret  = google_secret_manager_secret.source_db_connection.secret_id
-              version = "latest"
-            }
-          }
+          name  = "I4G_ML_ETL__SOURCE_DB_USER"
+          value = "sa-ml-platform@${var.project_id}.iam"
         }
         resources {
           limits = {
@@ -1561,14 +1544,14 @@ resource "google_cloud_run_v2_job" "ml_etl_ingest" {
 # ----- Cloud Scheduler (ETL trigger) -----
 
 resource "google_cloud_scheduler_job" "ml_etl_daily" {
-  name      = "ml-etl-daily"
+  name      = "etl-daily"
   project   = var.project_id
   region    = var.region
   schedule  = "0 2 * * *"   # Daily at 2 AM UTC
   time_zone = "UTC"
 
   http_target {
-    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/ml-etl-ingest:run"
+    uri         = "https://${var.region}-run.googleapis.com/apis/run.googleapis.com/v1/namespaces/${var.project_id}/jobs/etl-ingest:run"
     http_method = "POST"
     oauth_token {
       service_account_email = google_service_account.sa_ml.email
@@ -1580,7 +1563,7 @@ resource "google_cloud_scheduler_job" "ml_etl_daily" {
 
 resource "google_service_account" "sa_ml" {
   project      = var.project_id
-  account_id   = "sa-ml"
+  account_id   = "sa-ml-platform"
   display_name = "ML Platform Service Account"
 }
 ```
@@ -1620,7 +1603,7 @@ resource "google_project_iam_member" "sa_ml_roles" {
 resource "google_project_iam_member" "ml_cloudsql_client" {
   project = "i4g-dev"
   role    = "roles/cloudsql.client"
-  member  = "serviceAccount:sa-ml@i4g-ml.iam.gserviceaccount.com"
+  member  = "serviceAccount:sa-ml-platform@i4g-ml.iam.gserviceaccount.com"
 }
 
 # In infra/stacks/ml/main.tf
