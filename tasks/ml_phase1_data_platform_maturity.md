@@ -95,10 +95,10 @@ Wire up the full Core → ML Platform prediction flow, deferred from Phase 0.
 
 Verify and harden the full feedback data flow: Analyst → Core → ML Platform → BigQuery.
 
-- [ ] **2.1.1** E2E test: `POST /feedback` with prediction_id → verify row appears in `predictions_outcome_log` BigQuery table
-- [ ] **2.1.2** Verify `outcome_log` join with `prediction_log` produces correct analyst-override-rate metrics
-- [ ] **2.1.3** Add retry/dead-letter for failed BigQuery writes in `serving/logging.py` (currently fire-and-forget)
-- [ ] **2.1.4** Add Cloud Monitoring alert: outcome logging failure rate > 5%
+- [x] **2.1.1** E2E test: `POST /feedback` with prediction_id → verify row appears in `predictions_outcome_log` BigQuery table
+- [x] **2.1.2** Verify `outcome_log` join with `prediction_log` produces correct analyst-override-rate metrics
+- [x] **2.1.3** Add retry/dead-letter for failed BigQuery writes in `serving/logging.py` (currently fire-and-forget)
+- [x] **2.1.4** Add Cloud Monitoring alert: outcome logging failure rate > 5%
 
 **Repos:** `ml/`
 **Depends on:** 1.1 (Cloud Run service exposing `/feedback`)
@@ -107,11 +107,11 @@ Verify and harden the full feedback data flow: Analyst → Core → ML Platform 
 
 Wire `pii.py` (already implemented) into the dataset creation pipeline so training data is redacted.
 
-- [ ] **2.2.1** Call `redact_pii()` on case narrative text during `create_dataset_version()` before writing JSONL
-- [ ] **2.2.2** Add `redacted: bool` field to dataset registry metadata
-- [ ] **2.2.3** Unit test: dataset export produces redacted text (emails, phones, SSNs replaced)
-- [ ] **2.2.4** Validate: exported JSONL contains no raw PII patterns (regex scan)
-- [ ] **2.2.5** Update `ml/docs/design/architecture.md` to document PII handling in data flow
+- [x] **2.2.1** Call `redact_pii()` on case narrative text during `create_dataset_version()` before writing JSONL
+- [x] **2.2.2** Add `redacted: bool` field to dataset registry metadata
+- [x] **2.2.3** Unit test: dataset export produces redacted text (emails, phones, SSNs replaced)
+- [x] **2.2.4** Validate: exported JSONL contains no raw PII patterns (regex scan)
+- [x] **2.2.5** Update `ml/docs/design/architecture.md` to document PII handling in data flow
 
 **Repos:** `ml/`
 
@@ -119,13 +119,13 @@ Wire `pii.py` (already implemented) into the dataset creation pipeline so traini
 
 Build pipeline to re-export training datasets incorporating new analyst corrections.
 
-- [ ] **2.3.1** Extend `create_dataset_version()` to JOIN `raw_analyst_labels` as ground truth labels (prefer analyst labels over bootstrap LLM labels when both exist)
-- [ ] **2.3.2** Add label source priority: `analyst` > `llm_bootstrap` — track `label_source` in JSONL records
-- [ ] **2.3.3** Add `data-refresh-pipeline` KFP pipeline or Cloud Scheduler → Cloud Run Job: ETL refresh → feature re-materialization → dataset re-export (new version)
-- [ ] **2.3.4** Dataset version auto-increment: query registry for latest version, create v(N+1)
-- [ ] **2.3.5** Validation gate: new dataset must pass min_samples and class_balance checks
-- [ ] **2.3.6** Unit test: dataset with mixed label sources correctly prioritizes analyst labels
-- [ ] **2.3.7** Cloud Scheduler trigger: weekly dataset refresh (e.g., Sunday 4 AM UTC)
+- [x] **2.3.1** Extend `create_dataset_version()` to JOIN `raw_analyst_labels` as ground truth labels (prefer analyst labels over bootstrap LLM labels when both exist)
+- [x] **2.3.2** Add label source priority: `analyst` > `llm_bootstrap` — track `label_source` in JSONL records
+- [x] **2.3.3** Add `data-refresh-pipeline` KFP pipeline or Cloud Scheduler → Cloud Run Job: ETL refresh → feature re-materialization → dataset re-export (new version)
+- [x] **2.3.4** Dataset version auto-increment: query registry for latest version, create v(N+1)
+- [x] **2.3.5** Validation gate: new dataset must pass min_samples and class_balance checks
+- [x] **2.3.6** Unit test: dataset with mixed label sources correctly prioritizes analyst labels
+- [x] **2.3.7** Cloud Scheduler trigger: weekly dataset refresh (e.g., Sunday 4 AM UTC)
 
 **Repos:** `ml/`, `infra/` (scheduler)
 **Depends on:** 2.1 (outcomes must be flowing to BigQuery)
@@ -134,11 +134,11 @@ Build pipeline to re-export training datasets incorporating new analyst correcti
 
 The XGBoost training container exists but isn't fully integrated into the pipeline.
 
-- [ ] **2.4.1** Add XGBoost training config YAML: `pipelines/configs/classification_xgboost.yaml`
-- [ ] **2.4.2** Verify `train_model` pipeline component works with XGBoost container URI
-- [ ] **2.4.3** Test: submit training pipeline with XGBoost config, verify end-to-end (train → eval → register)
-- [ ] **2.4.4** Compare XGBoost vs PyTorch results on same dataset (notebook or script)
-- [ ] **2.4.5** Document framework selection criteria in `ml/docs/design/architecture.md`
+- [x] **2.4.1** Add XGBoost training config YAML: `pipelines/configs/classification_xgboost.yaml`
+- [x] **2.4.2** Verify `train_model` pipeline component works with XGBoost container URI
+- [x] **2.4.3** Test: submit training pipeline with XGBoost config, verify end-to-end (train → eval → register)
+- [x] **2.4.4** Compare XGBoost vs PyTorch results on same dataset (notebook or script)
+- [x] **2.4.5** Document framework selection criteria in `ml/docs/design/architecture.md`
 
 **Repos:** `ml/`
 **Depends on:** 1.3 (evaluate step must be un-stubbed)
@@ -243,6 +243,6 @@ Per PRD §12 Phase 2:
 | Sprint                                | Tasks              | Status      |
 | ------------------------------------- | ------------------ | ----------- |
 | Sprint 1 — Cloud Run + Real Inference | 1.1–1.4 (22 tasks) | Complete    |
-| Sprint 2 — Feedback + PII + Data      | 2.1–2.4 (21 tasks) | Not started |
+| Sprint 2 — Feedback + PII + Data      | 2.1–2.4 (21 tasks) | Complete    |
 | Sprint 3 — Monitoring + Prod          | 3.1–3.4 (22 tasks) | Not started |
 | **Total**                             | **65 tasks**       |             |
