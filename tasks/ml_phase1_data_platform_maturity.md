@@ -36,12 +36,12 @@ Phase 0 shipped a skeleton with these known gaps:
 Deploy the serving container as a Cloud Run service (not just behind Vertex AI Endpoint) so all routes
 (`/predict/classify`, `/feedback`, `/health`) are directly accessible over HTTP.
 
-- [ ] **1.1.1** Add Cloud Run service module to `infra/modules/run/` (or reuse existing) for the serving container
-- [ ] **1.1.2** Add Cloud Run service to `infra/stacks/ml/main.tf` — container from Artifact Registry, env vars (`MODEL_ARTIFACT_URI`, `GOOGLE_CLOUD_PROJECT`, BigQuery settings), auth via IAM
-- [ ] **1.1.3** Add Cloud Scheduler trigger for health check (optional — or rely on Cloud Run health probe)
-- [ ] **1.1.4** Update `infra/environments/ml/` tfvars if needed
-- [ ] **1.1.5** Deploy: `terraform apply` in `environments/ml/`
-- [ ] **1.1.6** Smoke test: `curl <service-url>/health` returns model info
+- [x] **1.1.1** Add Cloud Run service module to `infra/modules/run/` (or reuse existing) for the serving container
+- [x] **1.1.2** Add Cloud Run service to `infra/stacks/ml/main.tf` — container from Artifact Registry, env vars (`MODEL_ARTIFACT_URI`, `GOOGLE_CLOUD_PROJECT`, BigQuery settings), auth via IAM
+- [x] **1.1.3** Add Cloud Scheduler trigger for health check (optional — or rely on Cloud Run health probe)
+- [x] **1.1.4** Update `infra/environments/ml/` tfvars if needed
+- [x] **1.1.5** Deploy: `terraform apply` in `environments/ml/`
+- [x] **1.1.6** Smoke test: `curl <service-url>/health` returns model info
 
 **Repos:** `infra/`
 **Risk:** Service account needs `aiplatform.user` + `bigquery.dataEditor` + `storage.objectViewer` roles.
@@ -50,13 +50,13 @@ Deploy the serving container as a Cloud Run service (not just behind Vertex AI E
 
 Replace the stub `classify_text()` with real model loading and inference.
 
-- [ ] **1.2.1** Implement `load_model()` in `predict.py` — detect model type (PyTorch vs XGBoost) from artifact contents, load weights + tokenizer / booster into `_MODEL_STATE`
-- [ ] **1.2.2** Implement PyTorch inference path in `classify_text()` — tokenize → forward pass → softmax → extract per-axis predictions with confidence
-- [ ] **1.2.3** Implement XGBoost inference path in `classify_text()` — extract tabular features → predict → map output indices to label codes
-- [ ] **1.2.4** Handle label schema loading — model artifact must include `label_map.json` mapping indices to taxonomy codes
-- [ ] **1.2.5** Add fallback: if model load fails at startup, log error and serve `503` on prediction routes (not crash)
-- [ ] **1.2.6** Unit tests: model loading (mock GCS), PyTorch inference (mock model), XGBoost inference (mock booster)
-- [ ] **1.2.7** Build and push updated serving container: `make build-serve-dev`
+- [x] **1.2.1** Implement `load_model()` in `predict.py` — detect model type (PyTorch vs XGBoost) from artifact contents, load weights + tokenizer / booster into `_MODEL_STATE`
+- [x] **1.2.2** Implement PyTorch inference path in `classify_text()` — tokenize → forward pass → softmax → extract per-axis predictions with confidence
+- [x] **1.2.3** Implement XGBoost inference path in `classify_text()` — extract tabular features → predict → map output indices to label codes
+- [x] **1.2.4** Handle label schema loading — model artifact must include `label_map.json` mapping indices to taxonomy codes
+- [x] **1.2.5** Add fallback: if model load fails at startup, log error and serve `503` on prediction routes (not crash)
+- [x] **1.2.6** Unit tests: model loading (mock GCS), PyTorch inference (mock model), XGBoost inference (mock booster)
+- [x] **1.2.7** Build and push updated serving container: `make build-serve-dev`
 
 **Repos:** `ml/`
 **Risk:** PyTorch + Transformers add ~2GB to container image. Evaluate cold start time.
@@ -65,11 +65,11 @@ Replace the stub `classify_text()` with real model loading and inference.
 
 Replace the stubbed `evaluate_model` KFP component with real evaluation logic.
 
-- [ ] **1.3.1** `evaluate_model` component: download model artifact from GCS, load model, run inference on golden test set, compute per-axis P/R/F1 using existing `evaluation.py`
-- [ ] **1.3.2** Output metrics as KFP artifacts for Vertex AI Experiments tracking
-- [ ] **1.3.3** Eval gate check: compare candidate metrics against champion (uses `promotion.py` logic)
-- [ ] **1.3.4** Recompile pipeline: `python -m kfp.compiler ...` → update `pipeline.yaml`
-- [ ] **1.3.5** Test: submit pipeline with a known dataset, verify eval step runs real inference
+- [x] **1.3.1** `evaluate_model` component: download model artifact from GCS, load model, run inference on golden test set, compute per-axis P/R/F1 using existing `evaluation.py`
+- [x] **1.3.2** Output metrics as KFP artifacts for Vertex AI Experiments tracking
+- [x] **1.3.3** Eval gate check: compare candidate metrics against champion (uses `promotion.py` logic)
+- [x] **1.3.4** Recompile pipeline: `python -m kfp.compiler ...` → update `pipeline.yaml`
+- [x] **1.3.5** Test: submit pipeline with a known dataset, verify eval step runs real inference
 
 **Repos:** `ml/`
 **Depends on:** 1.2 (real inference must work for eval to produce real metrics)
@@ -78,11 +78,11 @@ Replace the stubbed `evaluate_model` KFP component with real evaluation logic.
 
 Wire up the full Core → ML Platform prediction flow, deferred from Phase 0.
 
-- [ ] **1.4.1** Update `core/config/settings.dev.toml` with Cloud Run service URL as `platform_base_url`
-- [ ] **1.4.2** Integration test: `MLPlatformClient.classify()` → Cloud Run service → real prediction
-- [ ] **1.4.3** Integration test: `MLPlatformClient.send_feedback()` → Cloud Run service → BigQuery `outcome_log`
-- [ ] **1.4.4** Verify `build_inference_client()` factory switches correctly between LLM and ML platform
-- [ ] **1.4.5** Document: deployment runbook for switching Core to ML platform inference
+- [x] **1.4.1** Update `core/config/settings.dev.toml` with Cloud Run service URL as `platform_base_url`
+- [x] **1.4.2** Integration test: `MLPlatformClient.classify()` → Cloud Run service → real prediction
+- [x] **1.4.3** Integration test: `MLPlatformClient.send_feedback()` → Cloud Run service → BigQuery `outcome_log`
+- [x] **1.4.4** Verify `build_inference_client()` factory switches correctly between LLM and ML platform
+- [x] **1.4.5** Document: deployment runbook for switching Core to ML platform inference
 
 **Repos:** `core/`, `ml/`
 **Depends on:** 1.1 (Cloud Run service deployed), 1.2 (real inference)
@@ -242,7 +242,7 @@ Per PRD §12 Phase 2:
 
 | Sprint                                | Tasks              | Status      |
 | ------------------------------------- | ------------------ | ----------- |
-| Sprint 1 — Cloud Run + Real Inference | 1.1–1.4 (22 tasks) | Not started |
+| Sprint 1 — Cloud Run + Real Inference | 1.1–1.4 (22 tasks) | Complete    |
 | Sprint 2 — Feedback + PII + Data      | 2.1–2.4 (21 tasks) | Not started |
 | Sprint 3 — Monitoring + Prod          | 3.1–3.4 (22 tasks) | Not started |
 | **Total**                             | **65 tasks**       |             |
