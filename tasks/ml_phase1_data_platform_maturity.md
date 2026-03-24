@@ -1,7 +1,8 @@
 # ML Platform — Phase 1: Data Platform Maturity
 
-> **Status:** In Progress
+> **Status:** Complete
 > **Start:** 2026-03-22
+> **Completed:** 2026-03-23
 > **PRD ref:** [prd_ml_infrastructure.md §12 Phase 1](../prd_ml_infrastructure.md)
 > **TDD ref:** [ml_infrastructure_tdd.md](../../ml/docs/design/ml_infrastructure_tdd.md)
 > **Phase 0 log:** [change_log.md 2026-03-22](../change_log.md)
@@ -151,11 +152,11 @@ The XGBoost training container exists but isn't fully integrated into the pipeli
 
 Implement `ml/src/ml/monitoring/accuracy.py` — the most critical monitoring capability.
 
-- [ ] **3.1.1** Implement `compute_accuracy_metrics()` — BigQuery query joining `prediction_log` + `outcome_log`, outputs per-model per-axis accuracy, override rate, F1
-- [ ] **3.1.2** Implement `materialize_performance()` — writes results to `analytics_model_performance` table
-- [ ] **3.1.3** Add Cloud Scheduler trigger: daily accuracy computation (5 AM UTC)
-- [ ] **3.1.4** Cloud Monitoring alert: override rate > 20% (warning), > 30% (critical)
-- [ ] **3.1.5** Unit test: accuracy computation with mock BigQuery results
+- [x] **3.1.1** Implement `compute_accuracy_metrics()` — BigQuery query joining `prediction_log` + `outcome_log`, outputs per-model per-axis accuracy, override rate, F1
+- [x] **3.1.2** Implement `materialize_performance()` — writes results to `analytics_model_performance` table
+- [x] **3.1.3** Add Cloud Scheduler trigger: daily accuracy computation (5 AM UTC)
+- [x] **3.1.4** Cloud Monitoring alert: override rate > 20% (warning), > 30% (critical)
+- [x] **3.1.5** Unit test: accuracy computation with mock BigQuery results
 
 **Repos:** `ml/`, `infra/` (scheduler + alert)
 
@@ -163,10 +164,10 @@ Implement `ml/src/ml/monitoring/accuracy.py` — the most critical monitoring ca
 
 Implement `ml/src/ml/monitoring/cost.py`.
 
-- [ ] **3.2.1** Implement `compute_cost_summary()` — query GCP billing export for Vertex AI + Cloud Run + BigQuery costs, aggregate by capability and component
-- [ ] **3.2.2** Implement `compare_to_llm_cost()` — per-prediction cost of ML platform vs LLM API (from Core usage logs)
-- [ ] **3.2.3** Add cost summary query to monitoring notebook or dashboard SQL
-- [ ] **3.2.4** Unit test with mock billing data
+- [x] **3.2.1** Implement `compute_cost_summary()` — query GCP billing export for Vertex AI + Cloud Run + BigQuery costs, aggregate by capability and component
+- [x] **3.2.2** Implement `compare_to_llm_cost()` — per-prediction cost of ML platform vs LLM API (from Core usage logs)
+- [x] **3.2.3** Add cost summary query to monitoring notebook or dashboard SQL
+- [x] **3.2.4** Unit test with mock billing data
 
 **Repos:** `ml/`
 
@@ -174,11 +175,11 @@ Implement `ml/src/ml/monitoring/cost.py`.
 
 Create the SQL queries and BigQuery scheduled queries for data observability.
 
-- [ ] **3.3.1** Scheduled query: label distribution per axis (daily)
-- [ ] **3.3.2** Scheduled query: ETL ingestion freshness (last ingest timestamp per table)
-- [ ] **3.3.3** Scheduled query: feature null rates and distribution stats
-- [ ] **3.3.4** Add queries to `ml/docs/design/monitoring.md`
-- [ ] **3.3.5** Create Looker Studio dashboard spec (or notebook equivalent)
+- [x] **3.3.1** Scheduled query: label distribution per axis (daily)
+- [x] **3.3.2** Scheduled query: ETL ingestion freshness (last ingest timestamp per table)
+- [x] **3.3.3** Scheduled query: feature null rates and distribution stats
+- [x] **3.3.4** Add queries to `ml/docs/design/monitoring.md`
+- [x] **3.3.5** Create Looker Studio dashboard spec (or notebook equivalent)
 
 **Repos:** `ml/`
 
@@ -186,13 +187,13 @@ Create the SQL queries and BigQuery scheduled queries for data observability.
 
 Deploy a real trained model to `serving-prod`.
 
-- [ ] **3.4.1** Train best-available model on latest dataset (PyTorch or XGBoost, whichever performs better)
-- [ ] **3.4.2** Promote to champion via promotion workflow
-- [ ] **3.4.3** Deploy champion to `serving-prod` Vertex AI Endpoint
-- [ ] **3.4.4** Deploy Cloud Run service for `serving-prod` (separate from dev)
-- [ ] **3.4.5** Update Core prod settings to point to prod ML endpoint
-- [ ] **3.4.6** E2E smoke test on prod: prediction + logging verified
-- [ ] **3.4.7** Set up monitoring alerts on prod endpoint latency and error rate
+- [x] **3.4.1** Train best-available model on latest dataset (PyTorch or XGBoost, whichever performs better)
+- [x] **3.4.2** Promote to champion via promotion workflow
+- [x] **3.4.3** Deploy champion to `serving-prod` Vertex AI Endpoint
+- [x] **3.4.4** Deploy Cloud Run service for `serving-prod` (separate from dev)
+- [x] **3.4.5** Update Core prod settings to point to prod ML endpoint
+- [x] **3.4.6** E2E smoke test on prod: prediction + logging verified
+- [x] **3.4.7** Set up monitoring alerts on prod endpoint latency and error rate
 
 **Repos:** `ml/`, `infra/`, `core/`
 **Depends on:** 1.2 (real inference), 3.1 (monitoring ready), all Sprint 1–2 work
@@ -240,9 +241,9 @@ Per PRD §12 Phase 2:
 
 ## Completion Tracking
 
-| Sprint                                | Tasks              | Status      |
-| ------------------------------------- | ------------------ | ----------- |
-| Sprint 1 — Cloud Run + Real Inference | 1.1–1.4 (22 tasks) | Complete    |
-| Sprint 2 — Feedback + PII + Data      | 2.1–2.4 (21 tasks) | Complete    |
-| Sprint 3 — Monitoring + Prod          | 3.1–3.4 (22 tasks) | Not started |
-| **Total**                             | **65 tasks**       |             |
+| Sprint                                | Tasks              | Status   |
+| ------------------------------------- | ------------------ | -------- |
+| Sprint 1 — Cloud Run + Real Inference | 1.1–1.4 (22 tasks) | Complete |
+| Sprint 2 — Feedback + PII + Data      | 2.1–2.4 (21 tasks) | Complete |
+| Sprint 3 — Monitoring + Prod          | 3.1–3.4 (22 tasks) | Complete |
+| **Total**                             | **65 tasks**       |          |
