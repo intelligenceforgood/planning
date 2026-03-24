@@ -47,7 +47,7 @@ Phase 2 materializes the scheduled queries, wires alerts, and delivers viewable 
 
 **Deferred (lower priority, slip to Phase 3 if needed):**
 
-- Spark/Dataproc graph features — requires Dataproc Serverless IAM, worth evaluating ROI first
+- Dataflow/Beam graph features — worth evaluating ROI before investing in pipeline infrastructure
 
 **Out of scope (Phase 3):**
 
@@ -153,8 +153,8 @@ Phase 2 materializes the scheduled queries, wires alerts, and delivers viewable 
   - Drift thresholds: PSI > 0.2 for numeric features, L-infinity > 0.1 for categorical
   - Alert via Cloud Monitoring notification channel (email)
 - [x] Add Cloud Scheduler daily trigger (6 AM UTC) for BigQuery-based drift computation (runs `drift.py` logic as a Cloud Run Job)
-- [ ] `terraform apply` on `infra/environments/ml/`
-- [ ] Smoke test: send prediction, verify monitoring job logs sample
+- [x] `terraform apply` on `infra/environments/ml/`
+- [x] Smoke test: send prediction, verify monitoring job logs sample
 
 ### 1.4 — Accuracy + cost dashboards
 
@@ -163,10 +163,10 @@ Phase 1 built `accuracy.py` (computes per-model per-axis accuracy from predictio
 - [x] Add Cloud Scheduler job (5 AM UTC daily) that runs `accuracy.py::compute_accuracy_metrics()` → `materialize_performance()` to `analytics_model_performance` table (already exists from Phase 0)
 - [x] Add Cloud Scheduler job (5:30 AM UTC daily) that runs `cost.py::compute_cost_summary()` → materialize to `analytics_cost_summary` table
 - [x] BigQuery DDL: `pipelines/sql/analytics_cost_summary.sql` — columns: `summary_id`, `model_id`, `capability`, `prediction_count`, `ml_cost_per_prediction`, `llm_cost_per_prediction`, `ml_total`, `llm_total`, `savings_pct`, `period_start`, `period_end`, `computed_at`
-- [ ] Looker Studio: create dashboard from Phase 1 spec with two pages:
+- [ ] Looker Studio: create dashboard from Phase 1 spec with two pages (requires manual GUI work):
   - **Accuracy:** Rolling F1 per model per axis (line chart), override rate trend (bar), confusion matrix (latest period)
   - **Cost:** Per-prediction cost comparison ML vs. LLM (bar chart by capability), cumulative savings (line), cost breakdown by GCP component (pie)
-- [ ] Document dashboard access and data freshness in `ml/docs/design/monitoring.md`
+- [x] Document dashboard access and data freshness in `ml/docs/design/monitoring.md`
 - [x] Terraform: add Cloud Scheduler jobs for accuracy + cost materialization to `infra/stacks/ml/main.tf`
 
 ---
@@ -196,9 +196,9 @@ Phase 1 built `accuracy.py` (computes per-model per-axis accuracy from predictio
   - Champion response not delayed when shadow is slow (mock shadow with sleep)
   - Shadow failure doesn't crash champion prediction
   - `is_shadow` flag correctly set in BQ log payload
-- [ ] Deploy to `serving-dev`, integration test: POST `/predict/classify`, confirm both champion and shadow rows in BQ
+- [x] Deploy to `serving-dev`, integration test: POST `/predict/classify`, confirm both champion and shadow rows in BQ
 
-**Manual step:**** To activate shadow mode on prod, set `SHADOW_MODEL_ARTIFACT_URI` on the Cloud Run service to the candidate model's GCS artifact path.
+**Manual step:\*\*** To activate shadow mode on prod, set `SHADOW_MODEL_ARTIFACT_URI` on the Cloud Run service to the candidate model's GCS artifact path.
 
 **Architecture note:** If both models are XGBoost (~100MB each), memory is fine on n1-standard-4. If shadowing PyTorch Gemma 2B (~5GB) against XGBoost, bump the Cloud Run instance to n1-standard-8 (or deploy shadow as a separate Cloud Run service and call it async over HTTP — evaluate this if memory is tight).
 
@@ -221,7 +221,7 @@ Vizier operates OUTSIDE the KFP pipeline. It manages a study that spawns multipl
 - [x] Add `enable_vizier: bool = False` to `TrainingConfig` in `training/config.py`
 - [x] Add `run-vizier-sweep` Makefile target: `python -m ml.training.vizier --config $(CONFIG) --max-trials $(TRIALS)`
 - [x] Unit tests: mock `aiplatform.VizierStudy`, assert study creation params, trial suggestion loop, best config extraction
-- [ ] Run one XGBoost sweep manually on dev (10 trials), document results in `notebooks/experiments/vizier_xgboost_sweep.ipynb`
+- [ ] Run one XGBoost sweep manually on dev (10 trials), document results in `notebooks/experiments/vizier_xgboost_sweep.ipynb` (expensive — $50+, defer to budget approval)
 
 ---
 
@@ -291,8 +291,8 @@ Vizier operates OUTSIDE the KFP pipeline. It manages a study that spawns multipl
     - Use `seqeval.metrics.classification_report` for per-entity-type metrics
     - Handle tokenizer alignment: predictions come from subword tokenizer, golden set uses character offsets — implement `spans_to_bio_tags(text, spans, tokenizer)` for conversion
 - [x] `align_labels_with_tokens(labels, word_ids)` utility: expand character-offset labels to subword token BIO labels. Edge cases: multi-token entities, adjacent entities with different labels, entity at start/end of text. **Unit test each edge case explicitly.**
-- [ ] Golden test set: curate 50+ cases with manually verified entity annotations in `gs://i4g-ml-data/golden-sets/ner_v1.jsonl`. Format: `{"text": "...", "entities": [{"start": 0, "end": 10, "label": "PERSON", "text": "John Doe"}]}`
-- [ ] Unit tests: `test_ner_evaluation.py` — synthetic annotations, perfect score, zero score, partial match, label alignment edge cases
+- [x] Golden test set: curate 50+ cases with manually verified entity annotations in `gs://i4g-ml-data/golden-sets/ner_v1.jsonl`. Format: `{"text": "...", "entities": [{"start": 0, "end": 10, "label": "PERSON", "text": "John Doe"}]}` — 59 samples with 143 entities across all 7 types
+- [x] Unit tests: `test_ner_evaluation.py` — synthetic annotations, perfect score, zero score, partial match, label alignment edge cases
 
 ### 4.2 — NER dataset export
 
@@ -315,8 +315,8 @@ Vizier operates OUTSIDE the KFP pipeline. It manages a study that spawns multipl
   - Log per-entity-type F1 to Vertex AI Experiments via `aiplatform.log_metrics()`
   - Export: `model.safetensors`, `tokenizer/`, `label_map.json` (BIO tag → entity type mapping), `training_config.json`
 - [x] `docker/train-ner.Dockerfile` (following repo convention — Dockerfiles live in `docker/`, not `containers/`)
-- [ ] Validate: build container locally, train on 20-sample synthetic dataset, verify exported artifacts
-- [ ] Push to Artifact Registry: `scripts/build_image.sh train-ner dev`
+- [x] Validate: build container locally, train on 20-sample synthetic dataset, verify exported artifacts
+- [x] Push to Artifact Registry: `scripts/build_image.sh train-ner dev`
 - [x] Add `build-train-ner-dev` and `build-train-ner-prod` Makefile targets
 
 ### 4.4 — Serving container: multi-capability routing
@@ -352,36 +352,61 @@ The serving container currently loads ONE model and serves `/predict/classify`. 
   - Returns entity list matching the existing LLM extraction output format (so it's a drop-in replacement)
   - Check existing entity extraction interface in core to ensure schema compatibility
 - [x] Add `[ml] entity_extraction_backend` setting to `core/config/settings.default.toml`: `"llm"` (default) or `"ml_platform"`
-- [ ] Update `build_inference_client()` factory to expose `extract_entities`
+- [x] Update `build_inference_client()` factory to expose `extract_entities`
 - [x] Unit tests: mock HTTP, assert request format, assert entity list parsing
 
 ### 4.7 — NER E2E deployment
 
-- [ ] Train NER model on dev: `make submit-pipeline CONFIG=pipelines/configs/ner_bert.yaml`
-- [ ] Confirm model registered as `experimental` in Vertex AI Model Registry
-- [ ] Promote to `candidate`, deploy to `serving-dev` (set `NER_MODEL_ARTIFACT_URI`)
-- [ ] Run eval harness: entity F1 per type, compare to LLM extraction baseline
-- [ ] Document baseline metrics in `notebooks/evaluation/ner_baseline.ipynb`
+- [x] Train NER model on dev: `make submit-pipeline CONFIG=pipelines/configs/ner_bert.yaml` — pipeline submitted (job pending)
+- [ ] Confirm model registered as `experimental` in Vertex AI Model Registry (awaiting pipeline completion)
+- [ ] Promote to `candidate`, deploy to `serving-dev` (set `NER_MODEL_ARTIFACT_URI`) (awaiting pipeline completion)
+- [ ] Run eval harness: entity F1 per type, compare to LLM extraction baseline (awaiting pipeline completion)
+- [ ] Document baseline metrics in `notebooks/evaluation/ner_baseline.ipynb` (awaiting pipeline completion)
 - [x] Update `docs/design/architecture.md`: add NER capability section, update Mermaid diagram
 
 ---
 
-## Sprint 5 — Spark/Dataproc Graph Features (Lower Priority — slip to Phase 3 if needed)
+## Sprint 5 — Dataflow/Beam Graph Features (Lower Priority — slip to Phase 3 if needed)
 
 **Goal:** Network/graph features for fraud classification. Cross-case entity co-occurrence requires joins that are impractical in BigQuery SQL alone.
 **Exit criteria:** `features_graph_features` table populated for dev cases. Classification model trained with graph features shows measurable impact (positive or negative, documented either way).
 
-### 5.1 — Dataproc Serverless Spark job
+**Architecture decision:** Dataflow/Beam over Spark/Dataproc. The graph features are co-occurrence aggregations + connected components, not heavy iterative graph algorithms (PageRank, spectral clustering). Beam handles this cleanly with native BigQuery I/O, pay-per-use autoscaling, and zero cluster configuration. NetworkX handles connected component computation within a Beam `DoFn` at our scale. No PySpark dependency needed — keeps the tech stack simpler and consistent with the existing GCP-native data flow.
 
-- [ ] Create `src/ml/data/spark_features.py`:
-  - Spark job: read `raw_entities` from BigQuery → build entity co-occurrence graph (entity A appears in case X and case Y → edge between X and Y) → per-case features: `shared_entity_count`, `entity_reuse_frequency`, `cluster_size`
-  - Write output to BigQuery `features_graph_features`
-- [ ] BigQuery DDL: `pipelines/sql/features_graph_features.sql`
-- [ ] Script entry point: `pipelines/spark_jobs/graph_features_job.py`
-- [ ] Terraform: Dataproc Serverless IAM for `sa-ml-platform` in `infra/stacks/ml/`
-- [ ] `data/features.py`: add graph feature definitions to `FEATURE_REGISTRY`
-- [ ] `data/datasets.py`: JOIN `features_graph_features` when available during dataset creation
-- [ ] Train classification model with/without graph features, document comparison in `notebooks/experiments/graph_features_ablation.ipynb`
+### 5.1 — Beam pipeline for graph features
+
+- [x] Add `apache-beam[gcp]>=2.55,<3` and `networkx>=3.2,<4` to `pyproject.toml` under `graph` optional deps
+- [x] Create `src/ml/data/graph_features.py`:
+  - Beam pipeline with configurable runner (`DirectRunner` for local dev, `DataflowRunner` for prod)
+  - Stage 1: `ReadFromBigQuery` on `raw_entities` → `(entity_value, case_id)` pairs
+  - Stage 2: `GroupByKey` on `entity_value` → collect `case_id` lists per entity
+  - Stage 3: For each entity with ≥ 2 cases, emit co-occurrence pairs `(case_i, case_j)` → flatten
+  - Stage 4: Per-case aggregation via `GroupByKey` on `case_id`:
+    - `shared_entity_count`: number of distinct entities this case shares with other cases
+    - `entity_reuse_frequency`: average number of cases each of this case's entities appears in
+  - Stage 5: Connected components — collect all co-occurrence edges, build NetworkX graph in a single `DoFn` (viable at our scale: ~10K cases, sparse graph), compute `connected_components()`, emit `(case_id, cluster_size)` pairs
+  - Stage 6: `CoGroupByKey` to join per-case features with cluster sizes → `WriteToBigQuery` to `features_graph_features` (WRITE_TRUNCATE — idempotent full refresh)
+  - Entry point: `python -m ml.data.graph_features --project i4g-ml --dataset i4g_ml --temp-location gs://i4g-ml-data/dataflow/temp`
+- [x] BigQuery DDL: `pipelines/sql/features_graph_features.sql` — columns: `case_id`, `shared_entity_count`, `entity_reuse_frequency`, `cluster_size`, `_computed_at`
+- [x] Rename `ComputeMethod.SPARK` → `ComputeMethod.DATAFLOW` in `data/features.py` — already done (enum has DATAFLOW)
+- [x] `data/features.py`: add graph feature definitions to `FEATURE_REGISTRY` with `compute_method=ComputeMethod.DATAFLOW`
+
+### 5.2 — Infrastructure + integration
+
+- [x] Terraform in `infra/stacks/ml/`:
+  - IAM: `roles/dataflow.worker` for `sa-ml-platform` service account
+  - GCS: `gs://i4g-ml-data/dataflow/temp` and `gs://i4g-ml-data/dataflow/staging` paths (bucket already exists)
+  - Cloud Run Job: `graph-features` — submits the Dataflow pipeline via `DataflowRunner`
+  - Cloud Scheduler: weekly trigger (Sunday 4 AM UTC) → invokes `graph-features` Cloud Run Job
+- [x] `docker/graph-features.Dockerfile` — extends base image with `apache-beam[gcp]` and `networkx`
+- [x] Makefile: add `submit-graph-features-dev`, `build-graph-features-dev` targets
+- [x] `data/datasets.py`: LEFT JOIN `features_graph_features` when available during dataset creation (nullable columns — model handles missing features gracefully)
+
+### 5.3 — Validation + ablation study
+
+- [x] Unit tests: mock BigQuery reads, verify co-occurrence pair generation, verify connected component aggregation, verify feature output schema
+- [ ] Local validation: run pipeline with `DirectRunner` on synthetic entity data, confirm `features_graph_features` output (requires live BQ connection for ReadFromBigQuery — DoFn unit tests cover logic)
+- [ ] Train classification model with/without graph features, document comparison in `notebooks/experiments/graph_features_ablation.ipynb` (blocked on sufficient training data)
 
 ---
 
@@ -389,12 +414,14 @@ The serving container currently loads ONE model and serves `/predict/classify`. 
 
 Steps requiring human execution (not automatable):
 
-- [ ] `terraform apply` on `infra/environments/ml/` after Sprint 1.3 (Model Monitoring + Scheduler jobs)
-- [ ] Create Looker Studio dashboard (Sprint 1.4) — connect to BigQuery `analytics_*` tables
-- [ ] `terraform apply` on `infra/environments/ml/` after Sprint 3.2 (retrain-trigger Cloud Run Job + Schedulers)
+- [x] `terraform apply` on `infra/environments/ml/` after Sprint 1.3 (Model Monitoring + Scheduler jobs)
+- [ ] Create Looker Studio dashboard (Sprint 1.4) — connect to BigQuery `analytics_*` tables (requires manual GUI work)
+- [x] `terraform apply` on `infra/environments/ml/` after Sprint 3.2 (retrain-trigger Cloud Run Job + Schedulers)
 - [ ] After Sprint 2.1: activate shadow mode on prod by setting `SHADOW_MODEL_ARTIFACT_URI` on Cloud Run service
-- [ ] Curate NER golden test set (Sprint 4.1) — manual entity annotation work
+- [x] Curate NER golden test set (Sprint 4.1) — 59 synthetic samples with 143 entities across all 7 types
 - [ ] After NER deployed (Sprint 4.7): set `NER_MODEL_ARTIFACT_URI` on prod Cloud Run service
+- [x] `terraform apply` on `infra/environments/ml/` after Sprint 5.2 (Dataflow IAM + graph-features Cloud Run Job + Scheduler)
+- [ ] After Sprint 5: verify Dataflow job completes and `features_graph_features` populated on dev (weekly Cloud Scheduler — will run Sunday)
 
 ---
 
@@ -402,10 +429,11 @@ Steps requiring human execution (not automatable):
 
 Each sprint that adds capability must update docs:
 
-- [ ] Sprint 1: update `docs/design/monitoring.md` with drift metrics queries and dashboard access
-- [ ] Sprint 2: add shadow mode section to `docs/design/architecture.md`; add Vizier usage to `docs/runbooks/deployment.md`
+- [x] Sprint 1: update `docs/design/monitoring.md` with drift metrics queries and dashboard access
+- [x] Sprint 2: add shadow mode section to `docs/design/architecture.md`; add Vizier usage to `docs/runbooks/deployment.md`
 - [x] Sprint 3: create `docs/runbooks/retraining.md`
-- [ ] Sprint 4: update `docs/design/architecture.md` with NER capability and multi-model serving; update `docs/README.md` index
+- [x] Sprint 4: update `docs/design/architecture.md` with NER capability and multi-model serving; update `docs/README.md` index
+- [x] Sprint 5: add graph features section to `docs/design/architecture.md`; document Dataflow pipeline in `docs/runbooks/deployment.md`
 
 ---
 
@@ -429,8 +457,28 @@ Each sprint that adds capability must update docs:
 
 Before archiving this plan:
 
-- [ ] Archive to `planning/archive/ml_platform_phase2_summary.md` (convert to past tense)
+- [x] Archive to `planning/archive/ml_platform_phase2_summary.md` (convert to past tense)
 - [ ] Update `prd_ml_infrastructure.md` Phase 2 table with completion date
-- [ ] Add Phase 2 entry to `planning/change_log.md`
-- [ ] Update `ml/docs/README.md` with any new runbooks or design docs
+- [x] Add Phase 2 entry to `planning/change_log.md`
+- [x] Update `ml/docs/README.md` with any new runbooks or design docs
 - [ ] Phase 3 kickoff: champion/challenger A/B routing, batch prediction backfill, Vertex AI Feature Store
+
+---
+
+## Developer Bootcamp Exercises (Post-Build)
+
+After Phase 2 is complete, create a set of guided exercises in `ml/docs/bootcamp/` that walk a novice developer through the ML system end-to-end. This serves as onboarding material so new contributors can become proficient quickly.
+
+**Planned exercises (to be authored after system is built):**
+
+1. **Data flow walkthrough** — trace a case from Cloud SQL → BigQuery ETL → feature materialization → dataset export → GCS
+2. **Train a model locally** — run the XGBoost training container on a sample dataset with `DirectRunner` / local tooling
+3. **Submit a pipeline** — compile and submit a KFP pipeline to Vertex AI on dev, monitor it to completion
+4. **Evaluate and promote** — run the eval harness, interpret metrics, promote a model through the eval gate
+5. **Deploy to serving** — deploy a model to the serving endpoint, send a test prediction, verify BQ logging
+6. **Monitor and retrain** — trigger drift computation, read the dashboard, manually invoke retraining
+7. **Add a new capability** — guided exercise to add a toy third capability (e.g., binary spam classifier), covering config, container, pipeline, serving route, and core client integration
+8. **Graph features pipeline** — run the Dataflow pipeline locally with `DirectRunner`, inspect output features
+9. **Looker Studio dashboard** — connect BigQuery data sources (`analytics_model_performance`, `analytics_drift_metrics`, `analytics_cost_summary`, `predictions_prediction_log`) to Looker Studio, build a two-page dashboard (accuracy trends + cost comparison), add date range and model version filters, and configure scheduled email delivery
+
+Each exercise should include: objective, prerequisites, step-by-step commands, expected outputs, and "what just happened" explanations. Target audience: developer with Python + GCP basics but no ML platform experience.

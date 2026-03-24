@@ -1594,3 +1594,14 @@ Executed Phase 0, Phase 1, Phase 2.3 / 2.4, and Phase 5 of the doc revamp sprint
 - **core/** — `analyst_labels` Alembic migration (FK → cases, indexed). `MlPlatformSettings` section with `inference_backend`, `platform_base_url`, `platform_auth_method`, `fallback_to_llm`. `MLPlatformClient` async httpx client. `build_inference_client()` factory routing. Unit tests for settings + factory.
 - **docs/** — Settings manifest updated with `ml.*` fields.
 - **planning/** — Task plan `tasks/ml_platform_phase0.md` with Sprint 1 tasks checked off.
+
+## 2026-03-24 — ML Phase 2: Sprint 5 Dataflow/Beam + Entity Extraction Factory
+
+- **planning/** — Updated `tasks/ml_phase2_training_maturity.md`: rewrote Sprint 5 from Spark/Dataproc to Dataflow/Beam (architecture decision: co-occurrence aggregations + connected components don't need Spark GraphX; Beam + NetworkX is simpler, cheaper, and consistent with existing GCP-native stack). Added Dataflow IAM + Cloud Scheduler items to Manual Steps Checklist. Added Documentation Updates entry for Sprint 5. Added Developer Bootcamp Exercises section (post-build onboarding material for new contributors).
+- **ml/** — Renamed `ComputeMethod.SPARK` → `ComputeMethod.DATAFLOW` in `src/ml/data/features.py` (forward-compatible with Sprint 5 graph features).
+- **core/** — Added `build_entity_extraction_client()` factory in `src/i4g/services/factories.py` — routes entity extraction based on `settings.ml.entity_extraction_backend` independently from classification backend. Unit tests added (4 tests pass). Task 4.6 completed.
+
+## 2026-03-24 — ML Phase 2: Archive + Bootcamp Exercises
+
+- **planning/** — Archived Phase 2 task plan to `archive/ml_platform_phase2_summary.md`. Extracted incomplete tasks (Vizier sweep, NER E2E deployment, graph features validation, manual steps) to `tasks/ml_phase2_deferred.md`. Created `tasks/ml_bootcamp_exercises.md` tracking 9 developer onboarding exercises.
+- **ml/** — Created `docs/bootcamp/` with 9 guided exercises covering the full ML platform lifecycle: data flow, local training, pipeline submission, evaluation/promotion, serving deployment, monitoring/retraining, adding capabilities, graph features, and Looker Studio dashboards. Updated `docs/README.md` with bootcamp index.
