@@ -118,14 +118,14 @@ Replaced stub `classify_text()` in `ml/src/ml/serving/predict.py` with real infe
 
 ## Deliverable Summary
 
-| Metric                     | Value                                    |
-| -------------------------- | ---------------------------------------- |
-| Sprints completed          | 3                                        |
-| Tasks completed            | 65 / 65                                  |
-| New unit tests added       | `test_accuracy.py`, `test_cost.py` + others |
-| Total test suite           | 137 passing, 0 failures                  |
-| Repos changed              | `ml/`, `infra/`, `core/`                 |
-| Production endpoint        | `serving-prod` deployed and smoke-tested |
+| Metric               | Value                                       |
+| -------------------- | ------------------------------------------- |
+| Sprints completed    | 3                                           |
+| Tasks completed      | 65 / 65                                     |
+| New unit tests added | `test_accuracy.py`, `test_cost.py` + others |
+| Total test suite     | 137 passing, 0 failures                     |
+| Repos changed        | `ml/`, `infra/`, `core/`                    |
+| Production endpoint  | `serving-prod` deployed and smoke-tested    |
 
 ## Known Deferrals to Phase 2
 
