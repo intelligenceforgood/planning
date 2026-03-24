@@ -202,9 +202,9 @@ Refactored serving container for multi-model support:
 
 | Metric                     | Value                                                           |
 | -------------------------- | --------------------------------------------------------------- |
-| Sprints completed          | 6 (Sprint 0–5)                                                 |
+| Sprints completed          | 6 (Sprint 0–5)                                                  |
 | PRD deliverables completed | 7 / 7                                                           |
-| Repos changed              | `ml/`, `infra/`, `core/`                                       |
+| Repos changed              | `ml/`, `infra/`, `core/`                                        |
 | Capabilities on platform   | 2 (classification + NER)                                        |
 | Monitoring coverage        | Drift daily, Model Monitoring on prod, accuracy + cost matured  |
 | Continuous retraining      | E2E validated on dev, Cloud Scheduler triggers operational      |
