@@ -1,6 +1,46 @@
 # Planning Change Log (active items only)
 
-Last updated: 22 Mar 2026
+Last updated: 24 Mar 2026
+
+## 2026-03-24 — ML Platform: Phase 2 Implementation (Sprints 0–4)
+
+Implemented all code deliverables for ML Phase 2: Training Maturity + Continuous Learning. All 7 PRD deliverables (Vizier, shadow mode, continuous retraining, Model Monitoring, accuracy dashboard, cost comparison, NER model) have code committed across `ml/`, `core/`, and `infra/`.
+
+**Repos affected:** `ml/`, `core/`, `infra/`, `planning/`
+
+**ml/ — 22 modified + 21 new files (2001 insertions):**
+
+- **Sprint 0 (Repo Hygiene):** Fixed README paths, deployment runbook conda env, moved `pipeline.yaml` to `pipelines/`, added `compile-pipeline` Makefile target, `.gitignore` + `pyproject.toml` cleanup
+- **Sprint 1 (Monitoring + Dashboards):** Implemented `drift.py` (PSI-based prediction/feature drift), `triggers.py` (retraining conditions: data volume, drift, time, force), accuracy materialization, cost summary materialization, BigQuery DDL for `analytics_drift_metrics`, `analytics_trigger_log`, `analytics_cost_summary`
+- **Sprint 2 (Shadow Mode + Vizier):** Shadow model loading with memory guard, async shadow inference on `/predict/classify`, `is_shadow` BQ column, `compute_shadow_comparison()`, Vizier hyperparameter tuning (`create_vizier_study`, `run_vizier_sweep`, `get_best_config`), search spaces in pipeline configs
+- **Sprint 3 (Continuous Retraining):** `submit_pipeline()` utility, `trigger_retraining.py` Cloud Run Job entry point, retraining runbook
+- **Sprint 4 (NER Model):** NER evaluation harness (`seqeval`, BIO tag alignment, per-entity-type F1), NER training container (`containers/train-ner/`, `docker/train-ner.Dockerfile`), multi-capability serving (entity extraction endpoint), NER pipeline config, promotion gate for NER
+- **Tests:** 238 passing (101 new tests across 8 new test files)
+- **Fixed during pre-merge review:** broken SQL table name in `v_case_features.sql`, `__import__` anti-pattern in `accuracy.py`, bare `except Exception` annotations (6 locations), stray `=1.2` pip output file
+
+**core/ — 4 files (169 insertions):**
+
+- `MLPlatformClient.extract_entities()` — NER endpoint integration
+- `entity_extraction_backend` setting (`llm` | `ml_platform`)
+- Settings manifest updated with new ML setting
+- 8 unit tests passing
+
+**infra/ — 2 files (337 insertions):**
+
+- Vertex AI Model Monitoring job on `serving-prod`
+- Cloud Scheduler jobs: drift computation, accuracy materialization, cost materialization, daily retrain trigger, monthly force retrain
+- `retrain-trigger` Cloud Run Job
+- `NER_MODEL_ARTIFACT_URI` and `SHADOW_MODEL_ARTIFACT_URI` env vars on Cloud Run serving service
+
+**Remaining operational tasks (not code — post-merge):**
+
+- `terraform apply` on `infra/environments/ml/`
+- Create Looker Studio dashboards (accuracy + cost)
+- Build and push NER training container
+- Train NER model, evaluate, deploy to `serving-dev`
+- Curate NER golden test set
+- Run Vizier sweep on dev
+- Activate shadow mode on prod
 
 ## 2026-03-22 — ML Platform: Phase 0 Complete
 
