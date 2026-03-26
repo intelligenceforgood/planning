@@ -18,12 +18,12 @@
 
 ## Status
 
-- [ ] Exercise 1: Data Flow Walkthrough
-- [ ] Exercise 2: Train a Model Locally
-- [ ] Exercise 3: Submit a Pipeline
-- [ ] Exercise 4: Evaluate and Promote
-- [ ] Exercise 5: Deploy to Serving
-- [ ] Exercise 6: Monitor and Retrain
-- [ ] Exercise 7: Add a New Capability
-- [ ] Exercise 8: Graph Features Pipeline
-- [ ] Exercise 9: Looker Studio Dashboard
+- [x] Exercise 1: Data Flow Walkthrough
+- [x] Exercise 2: Train a Model Locally
+- [x] Exercise 3: Submit a Pipeline
+- [x] Exercise 4: Evaluate and Promote
+- [x] Exercise 5: Deploy to Serving
+- [x] Exercise 6: Monitor and Retrain
+- [x] Exercise 7: Add a New Capability (read-only walkthrough — see exercise note)
+- [x] Exercise 8: Graph Features Pipeline
+- [x] Exercise 9: Looker Studio Dashboard
