@@ -42,4 +42,5 @@
 - [ ] Update `prd_ml_infrastructure.md` Phase 2 table with completion date
 - [x] Add Phase 2 entry to `planning/change_log.md`
 - [ ] Update `ml/docs/README.md` with any new runbooks or design docs
-- [ ] Phase 3 kickoff: champion/challenger A/B routing, batch prediction backfill, Vertex AI Feature Store
+- [x] Phase 3 kickoff: champion/challenger A/B routing, batch prediction backfill, Vertex AI Feature Store
+      → [tasks/ml_phase3_advanced_capabilities.md](ml_phase3_advanced_capabilities.md)
