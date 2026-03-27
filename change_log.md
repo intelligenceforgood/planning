@@ -1605,3 +1605,42 @@ Executed Phase 0, Phase 1, Phase 2.3 / 2.4, and Phase 5 of the doc revamp sprint
 
 - **planning/** — Archived Phase 2 task plan to `archive/ml_platform_phase2_summary.md`. Extracted incomplete tasks (Vizier sweep, NER E2E deployment, graph features validation, manual steps) to `tasks/ml_phase2_deferred.md`. Created `tasks/ml_bootcamp_exercises.md` tracking 9 developer onboarding exercises.
 - **ml/** — Created `docs/bootcamp/` with 9 guided exercises covering the full ML platform lifecycle: data flow, local training, pipeline submission, evaluation/promotion, serving deployment, monitoring/retraining, adding capabilities, graph features, and Looker Studio dashboards. Updated `docs/README.md` with bootcamp index.
+
+## 2026-03-25 — ML Platform: Phase 3 Implementation (Sprints 1–7)
+
+Implemented all code deliverables for ML Phase 3: Advanced Capabilities. 5 PRD deliverables (champion/challenger A/B routing, batch prediction, Feature Store, risk scoring + document similarity, cost-aware routing) have code committed across `ml/`, `core/`, and `infra/`.
+
+**Repos affected:** `ml/`, `core/`, `infra/`, `planning/`
+
+**ml/ — key changes:**
+
+- **Sprint 1 (Champion/Challenger A/B Routing):** `routing.py` — `TrafficSplitConfig`, `load_traffic_config()`, `route_prediction()` with deterministic/random split; `variant` + `routing_reason` columns in prediction log
+- **Sprint 2 (Batch Prediction):** `serving/batch.py` — BigQuery read → model inference → BigQuery write with progress logging; `scripts/run_batch_prediction.py` Cloud Run Job entry point; `docker/batch-prediction.Dockerfile`
+- **Sprint 3 (Feature Store):** `data/feature_store.py` — Vertex AI Feature Store sync + in-memory cache with TTL; `serving/features.py` — `compute_inline_features()` with Feature Store → inline fallback
+- **Sprint 4 (Risk Scoring):** `serving/predict.py` — `predict_risk_score()` XGBoost regressor with 0–1 clamping; `data/datasets.py` — `create_risk_dataset_version()`; `training/evaluation.py` — `evaluate_regression()` (MSE, MAE, RMSE, Spearman ρ); `registry/promotion.py` — risk scoring eval gate; `containers/train-xgboost/train.py` — dual classifier/regressor support
+- **Sprint 5 (Document Similarity):** `serving/embeddings.py` — sentence-transformer embedding; `serving/similarity.py` — FAISS index build/search with BigQuery persistence; `POST /predict/similar-cases` route
+- **Sprint 6 (Cost-Aware Routing):** `routing.py` — `select_cheapest_model()`, quality-gated cost optimization; `COST_AWARE_ROUTING` env var; `analytics_variant_comparison` BQ table
+- **Sprint 7 (Docs):** Architecture doc updated with 5 new sections; new runbooks for batch prediction and Feature Store
+- Scripts: `scripts/submit_pipeline.py` — Vertex AI pipeline submission utility; `scripts/trigger_retraining.py` — Cloud Run Job retraining trigger
+- **Refactored:** Standalone scripts `submit_pipeline.py` and `trigger_retraining.py` consolidated into `i4g-ml` CLI — `ml.training.submission` library + `ml.cli.retrain.run()` function; standalone scripts deleted
+- **Tests:** 333 passing, 7 skipped, 0 failures (fixed: mock patching for local imports, XGBoost DMatrix segfaults, Spearman tied-values edge case)
+
+**core/ — 4 files:**
+
+- `MLPlatformClient.score_risk()` and `.find_similar_cases()` — risk scoring + similarity endpoint integration
+- `risk_scoring_backend` and `similarity_backend` settings (default: `"llm"`)
+- `build_risk_scoring_client()` and `build_similarity_client()` factories
+- 12 unit tests passing (4 new)
+
+**infra/ — 2 files (stacks/ml/):**
+
+- 11 new Terraform variables (challenger, risk model, Feature Store, embedding, cost-aware routing)
+- Cloud Run serving env vars updated (dev + prod)
+- Memory bumped 2Gi → 4Gi on both serving environments
+- `prediction_log` schema: `variant` + `routing_reason` columns
+- 3 new BigQuery tables: `batch_predictions`, `features_case_embeddings`, `analytics_variant_comparison`
+- 3 new Cloud Run Jobs: `batch-prediction`, `feature-store-sync`, `embedding-refresh`
+- 2 new Cloud Scheduler Jobs: weekly feature store sync, weekly embedding refresh
+- Vertex AI Feature Store: `google_vertex_ai_featurestore.ml_features`, entity type + IAM
+
+**Remaining manual steps:** terraform apply, BigQuery schema migrations, model deployment, E2E smoke tests, exit criteria validation.

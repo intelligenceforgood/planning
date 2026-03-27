@@ -20,8 +20,8 @@ Full list in [ml_phase2_deferred.md](ml_phase2_deferred.md).
       (prerequisite for Sprint 1 champion/challenger work)
 - [ ] **P2-C.** Verify Dataflow graph features job: confirm `features_graph_features` populated on dev
       after weekly scheduler run. If blocked, run manually with DirectRunner + dev BQ connection.
-- [ ] **P2-D.** Update `prd_ml_infrastructure.md` Phase 2 table with completion date
-- [ ] **P2-E.** Update `ml/docs/README.md` with any new runbooks or design docs from Phase 2
+- [x] **P2-D.** Update `prd_ml_infrastructure.md` Phase 2 table with completion date
+- [x] **P2-E.** Update `ml/docs/README.md` with any new runbooks or design docs from Phase 2
 
 ---
 
@@ -59,17 +59,17 @@ Full list in [ml_phase2_deferred.md](ml_phase2_deferred.md).
 - [x] Extend `monitoring/accuracy.py` to compute per-variant accuracy:
       `compute_variant_comparison()` — champion vs. challenger override rates, per-axis F1
 - [x] BigQuery DDL: `analytics_variant_comparison` table
-- [ ] Add `variant` filter to existing accuracy materialization scheduled query
-- [ ] Tests: mock BigQuery, variant grouping logic
+- [x] Add `variant` filter to existing accuracy materialization scheduled query
+- [x] Tests: mock BigQuery, variant grouping logic
 
 ### 1.4 — Infrastructure
 
-- [ ] Terraform: add `CHALLENGER_MODEL_ARTIFACT_URI` and `CHALLENGER_TRAFFIC_WEIGHT` env vars to
+- [x] Terraform: add `CHALLENGER_MODEL_ARTIFACT_URI` and `CHALLENGER_TRAFFIC_WEIGHT` env vars to
       `ml-serving` Cloud Run service in `infra/stacks/ml/main.tf`
 - [x] BigQuery DDL: `ALTER TABLE predictions_prediction_log ADD COLUMN variant STRING DEFAULT 'champion'`
       → add to `pipelines/sql/alter_prediction_log_add_variant.sql`
-- [ ] Terraform: add `google_bigquery_table` schema entry for `variant` column
-- [ ] Add `variant` to Terraform BigQuery `predictions_prediction_log` schema
+- [x] Terraform: add `google_bigquery_table` schema entry for `variant` column
+- [x] Add `variant` to Terraform BigQuery `predictions_prediction_log` schema
 - [ ] Deploy to `serving-dev`, run smoke test: send 100 predictions, verify ~expected split in BQ
 
 ### Manual Steps
@@ -95,26 +95,26 @@ Full list in [ml_phase2_deferred.md](ml_phase2_deferred.md).
   - Schema: `case_id, prediction, confidence, model_id, model_version, predicted_at, capability`
   - Progress logging: every 100 rows, log count + elapsed time
 - [x] Support both classification and NER capabilities
-- [ ] Tests: mock BigQuery reads/writes, batch chunking, progress logging
+- [x] Tests: mock BigQuery reads/writes, batch chunking, progress logging
 
 ### 2.2 — Batch Prediction Cloud Run Job
 
-- [ ] Create `ml/scripts/run_batch_prediction.py` — Cloud Run Job entry point:
+- [x] Create `ml/scripts/run_batch_prediction.py` — Cloud Run Job entry point:
   - `--capability classification|ner`
   - `--model-artifact-uri gs://...`
   - `--source-query` (optional, default: all cases)
   - `--dest-table` (optional, default: `batch_predictions_{capability}_{timestamp}`)
   - `--batch-size` (default: 100)
-- [ ] Docker: reuse `serve` container (has model loading code) with different entrypoint
-- [ ] Tests: CLI arg parsing, entrypoint wiring
+- [x] Docker: reuse `serve` container (has model loading code) with different entrypoint
+- [x] Tests: CLI arg parsing, entrypoint wiring
 
 ### 2.3 — BigQuery Tables + Infrastructure
 
 - [x] BigQuery DDL: `pipelines/sql/batch_predictions.sql` — partitioned by `predicted_at`, clustered
       by `capability`
-- [ ] Terraform: `batch-prediction` Cloud Run Job in `infra/stacks/ml/main.tf`
+- [x] Terraform: `batch-prediction` Cloud Run Job in `infra/stacks/ml/main.tf`
   - No scheduled trigger (on-demand only for backfill) — invoked manually or via Makefile
-- [ ] Terraform: BQ table `batch_predictions`
+- [x] Terraform: BQ table `batch_predictions`
 - [x] Makefile targets: `run-batch-dev`, `run-batch-prod`
 
 ### 2.4 — Historical Backfill
@@ -137,12 +137,12 @@ Full list in [ml_phase2_deferred.md](ml_phase2_deferred.md).
 
 ### 3.1 — Feature Store Setup
 
-- [ ] Terraform: create `google_vertex_ai_featurestore` resource in `infra/stacks/ml/main.tf`:
+- [x] Terraform: create `google_vertex_ai_featurestore` resource in `infra/stacks/ml/main.tf`:
   - Feature store name: `i4g_ml_features`
   - Online serving config: fixed node count = 1 (scale-to-zero not available for Feature Store)
   - Entity type: `case` with entity ID = `case_id`
-- [ ] Define feature specs matching `FEATURE_CATALOG` (all BigQuery SQL + Dataflow features)
-- [ ] Terraform: IAM for `sa-ml-platform` to read/write Feature Store
+- [x] Define feature specs matching `FEATURE_CATALOG` (all BigQuery SQL + Dataflow features)
+- [x] Terraform: IAM for `sa-ml-platform` to read/write Feature Store
 
 ### 3.2 — Feature Ingestion Pipeline
 
@@ -151,28 +151,28 @@ Full list in [ml_phase2_deferred.md](ml_phase2_deferred.md).
     reads from `features_case_features` + `features_graph_features` BQ tables,
     writes to Feature Store via `aiplatform.EntityType.ingest_from_bq()`
   - Incremental: use `_computed_at` or `_ingested_at` watermark to sync only new/updated features
-- [ ] Cloud Run Job: `feature-store-sync` — runs after data refresh and after graph features compute
-- [ ] Cloud Scheduler: chain after existing weekly data refresh (Sunday 5 AM UTC, after 4 AM graph
+- [x] Cloud Run Job: `feature-store-sync` — runs after data refresh and after graph features compute
+- [x] Cloud Scheduler: chain after existing weekly data refresh (Sunday 5 AM UTC, after 4 AM graph
       features complete)
-- [ ] Tests: mock `aiplatform.EntityType`, feature mapping, watermark logic
+- [x] Tests: mock `aiplatform.EntityType`, feature mapping, watermark logic
 
 ### 3.3 — Online Feature Serving
 
-- [ ] Update `ml/src/ml/serving/features.py`:
+- [x] Update `ml/src/ml/serving/features.py`:
   - Add `fetch_online_features(case_id: str) -> dict[str, Any]` using
     `aiplatform.EntityType.read()` for online serving (sub-100ms)
   - Fall back to `compute_inline_features()` if Feature Store is unavailable or returns empty
   - Cache layer: LRU cache (128 entries, 60s TTL) to avoid repeated lookups for same case
-- [ ] Update `predict.py` to call `fetch_online_features()` before `compute_inline_features()`
+- [x] Update `predict.py` to call `fetch_online_features()` before `compute_inline_features()`
       when the Feature Store is configured (`FEATURE_STORE_ID` env var)
-- [ ] Tests: happy path, cache hit, fallback to inline, latency assertion (mock, but validate call
+- [x] Tests: happy path, cache hit, fallback to inline, latency assertion (mock, but validate call
       pattern is single RPC)
 
 ### 3.4 — Infrastructure
 
-- [ ] Terraform: Feature Store, entity types, features, IAM, Cloud Run Job, Cloud Scheduler
-- [ ] Add `FEATURE_STORE_ID` env var to `ml-serving` Cloud Run service
-- [ ] Document Feature Store schema in `ml/docs/design/architecture.md`
+- [x] Terraform: Feature Store, entity types, features, IAM, Cloud Run Job, Cloud Scheduler
+- [x] Add `FEATURE_STORE_ID` env var to `ml-serving` Cloud Run service
+- [x] Document Feature Store schema in `ml/docs/design/architecture.md`
 
 ### Manual Steps
 
@@ -195,21 +195,21 @@ Full list in [ml_phase2_deferred.md](ml_phase2_deferred.md).
 - [x] Pipeline config: `pipelines/configs/risk_scoring_xgboost.yaml`
   - XGBoost regressor (`reg:squarederror` objective)
   - Features: union of `features_case_features` + `features_graph_features`
-- [ ] Add `risk_scoring` to `ComputeMethod` and update feature catalog if needed
+- [x] Add `risk_scoring` to `ComputeMethod` and update feature catalog if needed
 
 ### 4.2 — Risk Score Dataset
 
-- [ ] Extend `ml/src/ml/data/datasets.py`:
+- [x] Extend `ml/src/ml/data/datasets.py`:
   - `create_risk_dataset_version()`: joins case features with risk labels
   - Risk labels source: analyst severity ratings from `raw_analyst_labels` where `axis = 'severity'`
     OR derive proxy labels from case outcomes (e.g., financial loss amount buckets)
   - Validation: min 100 samples, target distribution not degenerate
-- [ ] Tests: dataset creation, validation, split
+- [x] Tests: dataset creation, validation, split
 
 ### 4.3 — Risk Score Training Container
 
-- [ ] Reuse `containers/train-xgboost/` with regressor objective
-- [ ] Update `training/pipeline.py` to dispatch on `capability = "risk_scoring"` — select regressor
+- [x] Reuse `containers/train-xgboost/` with regressor objective
+- [x] Update `training/pipeline.py` to dispatch on `capability = "risk_scoring"` — select regressor
       eval (MSE, Spearman ρ) instead of classification eval (F1)
 - [x] Update `training/evaluation.py`: add `evaluate_regression()` — MSE, MAE, Spearman rank correlation
 - [x] Update `registry/promotion.py`: eval gate for risk scoring (MSE ≤ champion, Spearman ≥ 0.6)
@@ -223,20 +223,20 @@ Full list in [ml_phase2_deferred.md](ml_phase2_deferred.md).
 - [x] Env var: `RISK_MODEL_ARTIFACT_URI`
 - [x] Load risk model at startup alongside classification + NER
 - [x] Log predictions to `prediction_log` with `capability = "risk_scoring"`
-- [ ] Tests: route, 503 when model not loaded, prediction logging
+- [x] Tests: route, 503 when model not loaded, prediction logging
 
 ### 4.5 — Core Integration
 
-- [ ] Extend `core/src/i4g/ml/client.py`:
+- [x] Extend `core/src/i4g/ml/client.py`:
   - `score_risk(text, case_id) -> dict` — POST to `/predict/risk-score`
-- [ ] Add `risk_scoring_backend` setting to Core ML settings (default: `"llm"`)
-- [ ] `build_risk_scoring_client()` factory in `core/src/i4g/services/factories.py`
-- [ ] Tests: mock HTTP, request/response format
+- [x] Add `risk_scoring_backend` setting to Core ML settings (default: `"llm"`)
+- [x] `build_risk_scoring_client()` factory in `core/src/i4g/services/factories.py`
+- [x] Tests: mock HTTP, request/response format
 
 ### 4.6 — Infrastructure
 
-- [ ] Terraform: add `RISK_MODEL_ARTIFACT_URI` env var to `ml-serving` Cloud Run service
-- [ ] Update `prediction_log` schema comment to note `capability ∈ {classification, ner, risk_scoring}`
+- [x] Terraform: add `RISK_MODEL_ARTIFACT_URI` env var to `ml-serving` Cloud Run service
+- [x] Update `prediction_log` schema comment to note `capability ∈ {classification, ner, risk_scoring}`
 
 ### Manual Steps
 
@@ -256,7 +256,7 @@ Full list in [ml_phase2_deferred.md](ml_phase2_deferred.md).
   - `compute_embedding(text: str) -> list[float]` — 384-dim embedding vector
   - Env var: `EMBEDDING_MODEL_NAME` (default: `all-MiniLM-L6-v2`)
 - [x] Add `sentence-transformers` to `pyproject.toml`
-- [ ] Tests: embedding shape, determinism, model loading
+- [x] Tests: embedding shape, determinism, model loading
 
 ### 5.2 — Similarity Search Endpoint
 
@@ -268,30 +268,30 @@ Full list in [ml_phase2_deferred.md](ml_phase2_deferred.md).
 - [x] Add `POST /predict/similar-cases` route in `app.py`:
   - Request: `{"text": str, "case_id": str, "top_k": int = 10}`
   - Response: `{"similar_cases": [{"case_id": str, "score": float}], "prediction_id": str}`
-- [ ] Log to `prediction_log` with `capability = "document_similarity"`
-- [ ] Tests: index build, search results, route
+- [x] Log to `prediction_log` with `capability = "document_similarity"`
+- [x] Tests: index build, search results, route
 
 ### 5.3 — Embedding Pipeline
 
 - [x] Extend batch prediction module to support embedding generation:
   - `--capability embedding` → runs `compute_embedding()` on case text, writes vectors to BQ
   - BigQuery DDL: `features_case_embeddings` table: `case_id, embedding REPEATED FLOAT64, _computed_at`
-- [ ] Cloud Run Job for periodic embedding refresh (weekly, after data refresh)
-- [ ] On serving container startup, load latest embeddings from BQ → build FAISS index
+- [x] Cloud Run Job for periodic embedding refresh (weekly, after data refresh)
+- [x] On serving container startup, load latest embeddings from BQ → build FAISS index
 
 ### 5.4 — Core Integration
 
-- [ ] Extend `core/src/i4g/ml/client.py`:
+- [x] Extend `core/src/i4g/ml/client.py`:
   - `find_similar_cases(text, case_id, top_k=10) -> list[dict]`
-- [ ] Add `similarity_backend` setting to Core ML settings
-- [ ] Tests: mock HTTP, response format
+- [x] Add `similarity_backend` setting to Core ML settings
+- [x] Tests: mock HTTP, response format
 
 ### 5.5 — Infrastructure
 
-- [ ] Terraform: add `EMBEDDING_MODEL_NAME` env var to `ml-serving` Cloud Run service
-- [ ] Terraform: BQ table `features_case_embeddings`
-- [ ] Cloud Run Job `embedding-refresh` + Cloud Scheduler (weekly, Sunday 6 AM UTC)
-- [ ] Memory sizing: sentence-transformer + FAISS index → bump `ml-serving` to 4Gi if needed
+- [x] Terraform: add `EMBEDDING_MODEL_NAME` env var to `ml-serving` Cloud Run service
+- [x] Terraform: BQ table `features_case_embeddings`
+- [x] Cloud Run Job `embedding-refresh` + Cloud Scheduler (weekly, Sunday 6 AM UTC)
+- [x] Memory sizing: sentence-transformer + FAISS index → bump `ml-serving` to 4Gi if needed
 
 ### Manual Steps
 
@@ -329,10 +329,10 @@ Full list in [ml_phase2_deferred.md](ml_phase2_deferred.md).
 
 ### 6.3 — Infrastructure
 
-- [ ] Terraform: add `COST_AWARE_ROUTING` env var to `ml-serving` Cloud Run service
+- [x] Terraform: add `COST_AWARE_ROUTING` env var to `ml-serving` Cloud Run service
 - [x] BigQuery DDL: `ALTER TABLE predictions_prediction_log ADD COLUMN routing_reason STRING`
       (included in `alter_prediction_log_add_variant.sql`)
-- [ ] Update accuracy materialization to include cost-per-correct-prediction metric
+- [x] Update accuracy materialization to include cost-per-correct-prediction metric
 
 ### Manual Steps
 
@@ -356,7 +356,7 @@ Full list in [ml_phase2_deferred.md](ml_phase2_deferred.md).
 
 - [x] Update `ml/docs/design/architecture.md`: A/B routing, batch prediction, Feature Store, risk scoring,
       document similarity sections + updated Mermaid diagram
-- [ ] Update `ml/docs/design/monitoring.md`: variant comparison queries, risk scoring metrics
+- [x] Update `ml/docs/design/monitoring.md`: variant comparison queries, risk scoring metrics
 - [x] Create `ml/docs/runbooks/batch_prediction.md`
 - [x] Create `ml/docs/runbooks/feature_store.md`
 - [x] Update `ml/docs/README.md` with new runbooks and capability index
@@ -376,7 +376,7 @@ Full list in [ml_phase2_deferred.md](ml_phase2_deferred.md).
 
 - [ ] Archive to `planning/archive/ml_platform_phase3_summary.md`
 - [ ] Update `prd_ml_infrastructure.md` Phase 3 table with completion date
-- [ ] Add Phase 3 entry to `planning/change_log.md`
+- [x] Add Phase 3 entry to `planning/change_log.md`
 - [ ] Close out any remaining Phase 2 deferred items or re-defer with rationale
 
 ---

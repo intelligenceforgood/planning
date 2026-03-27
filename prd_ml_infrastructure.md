@@ -107,11 +107,11 @@ DATA SOURCES (e.g., I4G Cloud SQL):
 
 Training and serving run in the same GCP project (`i4g-ml`) but use fully isolated resources:
 
-| Concern      | Resources                                                  | Lifecycle                                         |
-| ------------ | ---------------------------------------------------------- | ------------------------------------------------- |
-| **Training** | Vertex AI Training jobs, Pipelines, Experiments, Workbench | Ephemeral — spun up per job/run                   |
-| **Serving**  | Vertex AI Endpoints (`serving-dev`, `serving-prod`)        | Long-lived — auto-scaling, always addressable     |
-| **Data**     | BigQuery, Cloud Storage                                    | Persistent — shared across training and serving   |
+| Concern      | Resources                                                  | Lifecycle                                       |
+| ------------ | ---------------------------------------------------------- | ----------------------------------------------- |
+| **Training** | Vertex AI Training jobs, Pipelines, Experiments, Workbench | Ephemeral — spun up per job/run                 |
+| **Serving**  | Vertex AI Endpoints (`serving-dev`, `serving-prod`)        | Long-lived — auto-scaling, always addressable   |
+| **Data**     | BigQuery, Cloud Storage                                    | Persistent — shared across training and serving |
 
 Training jobs are ephemeral compute that start, run, and terminate. Serving endpoints are persistent infrastructure with independent scaling. They never compete for the same resources.
 
@@ -121,30 +121,30 @@ Training jobs are ephemeral compute that start, run, and terminate. Serving endp
 
 ### 3.1 Project
 
-| Property       | Value                                          |
-| -------------- | ---------------------------------------------- |
-| Project ID     | `i4g-ml`                                       |
-| Region         | `us-central1`                                  |
-| Billing        | Same billing account as `i4g-dev` / `i4g-prod` |
+| Property   | Value                                          |
+| ---------- | ---------------------------------------------- |
+| Project ID | `i4g-ml`                                       |
+| Region     | `us-central1`                                  |
+| Billing    | Same billing account as `i4g-dev` / `i4g-prod` |
 
 ### 3.2 Services
 
-| Service                            | Purpose                                                       | Cost profile                                          |
-| ---------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------- |
-| **Vertex AI Training**             | Custom model training (any framework, GPU/CPU)                | Per-job compute hours                                 |
-| **Vertex AI Pipelines**            | ML pipeline orchestration                                     | Per-pipeline-step                                     |
-| **Vertex AI Endpoints**            | Model serving (auto-scaling, scale-to-zero)                   | Per-request + per-node-hour                           |
-| **Vertex AI Model Registry**       | Model versioning, stage management, lineage                   | Free (part of Vertex AI)                              |
-| **Vertex AI Experiments**          | Experiment tracking, metric comparison                        | Free (part of Vertex AI)                              |
-| **Vertex AI Workbench**            | Managed Jupyter notebooks                                     | Per-instance-hour (stop when idle)                    |
-| **Vertex AI Model Monitoring**     | Drift detection, feature skew, prediction drift               | Per-prediction monitored                              |
-| **BigQuery**                       | Data warehouse, feature store, prediction/outcome logs        | Free tier: 1 TB query + 10 GB storage/month           |
-| **Cloud Storage**                  | Raw data, model artifacts, dataset snapshots                  | Per-GB stored                                         |
-| **Cloud Run Jobs**                 | ETL pipelines, batch processing                               | Per-job execution                                     |
-| **Cloud Scheduler**                | Trigger periodic ETL, evaluation, retraining                  | ~$0.10/job/month                                      |
-| **Pub/Sub** (Phase 1+)            | Event-driven data flow for real-time feedback                 | Per-message                                           |
-| **Artifact Registry**              | Docker images for training and serving containers             | Per-GB stored                                         |
-| **Dataproc Serverless** (Phase 1+) | Spark jobs for large-scale feature engineering                | Per-job                                               |
+| Service                            | Purpose                                                | Cost profile                                |
+| ---------------------------------- | ------------------------------------------------------ | ------------------------------------------- |
+| **Vertex AI Training**             | Custom model training (any framework, GPU/CPU)         | Per-job compute hours                       |
+| **Vertex AI Pipelines**            | ML pipeline orchestration                              | Per-pipeline-step                           |
+| **Vertex AI Endpoints**            | Model serving (auto-scaling, scale-to-zero)            | Per-request + per-node-hour                 |
+| **Vertex AI Model Registry**       | Model versioning, stage management, lineage            | Free (part of Vertex AI)                    |
+| **Vertex AI Experiments**          | Experiment tracking, metric comparison                 | Free (part of Vertex AI)                    |
+| **Vertex AI Workbench**            | Managed Jupyter notebooks                              | Per-instance-hour (stop when idle)          |
+| **Vertex AI Model Monitoring**     | Drift detection, feature skew, prediction drift        | Per-prediction monitored                    |
+| **BigQuery**                       | Data warehouse, feature store, prediction/outcome logs | Free tier: 1 TB query + 10 GB storage/month |
+| **Cloud Storage**                  | Raw data, model artifacts, dataset snapshots           | Per-GB stored                               |
+| **Cloud Run Jobs**                 | ETL pipelines, batch processing                        | Per-job execution                           |
+| **Cloud Scheduler**                | Trigger periodic ETL, evaluation, retraining           | ~$0.10/job/month                            |
+| **Pub/Sub** (Phase 1+)             | Event-driven data flow for real-time feedback          | Per-message                                 |
+| **Artifact Registry**              | Docker images for training and serving containers      | Per-GB stored                               |
+| **Dataproc Serverless** (Phase 1+) | Spark jobs for large-scale feature engineering         | Per-job                                     |
 
 ### 3.3 Orchestration
 
@@ -163,10 +163,10 @@ At 10,000 inferences/month and weekly training:
 | Vertex AI Endpoints (scale-to-zero, ~14 req/hour avg) | $5–20        |
 | Vertex AI Training (1 GPU-hour/week)                  | $5–20        |
 | Vertex AI Pipelines (4 runs/month, ~5 steps each)     | $1–3         |
-| BigQuery (within free tier)                            | $0           |
+| BigQuery (within free tier)                           | $0           |
 | Cloud Storage (model artifacts, datasets)             | $1–5         |
-| Cloud Run Jobs (ETL, daily)                            | $1–5         |
-| Vertex AI Workbench (interactive, stopped when idle)   | $5–30        |
+| Cloud Run Jobs (ETL, daily)                           | $1–5         |
+| Vertex AI Workbench (interactive, stopped when idle)  | $5–30        |
 | **Total**                                             | **$18–83**   |
 
 [Google for Nonprofits](https://www.google.com/nonprofits/) provides $10,000/year in GCP credits for eligible 501(c)(3) organizations. Vertex AI, BigQuery, and Cloud Run all have free tier allotments.
@@ -240,11 +240,11 @@ Features are first-class objects: defined, versioned, documented, tested.
 
 **Feature serving strategy:**
 
-| Phase    | Method                                                    | Latency | Complexity |
-| -------- | --------------------------------------------------------- | ------- | ---------- |
-| Phase 0  | Caller sends raw text; serving container computes inline  | ~100ms  | Low        |
+| Phase    | Method                                                     | Latency | Complexity |
+| -------- | ---------------------------------------------------------- | ------- | ---------- |
+| Phase 0  | Caller sends raw text; serving container computes inline   | ~100ms  | Low        |
 | Phase 1  | Pre-computed features in BigQuery; fetched at predict time | ~1s     | Medium     |
-| Phase 2+ | Vertex AI Feature Store for online serving                | <10ms   | Higher     |
+| Phase 2+ | Vertex AI Feature Store for online serving                 | <10ms   | Higher     |
 
 At 10K inferences/month (~0.2 QPS average), Phase 0 inline computation is acceptable.
 
@@ -314,12 +314,12 @@ Pipelines are Python functions using KFP v2 SDK, compiled to YAML for Vertex AI.
                                                     ─ No  → log failure, stop
 ```
 
-| Pipeline                | Trigger                                    | Purpose                                           |
-| ----------------------- | ------------------------------------------ | ------------------------------------------------- |
-| `training-pipeline`     | Manual or Cloud Scheduler (weekly/monthly) | Full train + eval + register + deploy              |
-| `evaluation-pipeline`   | Cloud Scheduler (nightly) or on-demand     | Run champion against latest golden set             |
-| `data-refresh-pipeline` | Cloud Scheduler (daily)                    | ETL + feature engineering refresh                  |
-| `baseline-comparison`   | After any training run                     | Compare candidate vs. few-shot baseline            |
+| Pipeline                | Trigger                                    | Purpose                                 |
+| ----------------------- | ------------------------------------------ | --------------------------------------- |
+| `training-pipeline`     | Manual or Cloud Scheduler (weekly/monthly) | Full train + eval + register + deploy   |
+| `evaluation-pipeline`   | Cloud Scheduler (nightly) or on-demand     | Run champion against latest golden set  |
+| `data-refresh-pipeline` | Cloud Scheduler (daily)                    | ETL + feature engineering refresh       |
+| `baseline-comparison`   | After any training run                     | Compare candidate vs. few-shot baseline |
 
 ### 5.3 Experiment Tracking
 
@@ -480,10 +480,10 @@ The retraining pipeline is the same training pipeline — only the trigger chang
 
 ### 9.1 Dependency Model
 
-| Direction                   | Dependency                                                                   |
-| --------------------------- | ---------------------------------------------------------------------------- |
-| **ML Platform ← data**     | ETL jobs read from source databases on a schedule. No runtime coupling.      |
-| **Consumer → ML Platform** | Consumers call prediction endpoints (`/predict/*`). Standard HTTP.           |
+| Direction                  | Dependency                                                                    |
+| -------------------------- | ----------------------------------------------------------------------------- |
+| **ML Platform ← data**     | ETL jobs read from source databases on a schedule. No runtime coupling.       |
+| **Consumer → ML Platform** | Consumers call prediction endpoints (`/predict/*`). Standard HTTP.            |
 | **Consumer → ML Platform** | Consumers send feedback (`/feedback`). Optional, enables continuous learning. |
 
 No shared databases, no library imports, no code coupling. The platform's monitoring and evaluation are internal — they create no dependency on consumers.
@@ -520,12 +520,12 @@ A `build_inference_client()` factory routes to `MLPlatformClient` or falls back 
 
 ### 9.4 Responsibility Boundary (I4G Example)
 
-| I4G (application concerns)                              | ML Platform                                          |
-| -------------------------------------------------------- | ---------------------------------------------------- |
-| Analyst corrections CRUD, UI-facing label API            | Model training, evaluation, serving                  |
-| Case data, entity data, review queue                     | Feature engineering, dataset management              |
-| LLM direct calls (RAG, report generation, SSI agent)     | Prediction/outcome logging, model registry           |
-| `analyst_labels` table (stores corrections in app DB)    | Monitoring, drift detection, continuous improvement  |
+| I4G (application concerns)                            | ML Platform                                         |
+| ----------------------------------------------------- | --------------------------------------------------- |
+| Analyst corrections CRUD, UI-facing label API         | Model training, evaluation, serving                 |
+| Case data, entity data, review queue                  | Feature engineering, dataset management             |
+| LLM direct calls (RAG, report generation, SSI agent)  | Prediction/outcome logging, model registry          |
+| `analyst_labels` table (stores corrections in app DB) | Monitoring, drift detection, continuous improvement |
 
 ---
 
@@ -685,15 +685,15 @@ infra/
 
 ### Phase 1 — Data Platform Maturity
 
-| #   | Deliverable                                             | Exit criteria                                                |
-| --- | ------------------------------------------------------- | ------------------------------------------------------------ |
-| 1   | Outcome logging (feedback API)                          | Analyst corrections flow to BigQuery                         |
-| 2   | Automated dataset refresh with new outcomes             | Pipeline re-exports training data including corrections      |
-| 3   | Compute-heavy features (Spark on Dataproc Serverless)   | Network/graph features computed                              |
-| 4   | Data quality dashboard                                  | Label distribution, staleness, quality metrics visible       |
-| 5   | PII redaction in training export                        | Redacted text verified                                       |
-| 6   | Second training framework (XGBoost on tabular features) | XGBoost model trained, evaluated, compared                   |
-| 7   | `serving-prod` endpoint                                 | Production endpoint deployed and serving                     |
+| #   | Deliverable                                             | Exit criteria                                           |
+| --- | ------------------------------------------------------- | ------------------------------------------------------- |
+| 1   | Outcome logging (feedback API)                          | Analyst corrections flow to BigQuery                    |
+| 2   | Automated dataset refresh with new outcomes             | Pipeline re-exports training data including corrections |
+| 3   | Compute-heavy features (Spark on Dataproc Serverless)   | Network/graph features computed                         |
+| 4   | Data quality dashboard                                  | Label distribution, staleness, quality metrics visible  |
+| 5   | PII redaction in training export                        | Redacted text verified                                  |
+| 6   | Second training framework (XGBoost on tabular features) | XGBoost model trained, evaluated, compared              |
+| 7   | `serving-prod` endpoint                                 | Production endpoint deployed and serving                |
 
 **Exit criteria:** Feedback loop operational. Multiple frameworks demonstrated. Production serving active. ≥ 200 real analyst labels.
 
@@ -711,6 +711,8 @@ infra/
 
 **Exit criteria:** Continuous learning loop operational. Monitoring active. ≥ 2 capabilities. ≥ 500 labeled examples.
 
+**Status:** Phase 2 code complete. Remaining items (NER E2E deployment, shadow activation, graph features verification) deferred to Phase 3 carry-overs.
+
 ### Phase 3 — Advanced Capabilities
 
 | #   | Deliverable                                                | Exit criteria                           |
@@ -727,29 +729,29 @@ infra/
 
 ## 13. Risks & Mitigations
 
-| Risk                                          | Impact                                    | Mitigation                                                                                    |
-| --------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
-| **Insufficient labeled data**                 | Custom models underperform few-shot       | Bootstrap from existing data. Data gates (500+/axis) before promotion. Few-shot fallback.     |
-| **Platform complexity exceeds team capacity** | Infrastructure becomes its own project    | Strict phasing. GCP-managed services. Phase 0 proves end-to-end before expanding.             |
-| **Model regression in production**            | Accuracy degrades                         | Eval gate. Shadow period. Instant rollback via Vertex AI Endpoint version swap.               |
-| **Cross-project data access**                 | ETL requires cross-project IAM            | Cloud SQL Auth Proxy. Read-only service account.                                              |
-| **Cold start latency**                        | Scale-to-zero has 10–30s cold start       | Acceptable at 10K/month. Set `min_replicas=1` if latency is critical.                         |
-| **PII in training data**                      | Regulatory risk                           | PII redaction pipeline. BigQuery column-level security. Legal review before Phase 1.          |
-| **Vendor lock-in (GCP)**                      | Hard to move to another cloud             | Containerized training. Standard artifact formats (ONNX, SafeTensors). BigQuery export.       |
+| Risk                                          | Impact                                 | Mitigation                                                                                |
+| --------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Insufficient labeled data**                 | Custom models underperform few-shot    | Bootstrap from existing data. Data gates (500+/axis) before promotion. Few-shot fallback. |
+| **Platform complexity exceeds team capacity** | Infrastructure becomes its own project | Strict phasing. GCP-managed services. Phase 0 proves end-to-end before expanding.         |
+| **Model regression in production**            | Accuracy degrades                      | Eval gate. Shadow period. Instant rollback via Vertex AI Endpoint version swap.           |
+| **Cross-project data access**                 | ETL requires cross-project IAM         | Cloud SQL Auth Proxy. Read-only service account.                                          |
+| **Cold start latency**                        | Scale-to-zero has 10–30s cold start    | Acceptable at 10K/month. Set `min_replicas=1` if latency is critical.                     |
+| **PII in training data**                      | Regulatory risk                        | PII redaction pipeline. BigQuery column-level security. Legal review before Phase 1.      |
+| **Vendor lock-in (GCP)**                      | Hard to move to another cloud          | Containerized training. Standard artifact formats (ONNX, SafeTensors). BigQuery export.   |
 
 ---
 
 ## 14. Success Metrics
 
-| Metric                           | Phase 0            | Phase 1                 | Phase 2               | Phase 3                  |
-| -------------------------------- | ------------------ | ----------------------- | --------------------- | ------------------------ |
-| **Classification F1**            | Baseline measured  | Measured                | Custom ≥ baseline     | Custom > baseline by 5%+ |
-| **Labeled dataset size**         | Bootstrap (~50–100)| 200+ analyst labels     | 500+                  | 1,000+                   |
-| **Pipeline completeness**        | End-to-end skeleton| Feedback loop working   | Continuous retraining | Multi-capability         |
-| **Capabilities on platform**    | 1 (classification) | 1 + data maturity       | 2 (+ NER)             | 4+                       |
-| **Prediction logging coverage** | 100%               | 100%                    | 100%                  | 100%                     |
-| **Outcome capture rate**        | —                  | ≥ 10%                   | ≥ 20%                 | ≥ 30%                    |
-| **Regression detection time**   | —                  | —                       | < 24 hours            | < 12 hours               |
+| Metric                          | Phase 0             | Phase 1               | Phase 2               | Phase 3                  |
+| ------------------------------- | ------------------- | --------------------- | --------------------- | ------------------------ |
+| **Classification F1**           | Baseline measured   | Measured              | Custom ≥ baseline     | Custom > baseline by 5%+ |
+| **Labeled dataset size**        | Bootstrap (~50–100) | 200+ analyst labels   | 500+                  | 1,000+                   |
+| **Pipeline completeness**       | End-to-end skeleton | Feedback loop working | Continuous retraining | Multi-capability         |
+| **Capabilities on platform**    | 1 (classification)  | 1 + data maturity     | 2 (+ NER)             | 4+                       |
+| **Prediction logging coverage** | 100%                | 100%                  | 100%                  | 100%                     |
+| **Outcome capture rate**        | —                   | ≥ 10%                 | ≥ 20%                 | ≥ 30%                    |
+| **Regression detection time**   | —                   | —                     | < 24 hours            | < 12 hours               |
 
 ---
 
