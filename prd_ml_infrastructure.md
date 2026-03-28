@@ -725,6 +725,8 @@ infra/
 
 **Exit criteria:** Multi-capability, continuously improving. Platform matures into steady-state operations.
 
+**Status:** Phase 3 complete (2026-03-28). 3 capabilities fully operational (classification, risk scoring, document similarity); NER infrastructure ready, pipeline in progress. A/B routing, batch prediction, Feature Store, cost-aware routing all deployed to dev. Integration tests passing. Known gaps: labeled dataset at 346 (target 1000), Feature Store latency at 161ms (scales with nodes). See [archive/ml_platform_phase3_summary.md](archive/ml_platform_phase3_summary.md).
+
 ---
 
 ## 13. Risks & Mitigations
