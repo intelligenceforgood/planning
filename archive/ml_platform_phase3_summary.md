@@ -97,15 +97,15 @@ training infrastructure; Phase 3 made the platform multi-capability and operatio
 
 ## Exit Criteria Status
 
-| Criterion                         | Status               | Notes                                                                            |
-| --------------------------------- | -------------------- | -------------------------------------------------------------------------------- |
-| ≥ 4 capabilities operational      | ✅                   | Classification, NER, risk scoring, document similarity all operational           |
-| A/B routing with outcome tracking | ✅                   | Variant + routing_reason logged in BQ; feedback records outcomes                 |
-| Batch prediction backfill         | ✅                   | 1000 rows classification + 1000 embeddings                                       |
-| Feature Store sub-100ms           | ⚠️ Partial           | 161ms on single dev node; scales with node count                                 |
-| Cost-aware routing tested         | ✅                   | XGBoost + PyTorch, cost profiles in BQ                                           |
-| Labeled dataset ≥ 1,000           | ⚠️ Gap               | 346 predictions. Plan: production traffic + batch backfill of historical cases   |
-| Regression detection < 12h        | ⚠️ Gap               | Infrastructure ready (drift tables + scheduler); needs production traffic volume |
+| Criterion                         | Status     | Notes                                                                            |
+| --------------------------------- | ---------- | -------------------------------------------------------------------------------- |
+| ≥ 4 capabilities operational      | ✅         | Classification, NER, risk scoring, document similarity all operational           |
+| A/B routing with outcome tracking | ✅         | Variant + routing_reason logged in BQ; feedback records outcomes                 |
+| Batch prediction backfill         | ✅         | 1000 rows classification + 1000 embeddings                                       |
+| Feature Store sub-100ms           | ⚠️ Partial | 161ms on single dev node; scales with node count                                 |
+| Cost-aware routing tested         | ✅         | XGBoost + PyTorch, cost profiles in BQ                                           |
+| Labeled dataset ≥ 1,000           | ⚠️ Gap     | 346 predictions. Plan: production traffic + batch backfill of historical cases   |
+| Regression detection < 12h        | ⚠️ Gap     | Infrastructure ready (drift tables + scheduler); needs production traffic volume |
 
 ---
 
