@@ -4,18 +4,12 @@ Cross-validation checklist for running the bootstrap cookbooks end-to-end.
 Combines both [prepare_bootstrap_bundles.md](core/docs/cookbooks/prepare_bootstrap_bundles.md) and
 [bootstrap_environments.md](core/docs/cookbooks/bootstrap_environments.md).
 
-Items marked **🔲 DEFERRED** are newly implemented items from the bootstrap strengthening plan
-that should also be validated during this run.
-
 ---
 
 ## Pre-Flight
 
 - [ ] Conda env `i4g` is active
 - [ ] Working directory is `core/`
-- [ ] `gcloud auth login` and `gcloud auth application-default login` complete
-- [ ] `gcloud config set project i4g-dev`
-- [ ] `config/settings.local.toml` has Cloud SQL connection info (`[db_admin]` section)
 - [ ] Set run date: `export RUN_DATE=$(date +%Y%m%d)`
 
 ## Part 1 — Prepare Bootstrap Bundles
@@ -67,43 +61,39 @@ that should also be validated during this run.
   - [ ] `data/bundles/golden/seed.sql`
   - [ ] `data/bundles/golden/manifest.json`
 - [ ] Check manifest: `python -m json.tool data/bundles/golden/manifest.json`
-- [ ] Verify case count is reasonable (expect hundreds, not thousands)
+- [ ] Verify case count: `wc -l data/bundles/golden/cases.jsonl` (expect ~1200)
 
-### 1.5 Upload golden bundle to GCS **🔲 DEFERRED**
+### 1.5 Upload golden bundle to GCS (optional)
 
 - [ ] Run:
   ```bash
   gsutil -m rsync -r data/bundles/golden gs://i4g-dev-data-bundles/$RUN_DATE/golden/
   ```
 - [ ] Verify upload: `gsutil ls gs://i4g-dev-data-bundles/$RUN_DATE/golden/`
-- [ ] Confirm: `cases.jsonl`, `seed.sql`, `manifest.json` all present on GCS
 
 ## Part 2 — Bootstrap Local Environment
 
 ### 2.1 Backup current local state (safety net)
 
-- [ ] Run:
-  ```bash
-  i4g db backup --env local
-  ```
+- [ ] Run: `i4g db backup --env local`
 - [ ] Confirm archive created in `data/backups/`
-- [ ] Note the archive path for rollback: `_________________`
 
 ### 2.2 Bootstrap local with golden bundle
 
 - [ ] Run:
   ```bash
-  I4G_BOOTSTRAP__USE_GOLDEN_BUNDLE=true I4G_ENV=local i4g bootstrap local reset
+  i4g bootstrap local reset
   ```
-- [ ] Watch for errors in output — each step should complete cleanly:
+- [ ] Watch for errors. Each step should complete:
   - [ ] Reset artifacts (wipe SQLite, Chroma, reports)
   - [ ] Apply Alembic migrations
   - [ ] Seed campaigns
-  - [ ] Ingest JSONL bundles (skip-classification = on)
+  - [ ] Fast-ingest golden bundle (cases, entities, indicators)
   - [ ] Apply seed SQL (campaigns, watchlists, graph edges, timeline, geography)
   - [ ] OCR processing (if Tesseract available, else skipped)
   - [ ] Rebuild manual demo
   - [ ] Seed review cases
+  - [ ] **Analytics aggregation** (entity_stats, indicator_stats, campaign_stats)
   - [ ] Verify sandbox
 
 ### 2.3 Verify local sandbox
@@ -116,20 +106,17 @@ that should also be validated during this run.
 - [ ] Start dev server: `uvicorn i4g.api.app:app --reload`
 - [ ] Spot-check UI pages (if UI is running):
   - [ ] Dashboard — shows cases
-  - [ ] Intelligence / Campaigns — populated
+  - [ ] Intelligence / Campaigns — 7 campaigns with stats
+  - [ ] Intelligence / Indicators — has entries (from incident responses with entities)
   - [ ] Intelligence / Graph — nodes and edges visible
-  - [ ] Intelligence / Timeline — events across 6+ months
   - [ ] Intelligence / Watchlist — items and alerts
   - [ ] Impact / Geography — multiple countries
 
-### 2.4 Test local restore flow **🔲 DEFERRED — Alembic revision validation**
+### 2.4 Post-bootstrap backfill (optional)
 
-- [ ] Run:
-  ```bash
-  i4g db restore --env local --from data/backups/<your_backup_file>.tar.gz
-  ```
-- [ ] Confirm: Alembic revision check printed (OK or mismatch warning)
-- [ ] If mismatch: run `alembic upgrade head` then re-verify
+- [ ] Check pending work: `i4g backfill status`
+- [ ] Run classification (slow — LLM calls): `i4g backfill run classify`
+- [ ] Refresh analytics after classification: `i4g backfill run analytics`
 
 ## Part 3 — Bootstrap Dev Environment
 
@@ -137,16 +124,11 @@ that should also be validated during this run.
 
 ### 3.1 Backup dev database (critical safety net)
 
-- [ ] Run:
-  ```bash
-  i4g db backup --env dev
-  ```
-- [ ] Note the dump file path: `_________________`
+- [ ] Run: `i4g db backup --env dev`
 - [ ] Upload to GCS:
   ```bash
   gcloud storage cp <dump_path> gs://i4g-dev-data-bundles/backups/$(date +%Y%m%dT%H%M%SZ)/dump.sql.gz
   ```
-- [ ] Confirm upload: `gsutil ls gs://i4g-dev-data-bundles/backups/`
 
 ### 3.2 Bootstrap dev with golden bundle
 
@@ -164,68 +146,15 @@ that should also be validated during this run.
     --run-search-smoke
   ```
 - [ ] Monitor Cloud Run job logs in GCP Console for errors
-- [ ] Wait for ingestion to complete (may take 30-60 min)
 
 ### 3.3 Verify dev (post-ingest)
 
-- [ ] Wait ~10 min for classification_sweeper to run (or trigger manually):
-  ```bash
-  i4g jobs run classification-sweeper
-  ```
-- [ ] Wait for analytics_aggregation to run (or trigger manually):
-  ```bash
-  i4g jobs run analytics
-  ```
+- [ ] Wait ~10 min for classification_sweeper (or trigger manually): `i4g jobs run classification-sweeper`
+- [ ] Wait for analytics_aggregation (or trigger manually): `i4g jobs analytics`
 - [ ] Check dev UI at `https://app.dev.intelligenceforgood.org`:
   - [ ] Dashboard shows cases
   - [ ] Campaigns page populated
   - [ ] Search returns results
-
-### 3.4 Test dev restore flow **🔲 DEFERRED — Alembic revision validation**
-
-- [ ] Run:
-  ```bash
-  i4g db restore --env dev \
-    --from <backup_path>.sql.gz \
-    --confirm yes-restore-dev
-  ```
-- [ ] Confirm: Alembic revision validation printed after restore
-- [ ] If mismatch: `i4g db migrate dev`
-
-## Part 4 — Deferred Items Validation
-
-### 4.1 Backup job Docker image **🔲 DEFERRED**
-
-- [ ] Build the image:
-  ```bash
-  make build-backup-dev
-  ```
-- [ ] Deploy the job:
-  ```bash
-  make deploy-backup-dev
-  ```
-- [ ] Test manually (optional — will run weekly via scheduler):
-  ```bash
-  gcloud run jobs execute backup-db --region us-central1 --project i4g-dev --wait
-  ```
-- [ ] Verify backup appeared:
-  ```bash
-  gsutil ls gs://i4g-dev-data-bundles/backups/
-  ```
-
-### 4.2 Terraform — backup scheduler **🔲 DEFERRED**
-
-- [ ] After merging infra changes, apply Terraform:
-  ```bash
-  cd infra/environments/app/dev && make plan
-  ```
-- [ ] Review plan: should show new `backup-db` Cloud Run job + Cloud Scheduler
-- [ ] Apply: `make apply`
-- [ ] Verify scheduler: `gcloud scheduler jobs list --project i4g-dev --location us-central1`
-
-### 4.3 Dev e2e smoke (full cycle) **🔲 DEFERRED**
-
-- [ ] This is covered by Part 3 above — if Part 3 completes without errors, this item is satisfied
 
 ---
 
@@ -236,25 +165,12 @@ If the dev environment is left in a broken state:
 1. **Restore from backup:**
 
    ```bash
-   i4g db restore --env dev \
-     --from <backup_path>.sql.gz \
-     --confirm yes-restore-dev
+   i4g db restore --env dev --from <backup_path>.sql.gz --confirm yes-restore-dev
    ```
 
-2. **If no backup exists, re-bootstrap from legacy bundles:**
-
+2. **If no backup exists, re-bootstrap:**
    ```bash
-   I4G_ENV=dev i4g bootstrap dev reset \
-     --rate-limit-delay 0.5 \
-     --timeout 10800
-   ```
-
-3. **If Cloud SQL is truly unrecoverable:**
-   ```bash
-   # Terraform will recreate the instance
-   cd infra/environments/app/dev && make plan && make apply
-   # Then re-run migrations and bootstrap
-   i4g db migrate dev
+   I4G_ENV=dev i4g bootstrap dev reset --rate-limit-delay 0.5 --timeout 10800
    ```
 
 ---
