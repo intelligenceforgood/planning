@@ -1644,3 +1644,4 @@ Implemented all code deliverables for ML Phase 3: Advanced Capabilities. 5 PRD d
 - Vertex AI Feature Store: `google_vertex_ai_featurestore.ml_features`, entity type + IAM
 
 **Remaining manual steps:** terraform apply, BigQuery schema migrations, model deployment, E2E smoke tests, exit criteria validation.
+
