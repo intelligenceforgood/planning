@@ -1645,3 +1645,23 @@ Implemented all code deliverables for ML Phase 3: Advanced Capabilities. 5 PRD d
 
 **Remaining manual steps:** terraform apply, BigQuery schema migrations, model deployment, E2E smoke tests, exit criteria validation.
 
+## 2026-04-02 — Entity type normalization & UI labels
+
+Unified entity type handling across the stack: canonical definitions in `core/src/i4g/utils/entity_types.py`, normalization at all write paths, and user-friendly display labels in the UI.
+
+**core/ — 5 files:**
+
+- `entity_types.py` — rewritten as single source of truth: `ENTITY_TYPE_LABELS`, `CANONICAL_ENTITY_TYPES`, updated normalization map, removed `expand_entity_type()` / `_REVERSE_MAP`
+- `intelligence.py` — new `/entities/type-labels` endpoint; dashboard widget uses `count_entity_stats` instead of fetching full lists; graph seed normalization
+- `bootstrap/local/steps.py` — fixed golden bundle path; normalizes entity types at ingest time
+- `entity_extract.py` — normalizes entity types before persistence
+- `analytics_aggregation.py` — safety-net normalization for legacy data
+
+**ui/ — 9 files:**
+
+- New `entity-types.ts` — label + color utilities matching core definitions
+- Entity explorer, detail panel, filter sidebar, watchlist — display labels instead of raw type IDs
+- Network graph — split seed into type dropdown + value input, dynamic legend, fetch entity types from API
+- Classification badges — taxonomy code formatting with tooltips
+- Tests updated to match new UI controls
+
