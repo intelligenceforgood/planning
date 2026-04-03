@@ -1689,3 +1689,63 @@ Added entity lifecycle status tracking, threat entity type filtering for the Act
 **planning/ — 1 file:**
 
 - `change_log.md` — this entry
+
+## 2026-04-03 — Remove Azure and Legacy System References
+
+Removed all traces of the retired Azure infrastructure and legacy system from the codebase. The platform no longer depends on any Azure services; all historical data has been migrated to GCP.
+
+**Deleted files:**
+
+- `core/src/i4g/cli/azure/` — entire Azure CLI subcommand module (blob-to-gcs, search-export, search-to-vertex)
+- `core/scripts/migration/` — all 10 Azure migration scripts (azure_blob_to_gcs.py, azure_search_export.py, audit_db_tables.py, etc.)
+- `core/scripts/infra/add_azure_secrets.py` — Secret Manager helper for Azure credentials
+- `core/scripts/etl/clean_legacy_azure.py` — legacy Azure bundle cleaner
+- `core/docs/cookbooks/azure_legacy_data.md` — archived Azure cookbook
+
+**core/ — 4 files edited:**
+
+- `src/i4g/cli/app.py` — removed azure_app import and registration
+- `src/i4g/cli/__init__.py` — removed "azure" from `__all__`
+- `pyproject.toml` — removed `azure-identity`, `azure-search-documents`, `azure-storage-blob`, `pyodbc` dependencies
+- `requirements.txt` — regenerated without Azure/pyodbc packages
+
+**core/docs/ — 4 files edited:**
+
+- `cookbooks/README.md` — removed azure_legacy_data link
+- `cookbooks/bootstrap_environments.md` — removed legacy bundle structure section and Azure references
+- `cookbooks/prepare_bootstrap_bundles.md` — removed Azure export section and legacy steps; renumbered
+- `development/bundle_sources_and_coverage.md` — removed `legacy_azure` bundle entry
+
+**core/tests/ — 1 file edited:**
+
+- `tests/unit/settings/test_settings_env_overrides.py` — updated GCS test URI from legacy_azure path to golden bundle path
+
+**docs/ — 4 files edited:**
+
+- `book/security/secrets-reference.md` — removed "Azure Migration Secrets" section (stale D62 secrets)
+- `book/guides/admin/cli.md` — removed `i4g azure` command reference
+- `book/config/settings.md` — removed legacy alias mention
+- `book/architecture/evidence-storage.md` — removed "legacy" qualifier from flat path fallback
+- `book/api/sdk_endpoint_coverage.md` — "Legacy search" → "Superseded"
+- `config/README.md` — removed legacy alias mention
+
+**infra/ — 1 file edited:**
+
+- `README.md` — removed `add_azure_secrets.py` reference and Azure troubleshooting section
+
+**ssi/ — 1 file edited:**
+
+- `src/ssi/browser/agent_controller.py` — removed "instead of Azure Blob Storage" from docstring
+
+**planning/ — 2 files edited:**
+
+- `architecture/doc_audit_matrix.md` — updated azure_legacy_data.md status from ARCHIVED to DELETED
+- `change_log.md` — this entry
+
+**Not touched (intentional):**
+
+- `planning/architecture/adr/adr-001-azure-to-gcp-migration.md` — retained as historical decision record
+- `planning/change_log.md` historical entries — retained as changelog history
+- `planning/archive/` files — retained as archived history
+- `ml/` BigQuery `--use_legacy_sql=false` flags — BigQuery standard SQL flag, not Azure-related
+- `infra/modules/run/service/` "legacy v1" references — Cloud Run API version terminology, not Azure-related

@@ -100,17 +100,17 @@
 
 ### Core — Cookbooks
 
-| Path                                                 | Tier    | Status   | Issues                                                                                        | Owner          |
-| ---------------------------------------------------- | ------- | -------- | --------------------------------------------------------------------------------------------- | -------------- |
-| `core/docs/cookbooks/bootstrap_environments.md`      | 3       | ?        | Not verified.                                                                                 | Core SRE       |
-| `core/docs/cookbooks/smoke_test.md`                  | 3       | ?        | Not verified.                                                                                 | Core SRE       |
-| `core/docs/cookbooks/cloud_sql_primer.md`            | 3       | ?        | Not verified.                                                                                 | Core SRE       |
-| `core/docs/cookbooks/analytics_aggregation.md`       | 3       | ?        | Not verified.                                                                                 | Core tech lead |
-| `core/docs/cookbooks/external_enrichment.md`         | 3       | ?        | Not verified.                                                                                 | Core tech lead |
-| `core/docs/cookbooks/github_actions_setup.md`        | 3       | ?        | Not verified.                                                                                 | Core SRE       |
-| `core/docs/cookbooks/google_workspace_smtp_setup.md` | 3       | ?        | Not verified.                                                                                 | Core SRE       |
-| `core/docs/cookbooks/prepare_bootstrap_bundles.md`   | 3       | ?        | Not verified.                                                                                 | Core SRE       |
-| `core/docs/cookbooks/azure_legacy_data.md`           | archive | ARCHIVED | Azure migration complete (2025). ARCHIVED banner added March 2026. Historical reference only. | Core SRE       |
+| Path                                                 | Tier    | Status  | Issues                                                    | Owner          |
+| ---------------------------------------------------- | ------- | ------- | --------------------------------------------------------- | -------------- |
+| `core/docs/cookbooks/bootstrap_environments.md`      | 3       | ?       | Not verified.                                             | Core SRE       |
+| `core/docs/cookbooks/smoke_test.md`                  | 3       | ?       | Not verified.                                             | Core SRE       |
+| `core/docs/cookbooks/cloud_sql_primer.md`            | 3       | ?       | Not verified.                                             | Core SRE       |
+| `core/docs/cookbooks/analytics_aggregation.md`       | 3       | ?       | Not verified.                                             | Core tech lead |
+| `core/docs/cookbooks/external_enrichment.md`         | 3       | ?       | Not verified.                                             | Core tech lead |
+| `core/docs/cookbooks/github_actions_setup.md`        | 3       | ?       | Not verified.                                             | Core SRE       |
+| `core/docs/cookbooks/google_workspace_smtp_setup.md` | 3       | ?       | Not verified.                                             | Core SRE       |
+| `core/docs/cookbooks/prepare_bootstrap_bundles.md`   | 3       | ?       | Not verified.                                             | Core SRE       |
+| `core/docs/cookbooks/azure_legacy_data.md`           | archive | DELETED | Azure migration complete (2025). File removed April 2026. | Core SRE       |
 
 ### Core — Runbooks
 
@@ -198,24 +198,24 @@
 
 ## Archive
 
-| Path                                                       | Tier    | Status   | Notes                                                                 | Owner          |
-| ---------------------------------------------------------- | ------- | -------- | --------------------------------------------------------------------- | -------------- |
-| `planning/archive/prd_prototype_streamlit.md`              | archive | ARCHIVED | Streamlit prototype PRD. Retired 2025. Banner added March 2026.       | CPO            |
-| `planning/prd_prototype.md`                                | archive | ARCHIVED | Redirect file pointing to archive copy. Banner added March 2026.      | CPO            |
-| `core/docs/cookbooks/azure_legacy_data.md`                 | archive | ARCHIVED | Azure-era cookbook. Migration complete 2025. Banner added March 2026. | Core SRE       |
-| `planning/archive/visualization_strategy_deferred.md`      | archive | ARCHIVED | arch-viz repo deferred. Banner added March 2026.                      | CTO            |
-| `planning/archive/feature_completeness_plan.md`            | archive | ARCHIVED | 5-week sprint Feb 2026. ARCHIVED banner added March 2026.             | CPO            |
-| `planning/archive/consolidation_plan.md`                   | archive | ARCHIVED | —                                                                     | CPO            |
-| `planning/archive/debt_remediation_plan.md`                | archive | ARCHIVED | —                                                                     | CTO            |
-| `planning/archive/ecx_integration_summary.md`              | archive | ARCHIVED | Historical summary.                                                   | SSI tech lead  |
-| `planning/archive/gemini_model_migration.md`               | archive | ARCHIVED | Historical summary.                                                   | Core tech lead |
-| `planning/archive/production_launch_summary.md`            | archive | ARCHIVED | Historical summary.                                                   | CPO            |
-| `planning/archive/quality_elevation_plan.md`               | archive | ARCHIVED | Historical summary.                                                   | CTO            |
-| `planning/archive/ssi_awh_merge_summary.md`                | archive | ARCHIVED | Historical summary.                                                   | SSI tech lead  |
-| `planning/archive/ssi_case_enrichment_and_live_monitor.md` | archive | ARCHIVED | Historical summary.                                                   | SSI tech lead  |
-| `planning/archive/ssi_case_integration_summary.md`         | archive | ARCHIVED | Historical summary.                                                   | SSI tech lead  |
-| `planning/archive/ssi_development_summary.md`              | archive | ARCHIVED | Historical summary.                                                   | SSI tech lead  |
-| `planning/archive/tifap_implementation_summary.md`         | archive | ARCHIVED | Historical summary.                                                   | Core tech lead |
+| Path                                                       | Tier    | Status   | Notes                                                            | Owner          |
+| ---------------------------------------------------------- | ------- | -------- | ---------------------------------------------------------------- | -------------- |
+| `planning/archive/prd_prototype_streamlit.md`              | archive | ARCHIVED | Streamlit prototype PRD. Retired 2025. Banner added March 2026.  | CPO            |
+| `planning/prd_prototype.md`                                | archive | ARCHIVED | Redirect file pointing to archive copy. Banner added March 2026. | CPO            |
+| `core/docs/cookbooks/azure_legacy_data.md`                 | archive | DELETED  | Azure-era cookbook. Removed April 2026.                          | Core SRE       |
+| `planning/archive/visualization_strategy_deferred.md`      | archive | ARCHIVED | arch-viz repo deferred. Banner added March 2026.                 | CTO            |
+| `planning/archive/feature_completeness_plan.md`            | archive | ARCHIVED | 5-week sprint Feb 2026. ARCHIVED banner added March 2026.        | CPO            |
+| `planning/archive/consolidation_plan.md`                   | archive | ARCHIVED | —                                                                | CPO            |
+| `planning/archive/debt_remediation_plan.md`                | archive | ARCHIVED | —                                                                | CTO            |
+| `planning/archive/ecx_integration_summary.md`              | archive | ARCHIVED | Historical summary.                                              | SSI tech lead  |
+| `planning/archive/gemini_model_migration.md`               | archive | ARCHIVED | Historical summary.                                              | Core tech lead |
+| `planning/archive/production_launch_summary.md`            | archive | ARCHIVED | Historical summary.                                              | CPO            |
+| `planning/archive/quality_elevation_plan.md`               | archive | ARCHIVED | Historical summary.                                              | CTO            |
+| `planning/archive/ssi_awh_merge_summary.md`                | archive | ARCHIVED | Historical summary.                                              | SSI tech lead  |
+| `planning/archive/ssi_case_enrichment_and_live_monitor.md` | archive | ARCHIVED | Historical summary.                                              | SSI tech lead  |
+| `planning/archive/ssi_case_integration_summary.md`         | archive | ARCHIVED | Historical summary.                                              | SSI tech lead  |
+| `planning/archive/ssi_development_summary.md`              | archive | ARCHIVED | Historical summary.                                              | SSI tech lead  |
+| `planning/archive/tifap_implementation_summary.md`         | archive | ARCHIVED | Historical summary.                                              | Core tech lead |
 
 ---
 
