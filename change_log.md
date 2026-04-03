@@ -1665,3 +1665,27 @@ Unified entity type handling across the stack: canonical definitions in `core/sr
 - Classification badges — taxonomy code formatting with tooltips
 - Tests updated to match new UI controls
 
+## 2026-04-03 — Entity lifecycle statuses, threat entity types, KPI accuracy
+
+Added entity lifecycle status tracking, threat entity type filtering for the Active Threats KPI, and first_seen_at-based KPI counting to prevent bootstrap data inflation.
+
+**core/ — 6 files:**
+
+- `entity_types.py` — new `THREAT_ENTITY_TYPES` constant (14 actionable threat types, excludes contextual NER)
+- `intelligence.py` — Active Threats widget filters by `THREAT_ENTITY_TYPES` instead of counting all entities
+- `analytics_aggregation.py` — `_compute_entity_status()` lifecycle engine (active → declining → dormant → resolved, sticky flagged); `_refresh_entity_stats` writes status; KPI new-indicators/entities use `first_seen_at` over `created_at`
+- `analytics_store.py` — `count_entity_stats` and `_entity_filters` accept `entity_types` filter
+- `bootstrap/local/steps.py` — reads `manifest.json` bundle date for `first_seen_at`/`last_seen_at` on entities and indicators
+- `test_analytics_aggregation.py` — 8 new tests covering lifecycle transitions, resolved status, and first_seen_at KPI behavior
+
+**docs/ — 18 files:**
+
+- New `threat_entity_types.md` guide explaining threat vs contextual entities
+- `impact_dashboard.md` — expanded Active Threats, New Indicators, and entity lifecycle documentation
+- `entity_explorer.md` — added Status column and lifecycle status table
+- Removed sprint labels and internal source references across all changed files
+- `SUMMARY.md` — added Threat Entity Types entry
+
+**planning/ — 1 file:**
+
+- `change_log.md` — this entry
