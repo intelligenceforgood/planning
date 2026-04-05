@@ -1,6 +1,12 @@
 # Planning Change Log (active items only)
 
-Last updated: 24 Mar 2026
+Last updated: 05 Apr 2026
+
+## 2026-04-05 — TIFAP Enrichment Sprint: Schema Normalization + Entity UI
+
+Schema normalization (migration `20260404_01`): `cases.description` column added, `scam_records.classification_result` and `tags` removed, FK constraints on `review_queue` and `scam_records` to `cases`. Display reads (dashboard, case detail, analytics, dossier bundler) now join `cases` directly instead of `scam_records`. Entity extraction keys aligned between NER rules and worker job. New API: `GET /cases/{id}/related` (entity-overlap ranking). UI: Extracted Entities card on case detail, Related Cases card, graph deep-linking from entity explorer, edge click detail with linked case IDs, help modal on network graph. SSI `sql.py` synced with core schema changes.
+
+**Repos affected:** `core/`, `ssi/`, `ui/`, `copilot/`, `planning/`
 
 ## 2026-03-24 — ML Platform: Phase 2 Implementation (Sprints 0–4)
 
