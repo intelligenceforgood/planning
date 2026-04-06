@@ -133,7 +133,7 @@ backlog.
 
 ### 2.3 Case Detail → Graph Navigation
 
-- [ ] **On the new Entity Card (Phase 1.1), add "View Case Graph" button**
+- [x] **On the new Entity Card (Phase 1.1), add "View Case Graph" button**
   - Loads graph seeded from the case itself (using `seed_type=case`)
   - Shows all entities from this case and their connections
 
@@ -182,7 +182,7 @@ backlog.
   - Action buttons: "View Entity Detail", "Explore from Here" (re-seed graph),
     "View Cases" (list of cases containing this entity)
 
-- [ ] **API: Add endpoint for entity→cases lookup**
+- [x] **API: Add endpoint for entity→cases lookup**
   - `GET /intelligence/entities/{type}/{value}/cases` → paginated list of case summaries
   - Returns: case_id, title, status, risk_score, classification, created_at
 
@@ -219,7 +219,7 @@ backlog.
 
 ### 4.1 Entity Detail Page: Show Linked Cases
 
-- [ ] **Enhance entity detail view with case list**
+- [x] **Enhance entity detail view with case list**
   - When viewing an entity (either from explorer or from case page link), show:
     - Entity metadata (type, value, first/last seen, risk score, loss sum)
     - **Cases tab**: Paginated list of cases containing this entity
@@ -241,11 +241,11 @@ backlog.
 
 ### 4.3 Campaign Context Everywhere
 
-- [ ] **Case detail: Show linked campaigns**
+- [x] **Case detail: Show linked campaigns**
   - If case belongs to any threat campaigns, show campaign badge(s)
   - Clickable → campaign detail page
 
-- [ ] **Entity detail: Show campaigns**
+- [x] **Entity detail: Show campaigns**
   - Already partially supported via `campaign_ids` in entity_stats
   - Render campaign names as clickable badges
 
@@ -255,7 +255,7 @@ backlog.
 
 ### 4.4 Breadcrumb Navigation
 
-- [ ] **Add contextual breadcrumbs across intelligence pages**
+- [x] **Add contextual breadcrumbs across intelligence pages**
   - `Cases > Case ABC-123 > Entities > wallet_address:0x... > Graph`
   - Supports browser back behavior and orientation
   - Every page knows where the user came from

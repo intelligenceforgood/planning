@@ -1,6 +1,12 @@
 # Planning Change Log (active items only)
 
-Last updated: 05 Apr 2026
+Last updated: 06 Apr 2026
+
+## 2026-04-06 — TIFAP Enrichment Sprint: Cross-Navigation + Entity-Cases
+
+New API endpoint `GET /intelligence/entities/{type}/{value}/cases` with paginated case summaries. Case-seeded graph support (`seed_type=case`) in intelligence graph endpoint. Case detail now shows linked threat campaigns and "View Case Graph" button on entity card. Entity detail panel shows linked cases and campaign badges. Breadcrumb navigation added to entity explorer, network graph, and case detail pages. `dialect_group_concat` helper in `sql.py` for PostgreSQL/SQLite portability. Review store join flipped to `cases LEFT JOIN review_queue` so cases without queue entries render correctly. Infra: analytics-refresh job timeout bumped 1800→3600s.
+
+**Repos affected:** `core/`, `ui/`, `infra/`, `planning/`
 
 ## 2026-04-05 — TIFAP Enrichment Sprint: Schema Normalization + Entity UI
 
