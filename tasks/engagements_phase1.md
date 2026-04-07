@@ -8,10 +8,10 @@
 
 ## Tasks
 
-- [x] **Step 1 — Add `instructor` role** (`core/src/i4g/api/roles.py`)
-  - Add `INSTRUCTOR` to `Role` enum between `analyst` and `leo`
-  - Update `ROLE_HIERARCHY` (instructor inherits analyst, user, researcher)
-  - Update `LEO` and `ADMIN` to include instructor
+- [x] **Step 1 — Add `manager` role** (`core/src/i4g/api/roles.py`)
+  - Add `MANAGER` to `Role` enum between `analyst` and `leo`
+  - Update `ROLE_HIERARCHY` (manager inherits analyst, user, researcher)
+  - Update `LEO` and `ADMIN` to include manager
   - Add tests for new hierarchy
 
 - [x] **Step 2 — Alembic migration + schema** (`core/src/i4g/store/sql.py`, `core/src/i4g/migrations/versions/`)
@@ -31,7 +31,7 @@
   - POST/DELETE /engagements/{id}/cases
   - GET /engagements/{id}/summary
   - Pydantic v2 models with camelCase aliases
-  - Role guards (instructor+ for writes, analyst+ for reads)
+  - Role guards (manager+ for writes, analyst+ for reads)
   - Register router in app.py
   - Unit tests
 
@@ -83,12 +83,12 @@
 - `conda run -n i4g alembic upgrade head` on dev
 - Same on prod after dev validation
 - Run backfill script once per environment
-- Document `instructor` role in `docs/config/`
+- Document `manager` role in `docs/config/`
 
 ## Risks
 
 | Risk                                                             | Mitigation                                                   |
 | ---------------------------------------------------------------- | ------------------------------------------------------------ |
 | Engagement filter missed on query path                           | Test matrix: every case-returning endpoint × scoped/unscoped |
-| New `instructor` role breaks existing checks                     | Backward-compatible hierarchy subsumption                    |
+| New `manager` role breaks existing checks                        | Backward-compatible hierarchy subsumption                    |
 | Nullable `engagement_id` → orphan cases invisible in scoped mode | "All Engagements" mode + backfill script                     |

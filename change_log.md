@@ -2,6 +2,46 @@
 
 Last updated: 07 Apr 2026
 
+## 2026-04-07 — Engagements Phase 2: UI + Real-Time Dashboard
+
+Implemented the full Engagements UI layer (13 steps from `tasks/engagements_phase2.md`). Manager role added to auth context with proper role hierarchy. SDK extended with Zod schemas, TypeScript types, and 8 client methods for engagement CRUD, case assignment, and summary. Cookie-based engagement scoping (`i4g-engagement-id`) with `X-Engagement-Id` header injection in the catch-all proxy. `EngagementProvider` context resolves selection from URL param → cookie → auto-select-single-active. Engagement selector dropdown in console header. Full management page at `/admin/engagements` with create form, status transitions (draft→active→completed→archived), and bulk case assignment. Dashboard summary card with progress bar. Deep link support via `?engagement=` URL param. Edge case handling: completed-engagement read-only banner, no-engagements onboarding prompt.
+
+Quality gate: `pnpm build` ✓, `pnpm format` ✓, `pnpm lint` ✓, 218/218 tests pass.
+
+**Repos affected:** `ui/`, `planning/`
+
+**ui/ — New files:**
+
+- `apps/web/src/lib/engagement-cookie.ts` — cookie read/write/clear helpers
+- `apps/web/src/lib/engagement-context.tsx` — EngagementProvider + useEngagement hook
+- `apps/web/src/lib/server/engagements-service.ts` — server-action wrappers for engagement API
+- `apps/web/src/components/engagement-selector.tsx` — header dropdown component
+- `apps/web/src/components/engagement-summary-card.tsx` — dashboard progress card
+- `apps/web/src/components/completed-engagement-banner.tsx` — read-only warning banner
+- `apps/web/src/components/no-engagements-prompt.tsx` — onboarding empty state
+- `apps/web/src/app/(console)/admin/engagements/page.tsx` — management page (server)
+- `apps/web/src/app/(console)/admin/engagements/engagements-table.tsx` — CRUD table (client)
+
+**ui/ — Modified files:**
+
+- `packages/sdk/src/index.ts` — engagement schemas, types, 8 client methods
+- `packages/sdk/src/__fixtures__/index.ts` — mock client engagement methods
+- `apps/web/src/lib/auth-context.tsx` — manager role + hierarchy update
+- `apps/web/src/app/(console)/layout.tsx` — provider chain + selector + banner
+- `apps/web/src/app/(console)/navigation.tsx` — Engagements nav item (minRole: manager)
+- `apps/web/src/app/(console)/dashboard/page.tsx` — engagement summary card
+- `apps/web/src/app/(console)/admin/users/accounts-table.tsx` — manager role config
+- `apps/web/src/app/api/[...path]/route.ts` — X-Engagement-Id header injection
+- `tsconfig.base.json` — removed stale ignoreDeprecations field
+- `apps/web/tests/unit/api-proxy-route.test.ts` — test mock updated for cookies
+
+**Follow-up (Phase 3):**
+
+- Mid-switch unsaved-data warning dialog (needs form-level integration)
+- Cross-engagement deep link badge on case detail ("This case belongs to [Other Engagement]")
+- `?engagement=` param in shareable search/case links
+- Leaderboard + awards (Phase 3 task plan)
+
 ## 2026-04-07 — PRD: Engagements (Bounded Work Periods)
 
 New PRD (`planning/prd_engagements.md`) introducing **Engagements** — a first-class concept for grouping cases into bounded work periods (competitions, semesters, exercises). Covers data model (`engagements` table + FK on `cases`), API scoping via `X-Engagement-Id` header, UI engagement selector, per-engagement analytics, and leaderboard. Three-phase delivery: Phase 1 (data + API), Phase 2 (UI + dashboard), Phase 3 (leaderboard + awards). Replaces the informal "batch" concept that was lost during the campaign/batch separation work.

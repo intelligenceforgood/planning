@@ -44,11 +44,11 @@ This PRD introduces **Engagements** — a lightweight scoping mechanism that gro
 bounded work periods. An engagement answers: "Which cases should this group of analysts be
 working on right now, and how do we measure their performance against that specific set?"
 
-| Lens                     | Without Engagements                             | With Engagements                                    |
-| ------------------------ | ----------------------------------------------- | --------------------------------------------------- |
-| **Student experience**   | Sees all 2,000+ cases; unclear which to work on | Sees only the 50 cases assigned to Spring 2026      |
-| **Instructor analytics** | Ad-hoc SQL to filter by date range              | Per-engagement dashboard: accuracy, speed, coverage |
-| **Multi-university**     | All data co-mingled; no isolation               | Each university/competition is its own engagement   |
+| Lens                   | Without Engagements                             | With Engagements                                    |
+| ---------------------- | ----------------------------------------------- | --------------------------------------------------- |
+| **Student experience** | Sees all 2,000+ cases; unclear which to work on | Sees only the 50 cases assigned to Spring 2026      |
+| **Manager analytics**  | Ad-hoc SQL to filter by date range              | Per-engagement dashboard: accuracy, speed, coverage |
+| **Multi-university**   | All data co-mingled; no isolation               | Each university/competition is its own engagement   |
 
 ---
 
@@ -80,7 +80,7 @@ boundaries.
 | Problem                                                       | Impact                                                           |
 | ------------------------------------------------------------- | ---------------------------------------------------------------- |
 | Students see all cases, not just their assigned set           | Confusion, accidental work on wrong cases, data integrity risk   |
-| No per-competition analytics                                  | Instructors resort to spreadsheets or manual BigQuery queries    |
+| No per-competition analytics                                  | Managers resort to spreadsheets or manual BigQuery queries       |
 | No performance comparison within a bounded period             | Awards are subjective instead of data-driven                     |
 | Multi-university deployment requires manual case partitioning | Onboarding a new university partner is a custom engineering task |
 | Historical competition results are not queryable              | Institutional knowledge lost after each semester                 |
@@ -118,7 +118,7 @@ boundaries.
 
 ## 4. Personas
 
-### 4.1 Competition Organizer (Instructor)
+### 4.1 Competition Organizer (Manager)
 
 **Profile:** University professor or I4G staff member who manages competitions.
 
@@ -249,16 +249,16 @@ Transitions:
 
 ### 6.3 Engagement CRUD API
 
-| Method | Path                        | Description                                                    | Required Role          |
-| ------ | --------------------------- | -------------------------------------------------------------- | ---------------------- |
-| POST   | `/engagements`              | Create a new engagement                                        | `instructor` or higher |
-| GET    | `/engagements`              | List engagements (filtered by status, user role)               | `analyst` or higher    |
-| GET    | `/engagements/{id}`         | Engagement detail                                              | `analyst` or higher    |
-| PATCH  | `/engagements/{id}`         | Update name, description, dates, status                        | `instructor` or higher |
-| DELETE | `/engagements/{id}`         | Soft-delete (sets `archived`)                                  | `admin` only           |
-| POST   | `/engagements/{id}/cases`   | Bulk-assign case IDs to engagement                             | `instructor` or higher |
-| DELETE | `/engagements/{id}/cases`   | Remove case assignments                                        | `instructor` or higher |
-| GET    | `/engagements/{id}/summary` | Stats snapshot: case count, review progress, top-level metrics | `analyst` or higher    |
+| Method | Path                        | Description                                                    | Required Role       |
+| ------ | --------------------------- | -------------------------------------------------------------- | ------------------- |
+| POST   | `/engagements`              | Create a new engagement                                        | `manager` or higher |
+| GET    | `/engagements`              | List engagements (filtered by status, user role)               | `analyst` or higher |
+| GET    | `/engagements/{id}`         | Engagement detail                                              | `analyst` or higher |
+| PATCH  | `/engagements/{id}`         | Update name, description, dates, status                        | `manager` or higher |
+| DELETE | `/engagements/{id}`         | Soft-delete (sets `archived`)                                  | `admin` only        |
+| POST   | `/engagements/{id}/cases`   | Bulk-assign case IDs to engagement                             | `manager` or higher |
+| DELETE | `/engagements/{id}/cases`   | Remove case assignments                                        | `manager` or higher |
+| GET    | `/engagements/{id}/summary` | Stats snapshot: case count, review progress, top-level metrics | `analyst` or higher |
 
 ### 6.4 Case Assignment
 
@@ -326,7 +326,7 @@ Every endpoint that returns case data respects the engagement scope:
 | Role                  | Default Behavior                       | Can Select "All Engagements"?               |
 | --------------------- | -------------------------------------- | ------------------------------------------- |
 | `student` / `analyst` | Scoped to their active engagement      | No — must have an engagement selected       |
-| `instructor`          | Scoped to their engagement, can switch | Yes                                         |
+| `manager`             | Scoped to their engagement, can switch | Yes                                         |
 | `admin`               | "All Engagements" by default           | Yes (always)                                |
 | `researcher`          | Engagement-scoped if header present    | Yes (data is anonymized per existing rules) |
 
@@ -364,9 +364,9 @@ Slack's workspace switcher.
 **Dropdown contents:**
 
 - Active engagements the user has access to (sorted by `starts_at` descending)
-- "All Engagements" option (visible only to `instructor` and above)
+- "All Engagements" option (visible only to `manager` and above)
 - Completed engagements in a "Past" section (read-only badge)
-- "Manage Engagements" link for `instructor` role (navigates to admin page)
+- "Manage Engagements" link for `manager` role (navigates to admin page)
 
 ### 8.2 Persistence
 
@@ -391,14 +391,14 @@ Shared links include the engagement context so recipients see the same scoped vi
 
 | Scenario                                                    | Behavior                                                                                    |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| User has no active engagements                              | Show onboarding prompt: "No active engagements. Contact your instructor."                   |
+| User has no active engagements                              | Show onboarding prompt: "No active engagements. Contact your manager."                      |
 | Selected engagement transitions to `completed`              | Show banner: "This engagement has ended. Data is read-only." Student cannot submit reviews. |
 | User switches engagement mid-workflow                       | Dashboard, queue, and search results refresh. Unsaved form data triggers "discard?" prompt. |
 | Case viewed via deep link belongs to a different engagement | Display the case but show info badge: "This case belongs to [Other Engagement]."            |
 
 ### 8.5 Engagement Management Page
 
-Available to `instructor` and above at `/settings/engagements`:
+Available to `manager` and above at `/settings/engagements`:
 
 - List all engagements (filterable by status)
 - Create new engagement (name, description, dates)
@@ -456,7 +456,7 @@ Default weights configurable via `I4G_ANALYTICS__LEADERBOARD_WEIGHTS`.
 
 Leaderboard is visible to:
 
-- `instructor` and above: full leaderboard with all names
+- `manager` and above: full leaderboard with all names
 - `analyst` / `student`: their own rank + anonymized neighbors (e.g., "You are #3 of 12")
 
 ### 9.3 Engagement Summary Endpoint
@@ -533,7 +533,7 @@ continue to return all cases.
 - Edge case handling (no engagement, completed engagement, mid-switch)
 
 **Exit criteria:** A student analyst can log in, select their engagement, and navigate
-the entire console seeing only their engagement's cases. An instructor can create an
+the entire console seeing only their engagement's cases. A manager can create an
 engagement, assign cases, and monitor progress.
 
 ### Phase 3: Analytics + Leaderboard (1 sprint — can be deferred)
@@ -545,9 +545,9 @@ engagement, assign cases, and monitor progress.
 - `GET /engagements/{id}/summary` endpoint (extended analytics)
 - Leaderboard UI component
 - Per-engagement analytics export (PDF/CSV)
-- Engagement comparison view for instructors (side-by-side stats)
+- Engagement comparison view for managers (side-by-side stats)
 
-**Exit criteria:** At the end of a competition, an instructor can view a ranked leaderboard,
+**Exit criteria:** At the end of a competition, a manager can view a ranked leaderboard,
 export a summary PDF, and compare engagement results across semesters.
 
 ### Phase 4: Looker + Cross-Engagement Intelligence (future)
@@ -588,7 +588,7 @@ engineering involvement.
 | ------------------------------------------ | ---------------------------------- |
 | Time to generate competition report        | < 5 min (vs. hours of manual SQL)  |
 | Student confusion reports (wrong case set) | → 0 after Phase 2                  |
-| Instructor adoption of leaderboard         | ≥ 80% of active engagements use it |
+| Manager adoption of leaderboard            | ≥ 80% of active engagements use it |
 
 ### Operational Efficiency
 
@@ -606,7 +606,7 @@ engineering involvement.
 | Filter injection bugs — engagement filter missed on some query paths      | Medium     | High — students see wrong cases      | Test matrix: every case-returning endpoint × scoped/unscoped. Integration test suite validates no data leakage.                                          |
 | Aggregation job performance — per-engagement passes multiply compute time | Low        | Medium — analytics lag               | O(active engagements) is bounded (<20). Add circuit breaker: skip engagement breakdown if > 50 active engagements.                                       |
 | M:N demand emerges — cases need to be in multiple engagements             | Low        | Medium — requires schema migration   | 1:N is sufficient for known use cases. If M:N needed, migrate to junction table. API contract (`engagement_id` on case) can alias to primary engagement. |
-| Instructor creates too many engagements, polluting the selector           | Low        | Low — UX clutter                     | Auto-archive completed engagements after 90 days. Separate "active" vs. "past" sections in dropdown.                                                     |
+| Manager creates too many engagements, polluting the selector              | Low        | Low — UX clutter                     | Auto-archive completed engagements after 90 days. Separate "active" vs. "past" sections in dropdown.                                                     |
 | Engagement scoping mistaken for security boundary                         | Medium     | High — false sense of data isolation | Documentation, UI copy, and API docs explicitly state: "Engagement scoping is a convenience filter, not an access control boundary."                     |
 
 ---
@@ -619,7 +619,7 @@ engineering involvement.
    should operate without engagement context.
 
 2. **Auto-complete lifecycle transitions.** Should the system automatically move `active →
-completed` when `ends_at` passes? Or should this always require instructor action? The
+completed` when `ends_at` passes? Or should this always require manager action? The
    risk of auto-completion is interrupting a competition that ran over schedule.
 
 3. **Cross-engagement entity/indicator views.** When viewing an entity in Intelligence,
@@ -629,13 +629,13 @@ completed` when `ends_at` passes? Or should this always require instructor actio
    Engagements" regardless of selector state, with a toggle to scope.
 
 4. **Ground truth for accuracy scoring.** The leaderboard requires "classification
-   accuracy," which implies a ground truth. Options: (a) instructor-provided answer key,
+   accuracy," which implies a ground truth. Options: (a) manager-provided answer key,
    (b) consensus of multiple reviewers, (c) post-engagement expert adjudication. This is a
    Phase 3 design decision.
 
-5. **Engagement-level permissions.** Should instructors be scoped to only their own
-   engagements, or can any instructor see all engagements? For multi-university deployment,
-   instructors should probably only manage their own institution's engagements. This may
+5. **Engagement-level permissions.** Should managers be scoped to only their own
+   engagements, or can any manager see all engagements? For multi-university deployment,
+   managers should probably only manage their own institution's engagements. This may
    require an `engagement_members` junction table — evaluate in Phase 2.
 
 ---
