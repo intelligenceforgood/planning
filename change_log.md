@@ -1,6 +1,12 @@
 # Planning Change Log (active items only)
 
-Last updated: 06 Apr 2026
+Last updated: 07 Apr 2026
+
+## 2026-04-07 — PRD: Engagements (Bounded Work Periods)
+
+New PRD (`planning/prd_engagements.md`) introducing **Engagements** — a first-class concept for grouping cases into bounded work periods (competitions, semesters, exercises). Covers data model (`engagements` table + FK on `cases`), API scoping via `X-Engagement-Id` header, UI engagement selector, per-engagement analytics, and leaderboard. Three-phase delivery: Phase 1 (data + API), Phase 2 (UI + dashboard), Phase 3 (leaderboard + awards). Replaces the informal "batch" concept that was lost during the campaign/batch separation work.
+
+**Repos affected:** `planning/`
 
 ## 2026-04-06 — TIFAP Enrichment Sprint: Cross-Navigation + Entity-Cases
 
