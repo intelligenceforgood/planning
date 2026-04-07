@@ -249,7 +249,7 @@ backlog.
   - Already partially supported via `campaign_ids` in entity_stats
   - Render campaign names as clickable badges
 
-- [ ] **Graph nodes: Campaign membership indicator**
+- [x] **Graph nodes: Campaign membership indicator**
   - Nodes belonging to the same campaign get a shared visual indicator
   - Campaign filter toggle in graph controls
 
@@ -281,7 +281,7 @@ backlog.
 
 ### 5.3 Classification + Entity Dependency Check
 
-- [ ] **Ensure both jobs can run without blocking each other**
+- [x] **Ensure both jobs can run without blocking each other**
   - Classification sweeper and entity extraction both use LLM
   - If sharing a quota, add staggered scheduling or separate quota pools
 
@@ -294,24 +294,24 @@ backlog.
 
 ### 6.1 Empty State Improvements
 
-- [ ] **Every card/section: meaningful empty states instead of blank**
+- [x] **Every card/section: meaningful empty states instead of blank**
   - "No entities extracted yet — extraction runs automatically after ingestion"
   - "Classification in progress — 1,247 of 1,300 cases classified"
   - "No related cases found — this case's entities are unique"
 
 ### 6.2 Loading States & Progress
 
-- [ ] **Show classification/extraction progress on dashboard**
+- [x] **Show classification/extraction progress on dashboard**
   - "1,300 cases ingested | 1,247 classified | 1,198 entities extracted"
   - Progress bar or percentage
 
 ### 6.3 Graph Visual Polish
 
-- [ ] **Node tooltips on hover** (quick info without clicking)
-- [ ] **Edge labels on hover** ("3 shared cases")
-- [ ] **Zoom-to-fit button** (auto-frame all nodes)
-- [ ] **Minimap** for large graphs
-- [ ] **Search within graph** (highlight a node by typing entity value)
+- [x] **Node tooltips on hover** (quick info without clicking)
+- [x] **Edge labels on hover** ("3 shared cases")
+- [x] **Zoom-to-fit button** (auto-frame all nodes)
+- [x] **Minimap** for large graphs
+- [x] **Search within graph** (highlight a node by typing entity value)
 
 ---
 
