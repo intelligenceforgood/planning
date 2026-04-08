@@ -1807,3 +1807,42 @@ Removed all traces of the retired Azure infrastructure and legacy system from th
 - `planning/archive/` files — retained as archived history
 - `ml/` BigQuery `--use_legacy_sql=false` flags — BigQuery standard SQL flag, not Azure-related
 - `infra/modules/run/service/` "legacy v1" references — Cloud Run API version terminology, not Azure-related
+
+## 2026-07-22 — Engagements Phase 3: Analytics + Leaderboard
+
+Completed Phase 3 of `prd_engagements.md`. Implements engagement analytics, ranked leaderboard, analytics export
+(CSV/JSON), and comparison view.
+
+**core/ — 5 files edited:**
+
+- `src/i4g/store/sql.py` — added `engagement_analyst_stats` table (PK: engagement_id + analyst_email; FK to engagements)
+- `src/i4g/settings/sections/jobs.py` — added `leaderboard_weights` field to `AnalyticsSettings`
+- `src/i4g/store/engagement_store.py` — added `get_extended_summary()` (classification distribution, analyst count, days elapsed/remaining, avg review time) and `get_leaderboard()` (composite score from accuracy/throughput/quality weights, ranked)
+- `src/i4g/api/engagements.py` — added `GET /{id}/analytics` (analyst+), `GET /{id}/leaderboard` (analyst+), `GET /{id}/export` (manager+, CSV/JSON)
+- `src/i4g/worker/jobs/analytics_aggregation.py` — added `_refresh_engagement_analyst_stats()` to compute per-analyst stats per engagement (cases reviewed, actions, classification accuracy); integrated into aggregation job step list
+
+**core/ — 2 config files updated:**
+
+- `config/settings.default.toml` — added `leaderboard_weights` under `[analytics]`
+- `docs/config/settings_manifest.yaml` — added `analytics.leaderboard_weights` entry
+
+**core/ — 3 test files updated:**
+
+- `tests/unit/test_engagement_store.py` — added `TestExtendedSummary` (5 tests) and `TestLeaderboard` (5 tests)
+- `tests/unit/api/test_engagements_api.py` — added `TestAnalytics` (3 tests), `TestLeaderboard` (3 tests), `TestExport` (4 tests)
+- `tests/unit/test_analytics_aggregation.py` — added 3 tests for `_refresh_engagement_analyst_stats` (basic, idempotent, skips draft)
+
+**ui/packages/sdk/ — 1 file edited:**
+
+- `src/index.ts` — added Zod schemas (`engagementExtendedSummarySchema`, `leaderboardEntrySchema`, `leaderboardResponseSchema`), TS types, and client methods (`getEngagementAnalytics`, `getEngagementLeaderboard`, `exportEngagement`)
+
+**ui/apps/web/ — 7 files (4 new, 3 edited):**
+
+- `src/lib/server/engagements-service.ts` — added `getEngagementAnalytics()`, `getEngagementLeaderboard()`
+- `src/app/(console)/admin/engagements/[id]/leaderboard/page.tsx` — NEW: leaderboard page (server component)
+- `src/app/(console)/admin/engagements/[id]/leaderboard/analytics-summary.tsx` — NEW: analytics stat cards + classification distribution bar chart
+- `src/app/(console)/admin/engagements/[id]/leaderboard/leaderboard-table.tsx` — NEW: ranked table with CSV/JSON export buttons
+- `src/app/(console)/admin/engagements/compare/page.tsx` — NEW: side-by-side engagement comparison (server component)
+- `src/app/(console)/admin/engagements/compare/comparison-grid.tsx` — NEW: comparison metrics grid with sticky first column
+- `src/app/(console)/admin/engagements/engagements-table.tsx` — added Trophy icon link to leaderboard for active/completed engagements
+- `src/app/(console)/admin/engagements/page.tsx` — added "Compare Engagements" link (visible when past engagements exist)
