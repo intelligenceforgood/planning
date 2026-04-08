@@ -1846,3 +1846,36 @@ Completed Phase 3 of `prd_engagements.md`. Implements engagement analytics, rank
 - `src/app/(console)/admin/engagements/compare/comparison-grid.tsx` — NEW: comparison metrics grid with sticky first column
 - `src/app/(console)/admin/engagements/engagements-table.tsx` — added Trophy icon link to leaderboard for active/completed engagements
 - `src/app/(console)/admin/engagements/page.tsx` — added "Compare Engagements" link (visible when past engagements exist)
+
+## 2026-04-07 — Engagements Phase 4: Looker + Cross-Engagement Intelligence
+
+Implemented the final phase of the engagements PRD: BigQuery export pipeline, Looker dashboard templates, cross-engagement comparison API, and university partnership reports.
+
+Quality gate: 17/17 new unit tests pass (`tests/unit/test_bq_export.py`).
+
+**Repos affected:** `core/`, `planning/`
+
+**core/ — New files:**
+
+- `src/i4g/worker/jobs/bq_export.py` — BigQuery export job: syncs 6 aggregate tables (engagements, platform_kpis, entity_stats, indicator_stats, campaign_stats, engagement_analyst_stats) from Cloud SQL to BQ with WRITE_TRUNCATE; includes `get_cross_engagement_kpis()`, `get_semester_trends()`, `get_university_comparison()` query functions; supports `--dry-run` for local testing
+- `src/i4g/migrations/versions/20260407_02_add_engagement_id_to_platform_kpis.py` — Alembic migration adding `engagement_id` column to `platform_kpis`, backfilling `__global__` sentinel, rebuilding composite PK
+- `docs/looker/i4g_analytics.model.lkml` — Looker model with 5 explores and engagement joins
+- `docs/looker/views/engagements.view.lkml` — engagement dimensions + university extraction from metadata JSON
+- `docs/looker/views/platform_kpis.view.lkml` — KPI measures + computed fields (action_rate, proactive_percentage)
+- `docs/looker/views/engagement_analyst_stats.view.lkml` — analyst performance dimensions/measures
+- `docs/looker/views/entity_stats.view.lkml` — entity analytics dimensions/measures
+- `docs/looker/views/indicator_stats.view.lkml` — indicator analytics dimensions/measures
+- `docs/looker/views/campaign_stats.view.lkml` — campaign analytics dimensions/measures
+- `docs/looker/dashboards/cross_engagement_analytics.dashboard.lookml` — pre-built dashboard with KPI cards, semester trends, university comparison, analyst performance charts
+- `docs/looker/README.md` — Looker setup instructions
+- `tests/unit/test_bq_export.py` — 17 unit tests covering dry-run, cross-engagement KPIs, semester trends, university comparison, export table specs, BigQueryExportSettings, and platform_kpis engagement dimension
+
+**core/ — Modified files:**
+
+- `src/i4g/store/sql.py` — `platform_kpis` table: added `engagement_id` column (nullable), changed PK to `(period_type, period_start, engagement_id)`, added index `idx_platform_kpis_engagement_id`
+- `src/i4g/worker/jobs/analytics_aggregation.py` — `_refresh_platform_kpis()` now produces per-engagement + `__global__` rows for each (period_type, period_start) combination
+- `src/i4g/settings/sections/jobs.py` — added `BigQueryExportSettings` (project_id, dataset_id, enabled) with env var aliases
+- `src/i4g/settings/sections/__init__.py` — exported `BigQueryExportSettings`
+- `src/i4g/settings/config.py` — added `bq_export` field to `Settings`
+- `src/i4g/cli/jobs/__init__.py` — registered `bq-export` CLI command with `--dry-run` flag
+- `src/i4g/api/engagements.py` — added 3 cross-engagement comparison endpoints: `GET /engagements/compare/kpis`, `GET /engagements/compare/trends`, `GET /engagements/compare/universities` (all require `manager` role)
