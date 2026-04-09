@@ -1879,3 +1879,34 @@ Quality gate: 17/17 new unit tests pass (`tests/unit/test_bq_export.py`).
 - `src/i4g/settings/config.py` — added `bq_export` field to `Settings`
 - `src/i4g/cli/jobs/__init__.py` — registered `bq-export` CLI command with `--dry-run` flag
 - `src/i4g/api/engagements.py` — added 3 cross-engagement comparison endpoints: `GET /engagements/compare/kpis`, `GET /engagements/compare/trends`, `GET /engagements/compare/universities` (all require `manager` role)
+
+## 2026-04-09 — Entity Extraction Overhaul: Sprint 1 (Critical Fixes & Type Fidelity)
+
+Implemented all Sprint 1 tasks from `tasks/entity_extraction_overhaul.md`:
+
+**Phase 1A — Fix Critical Bugs:**
+
+- Fixed ML NER label mapping in `core/src/i4g/ml/client.py`: `BANK_ACCOUNT` now maps to `bank_accounts` (was `wallet_addresses`), `PHONE` → `phone_numbers`, `EMAIL` → `email_addresses`, `URL` → `urls`. Added mappings for `ACCOUNT_NUMBER`, `ROUTING_NUMBER`, `DOMAIN`, `IP_ADDRESS`, `SOCIAL_HANDLE`, `LOCATION`, `CRYPTO_TOKEN`.
+- Split `contact_channels` catch-all in `core/src/i4g/extraction/ner_rules.py`: `extract_entities()` now returns separate `urls`, `phone_numbers`, `email_addresses`, `bank_accounts` keys instead of lumping into `contact_channels`/`email_address`/`bank_account`.
+- Added missing entries to normalization map in `core/src/i4g/utils/entity_types.py`: `email_addresses`, `emails`, `bank_accounts`, `bank_account`, `email_address`, `domains`, `ip_addresses`, `social_handles`. Every key from all extraction paths now resolves to a canonical type.
+
+**Phase 1B — Expand LLM Entity Type Coverage:**
+
+- Expanded `_ENTITY_KEYS` from 7 to 14 types in both `entity_extract.py` and `semantic_ner.py`: added `bank_accounts`, `account_numbers`, `routing_numbers`, `email_addresses`, `phone_numbers`, `urls`, `domains`, `social_handles`.
+- Rewrote extraction prompts with explicit field definitions, negative examples (field labels, scam terms, financial terms not to extract as people), and a second few-shot example showing email/phone/account extraction.
+- Updated all few-shot examples to use expanded key set (no more `contact_channels`).
+
+**Phase 1C — Indicator Filtering:**
+
+- `_persist_extracted_entities()` now only creates indicator rows for types in `THREAT_ENTITY_TYPES`. Person, organization, location, scam_indicator entities no longer inflate the indicators table.
+- Created idempotent cleanup script `core/scripts/cleanup_indicators_and_entities.sql` that: deletes non-threat indicator rows, re-classifies `contact_handle` entities/indicators into `url`/`email_address`/`phone_number` based on value patterns, and normalizes remaining legacy plural types.
+
+**Tests:** 1420 passed, 0 failed, 2 skipped. New tests:
+
+- `tests/unit/extraction/test_indicator_filtering.py` — 13 tests for threat type membership
+- `tests/unit/utils/test_entity_types.py` — 6 tests for normalization map completeness
+- `tests/unit/services/test_ml_ner_mapping.py` — 6 tests for ML NER label mapping correctness
+- Updated `test_ner_rules.py` with 5 new tests for split keys
+- Updated `test_semantic_ner.py` and `test_ml_platform_client.py` for expanded schema
+
+Quality gate: `pytest tests/unit/ -x` ✓ (1420 passed), `pre-commit run` ✓ (all hooks clean).
