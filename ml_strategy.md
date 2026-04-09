@@ -318,7 +318,7 @@ Each phase has explicit exit criteria before the next begins. Few-shot prompting
 ```toml
 [llm]
 provider = "gemini"              # gemini | ollama | mock
-chat_model = "gemini-2.5-flash"  # primary model
+chat_model = "gemini-3-flash-preview"  # primary model
 temperature = 0.1
 vertex_ai_project = "i4g-dev"
 vertex_ai_location = "us-central1"
@@ -333,7 +333,7 @@ embedding_model = "mxbai-embed-large"
 ```toml
 [llm]
 provider = "gemini"
-model = "gemini-2.5-flash"
+model = "gemini-3-flash-preview"
 cheap_model = ""                 # optional lightweight model for simple states
 vision_model = ""                # Ollama-specific vision override
 temperature = 0.1
