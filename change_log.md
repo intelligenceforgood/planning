@@ -1,6 +1,20 @@
 # Planning Change Log (active items only)
 
-Last updated: 07 Apr 2026
+Last updated: 10 Apr 2026
+
+## 2026-04-10 — Entity Extraction v2: Sprint 6 — Documentation, Migration & Launch
+
+Completed Sprint 6 of the entity extraction v2 overhaul:
+
+- **Architecture documentation** — full design doc at `core/docs/design/entity-extraction-v2.md` with Mermaid pipeline flowchart, module capability matrix, merge algorithm details, and decision log
+- **Developer onboarding guide** — `copilot/docs/entity-extraction-dev-guide.md` covering: adding a new module, adding a new entity type, debugging false positives
+- **Production migration runbook** — step-by-step at `core/docs/design/entity-extraction-v2-migration.md` with baseline → backfill → validate → deploy sequence
+- **Legacy code cleanup** — migrated `cli/extract/tasks.py` from direct `ner_rules`/`semantic_ner` imports to the public `extract_entities()` API; added deprecation warnings to `ner_rules.extract_entities()`, `semantic_ner._merge_results()`, and `semantic_ner._add_confidence_scores()`; updated all tests to suppress deprecation warnings
+- **QA bundle expansion** — created `expanded-v1` bundle with 51 labeled cases across 6 categories: non-English (10), obfuscated (10), email threads (5), short texts (10), zero entities (10), complex scams (6)
+- **Bug fix** — `bundle.py` referenced `settings.app.project_root` (nonexistent); fixed to `settings.project_root`
+- **Handoff documentation** — quality baseline, known limitations, runbook, and future improvements at `core/docs/design/entity-extraction-v2-handoff.md`
+
+Quality gate: 263 extraction + entity_types tests pass. Bundle CLI verified (list, create, test module).
 
 ## 2026-04-07 — Engagements Phase 2: UI + Real-Time Dashboard
 
@@ -1910,3 +1924,64 @@ Implemented all Sprint 1 tasks from `tasks/entity_extraction_overhaul.md`:
 - Updated `test_semantic_ner.py` and `test_ml_platform_client.py` for expanded schema
 
 Quality gate: `pytest tests/unit/ -x` ✓ (1420 passed), `pre-commit run` ✓ (all hooks clean).
+
+## 2026-04-10 — Entity Extraction v2: Sprint 1 — Foundation Types & Module Refactor
+
+Completed all 8 tasks in Sprint 1 of the entity extraction v2 overhaul. Created clean abstractions
+behind a `ModuleProtocol` interface — no behavior changes, pure refactor with full test continuity.
+
+- Defined core types in `src/i4g/extraction/types.py`: `ScoredEntity`, `ExtractionResult`,
+  `ModuleProtocol`, `MergeDecision`, `ModuleReport`, `ConfidenceGate`
+- Created `src/i4g/extraction/modules/` package with 5 modules:
+  - `regex.py` — wraps `ner_rules.py` extractors, authority 1.0 for wallet/email/phone/url
+  - `heuristic.py` — names + crypto keywords, deliberately low authority (0.4)
+  - `llm.py` — prompt construction + JSON parsing via `LLMClient` abstraction
+  - `ml_ner.py` — Vertex AI NER endpoint with passthrough model confidence
+  - `blocklist.py` — configurable false-positive filter (TOML-loadable)
+- Created `src/i4g/extraction/normalize.py` — re-exports from `entity_types.py` + obfuscation normalizer
+- Existing `ner_rules.py` and `semantic_ner.py` remain untouched (compatibility shims in Sprint 2)
+
+**Tests:** 160 passed (61 original unchanged + 99 new). New test files:
+
+- `tests/unit/extraction/modules/test_types.py` — 12 tests for core types + protocol compliance
+- `tests/unit/extraction/modules/test_regex.py` — 14 tests for regex module
+- `tests/unit/extraction/modules/test_heuristic.py` — 10 tests for heuristic module
+- `tests/unit/extraction/modules/test_llm.py` — 12 tests for LLM module
+- `tests/unit/extraction/modules/test_ml_ner.py` — 11 tests for ML NER module
+- `tests/unit/extraction/modules/test_blocklist.py` — 18 tests for blocklist module
+- `tests/unit/extraction/modules/test_normalize.py` — 9 tests for normalize re-exports
+
+Quality gate: `pytest tests/unit/extraction/ -x` ✓ (160 passed), `pre-commit run` ✓ (all hooks clean).
+
+**Repos affected:** `core/`, `planning/`
+
+## 2026-04-10 — Entity Extraction v2: Sprint 4 — Advanced Quality & CI Integration
+
+Implemented all 6 tasks from Sprint 4 of `tasks/entity_extraction_v2_tasks.md`.
+
+- **CI quality gate** (`.github/workflows/entity-qa.yaml`): runs `i4g entity-qa score --bundle regression-v1 --threshold 0.8` on PRs touching extraction code, with rule-only modules for fast CI
+- **Regression bundle auto-update**: `i4g entity-qa bundle add-case` CLI command to add cases (with optional golden labels) to existing bundles
+- **False-positive analysis** (`i4g entity-qa analyze-fps`): identifies entities appearing frequently with low average confidence across a bundle
+- **Local bootstrap parity**: `ingest_golden_fast()` now runs the extraction orchestrator on golden cases by default; `--skip-extraction` flag for speed
+- **Quality metrics emission** (`src/i4g/extraction/quality/metrics.py`): computes entity counts, confidence histograms, module contributions, and latency; saves to JSON and logs for Cloud Monitoring
+- **Blocklist management** (`i4g entity-qa blocklist list|add|test`): CLI for viewing, adding, and testing blocklist entries; `config/entity_blocklist.toml` created as editable config file
+
+Quality gate: `pytest tests/unit/extraction/ -x` ✓ (229 passed, 10 new), `pre-commit run` ✓ (all hooks clean).
+
+**Repos affected:** `core/`, `planning/`
+
+**core/ — New files:**
+
+- `.github/workflows/entity-qa.yaml`
+- `config/entity_blocklist.toml`
+- `src/i4g/extraction/quality/metrics.py`
+- `tests/unit/extraction/quality/test_metrics.py`
+- `tests/unit/extraction/quality/test_add_case.py`
+
+**core/ — Modified files:**
+
+- `src/i4g/cli/entity_qa/__init__.py` — added `bundle add-case`, `analyze-fps`, `blocklist list|add|test` commands
+- `src/i4g/extraction/quality/bundle.py` — added `add_case_to_bundle()`
+- `src/i4g/cli/bootstrap/local/steps.py` — `ingest_golden_fast()` runs orchestrator by default
+- `src/i4g/cli/bootstrap/local/orchestrator.py` — `skip_extraction` parameter pass-through
+- `src/i4g/cli/bootstrap/local/commands.py` — `--skip-extraction` CLI flag
