@@ -1,6 +1,54 @@
 # Planning Change Log (active items only)
 
-Last updated: 10 Apr 2026
+Last updated: 13 Apr 2026
+
+## 2026-04-13 — Docs Site Rewrite: Phase 1 Tone & Nav Revision
+
+Revised Phase 1 content based on review feedback.
+
+**Tone (Stripe Docs style):**
+
+- Rewrote `getting-started/why-i4g.md` — removed motivational tagline and emotional framing, replaced narrative "4 things" section with capabilities table
+- Rewrote `getting-started/how-it-works.md` — cut "What happens behind the scenes" section, tightened step descriptions, added pipeline stages header
+- Rewrote `getting-started/find-your-role.md` — removed "I am a..." framing, streamlined role descriptions
+- Rewrote `README.md` welcome page — factual one-liner intro, removed "New here?" section
+- Light tone pass on Key Concepts README
+
+**Navigation nesting:**
+
+- Restructured `SUMMARY.md` — child pages now nest under each section's overview/README page so sidebar groups collapse (Getting Started stays flat at 3 pages)
+
+**GitBook hint blocks:**
+
+- `how-it-works.md` — info hint: steps 1–4 automatic, human review at step 5
+- `find-your-role.md` — info hint: analysts/engagement participants should read Key Concepts first
+- `key-concepts/README.md` — info hint: pages ordered by dependency
+- `key-concepts/cases-and-evidence.md` — warning hint on PII protection
+- `key-concepts/entity-extraction.md` — info hint on automatic obfuscation reversal
+
+**Repos affected:** `docs/`, `planning/`
+
+## 2026-04-13 — Docs Site Rewrite: Phase 0 + Phase 1 (Structure & Foundation)
+
+Executed Phase 0 (Prep) and Phase 1 (Foundation) of the docs site rewrite plan (`tasks/docs-site-rewrite.md`).
+
+**Phase 0 — Structural prep:**
+
+- Created new directory structure: `getting-started/`, `key-concepts/`, `analyst-guide/`, `engagement-guide/`, `law-enforcement-guide/`, `user-guide/`, `admin-guide/`
+- Migrated 8 keep-as-is pages to new locations (taxonomy-explorer, geographic-heatmap, timeline, impact-dashboard, indicator-registry, working-in-engagement, lifecycle, taxonomy-reference)
+- Replaced `SUMMARY.md` with the new information architecture (55 pages across 9 sections)
+- Created stub pages for Phase 2–4 content so all SUMMARY.md links resolve
+
+**Phase 1 — Foundation content:**
+
+- Rewrote `README.md` welcome page (mission-first, persona-routed table)
+- Wrote 3 Getting Started pages: `why-i4g.md`, `how-it-works.md`, `find-your-role.md`
+- Wrote 11 Key Concepts pages: README, cases-and-evidence, entities, indicators, entity-extraction, fraud-taxonomy, campaigns, risk-scoring, engagements, dossiers-and-reports, site-investigations
+- Created 7 P0 SVG diagrams from Mermaid sources: how-it-works, case-lifecycle, entity-aggregation, entity-indicator-funnel, extraction-pipeline, taxonomy-axes, campaign-clustering
+
+**Repos affected:** `docs/`, `planning/`
+
+**Remaining phases:** Phase 2 (Analyst Journey), Phase 3 (Secondary Journeys), Phase 4 (Security, API, Cleanup).
 
 ## 2026-04-10 — Entity Extraction v2: Sprint 6 — Documentation, Migration & Launch
 
@@ -1985,3 +2033,89 @@ Quality gate: `pytest tests/unit/extraction/ -x` ✓ (229 passed, 10 new), `pre-
 - `src/i4g/cli/bootstrap/local/steps.py` — `ingest_golden_fast()` runs orchestrator by default
 - `src/i4g/cli/bootstrap/local/orchestrator.py` — `skip_extraction` parameter pass-through
 - `src/i4g/cli/bootstrap/local/commands.py` — `--skip-extraction` CLI flag
+
+## 2026-04-14 — Docs Site Rewrite: Phase 2 Analyst Journey
+
+Wrote all Phase 2 content for the docs site rewrite — the Analyst Guide journey.
+
+**New pages written (12):**
+
+- `analyst-guide/README.md` — start here page with guide table, reading order, best practices, escalation paths
+- `analyst-guide/console-tour.md` — sidebar navigation table, dashboard overview, engagement selector, keyboard shortcuts
+- `analyst-guide/daily-workflow.md` — five-step loop (dashboard → queue → review → classify → action)
+- `analyst-guide/reviewing-cases.md` — narrative reading, evidence inspection, taxonomy classification, risk scoring, entity annotation
+- `analyst-guide/search-and-discovery.md` — merged Search (filters, saving, results) + Discovery (semantic exploration, PII handling)
+- `analyst-guide/entity-explorer.md` — browsing, lifecycle statuses, searching, detail panel, exporting (stripped API endpoints)
+- `analyst-guide/network-graph.md` — seeding, visual encoding, filtering, campaign seeding, temporal animation, clusters (stripped API endpoints)
+- `analyst-guide/campaigns.md` — browsing, managing, creating, risk scores, tactical vs strategic, detail page (merged campaigns + governance)
+- `analyst-guide/reports-and-dossiers.md` — Report Builder, Library, TLP guidance, Evidence Dossiers verification, SSI artifacts (merged user-guide-reports + dossiers)
+- `analyst-guide/investigating-sites.md` — scan types, passive results, AI agent, wallet extraction, eCrimeX submissions/feed/dashboard, evidence downloads
+- `analyst-guide/live-monitoring.md` — monitor display, guidance commands, tips (stripped WebSocket/SSE internals)
+- `analyst-guide/watchlist-and-alerts.md` — pinning, management, alert types, viewing/managing alerts (stripped API table and env var)
+
+**Migrated pages verified clean (5):**
+
+- `taxonomy-explorer.md`, `geographic-heatmap.md`, `timeline.md`, `impact-dashboard.md`, `indicator-registry.md` — all confirmed free of developer content
+
+**Minor cleanup:**
+
+- `indicator-registry.md` — replaced "403 Forbidden" language and SDO reference with end-user-friendly wording
+
+**Key design decisions:**
+
+- All pages follow Phase 1 tone: present tense, active voice, second person, visual-first
+- Screenshots use HTML comments (`<!-- TODO -->`) as placeholders until P0 screenshots are captured
+- Every page links back to relevant Key Concepts pages
+- No env vars, CLI commands, API endpoints, source file paths, or Docker/Terraform references
+- eCrimeX coverage added to investigating-sites.md (submissions, feed, dashboard) per UI audit gap
+
+**Remaining Phase 2 items:**
+
+- Capture P0 screenshots (requires running Console)
+- Final UI coverage audit verification
+
+**Repos affected:** `docs/`, `planning/`
+
+## 2026-04-14 — Docs Site Rewrite: Phase 4 — Security, API, Cleanup
+
+Completed Phase 4 of the docs site rewrite.
+
+**Security section (3 pages rewritten):**
+
+- `security/README.md` — updated links, added section index table, converted retention to table format
+- `security/access-and-roles.md` — rewrote from stub; pulled end-user content from old `access-control.md` (roles, permissions, data visibility matrix); stripped IAP/OAuth/service-account internals
+- `security/report-authenticity.md` — rewrote from stub; step-by-step verification guide, hash explanation, quick-reference command
+
+**API section (4 pages rewritten for partner-integrator focus):**
+
+- `api/README.md` — stripped endpoint tables and internal architecture; reframed for integration partners
+- `api/authentication.md` — replaced 3-layer IAP/JWT architecture with API-key and bearer-token partner docs
+- `api/sample-workflows.md` — rewrote from stub; 7 curl-based workflow examples (submit, search, download, STIX export)
+- `api/taxonomy-reference.md` — stripped analytics internals (aggregation job, endpoint refs); added concept links
+
+**Deleted pages (63 files removed):**
+
+- `architecture/` (8 files) — 100% infra internals
+- `config/` (3 files) — env var catalog, SLO definitions
+- `ssi/` (12 files) — CLI reference, configuration, batch jobs
+- `guides/` (31+ files) — old pre-rewrite guide structure
+- `overview/` (3 files) — replaced by getting-started/
+- `api/field_name_translation.md`, `api/sdk_endpoint_coverage.md`, `api/sample-requests.md`, `api/taxonomy_reference.md` — dev-only or duplicates
+- `security/access-control.md`, `security/secrets-reference.md` — dev-only
+- `contributing.md` — developer contribution guide
+
+**Validation:**
+
+- All 55 SUMMARY.md links resolve to existing files
+- Zero orphan pages (every .md file in book/ is in SUMMARY.md)
+- Zero broken internal cross-references across all pages
+- Dev-content scan clean (no env vars, CLI commands, source paths, Docker/Terraform refs in body text)
+
+**Remaining items (screenshots/diagrams — require running Console):**
+
+- P1/P2 screenshots (26 total) — see §11 visual asset checklist
+- P1/P2 diagrams (4 remaining) — entity-lifecycle, engagement-lifecycle, SSI-flow, persona-router
+- Replace 2 placeholder images (LEO report, victim intake)
+- Review 7 existing screenshots for currency
+
+**Repos affected:** `docs/`, `planning/`
