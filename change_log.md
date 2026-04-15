@@ -1,6 +1,46 @@
 # Planning Change Log (active items only)
 
-Last updated: 13 Apr 2026
+Last updated: 15 Apr 2026
+
+## 2026-04-15 — Gemini API Key Auth Migration
+
+Switched LLM auth from Vertex AI Application Default Credentials (routed via AI Studio, billing to personal credit card) to Gemini API key auth (routed via `generativelanguage.googleapis.com`, billing to GCP project's non-profit billing account).
+
+**Code changes:**
+
+- `core/src/i4g/settings/sections/ml.py` — added `gemini_api_key` field (aliases: `LLM_GEMINI_API_KEY`, `LLM__GEMINI_API_KEY`)
+- `core/src/i4g/services/classifier.py` — `VertexAIClient` prefers API-key auth when key is set
+- `core/src/i4g/llm/client.py` — `build_llm_client()` and `_build_vertex_langchain()` pass API key through
+- `ssi/src/ssi/settings/config.py` — added `gemini_api_key` field to SSI `LLMSettings`
+- `ssi/src/ssi/llm/gemini_provider.py` — `GeminiProvider._init_client()` uses `genai.Client(api_key=...)` when set
+- `ssi/src/ssi/llm/factory.py` — passes `api_key` from settings to provider
+- `core/tests/unit/llm/test_client.py` — updated mock and error message assertion
+
+**Infrastructure:**
+
+- `infra/stacks/app/main.tf` — enabled `generativelanguage.googleapis.com` API, created `gemini-api-key` Secret Manager secret
+- `infra/environments/app/dev/terraform.tfvars` — wired `I4G_LLM__GEMINI_API_KEY` (core-svc, sweeper) and `SSI_LLM__GEMINI_API_KEY` (ssi-svc)
+- `infra/environments/app/prod/terraform.tfvars` — same for prod
+
+**Deployment (dev):**
+
+- Built and pushed images: `core-svc:dev`, `ssi-svc:dev`, `ingest-job:dev`
+- `terraform apply` successful, all services healthy
+- Placeholder secret version created; replace with real API key
+
+**Documentation:**
+
+- `docs/config/README.md` — added `llm.gemini_api_key` to settings table, updated `llm.provider` description
+- `ssi/config/settings.default.toml` — added `gemini_api_key` comment
+- `copilot/.github/shared/architecture-cheatsheet.instructions.md` — added §4 "LLM Auth (Gemini API)" section with key creation instructions
+
+**Remaining:**
+
+- Create real Gemini API keys for dev and prod projects
+- Store keys in Secret Manager (replace placeholder)
+- Build and push prod images, run `terraform apply` for prod
+
+**Repos affected:** `core/`, `ssi/`, `infra/`, `docs/`, `copilot/`, `planning/`
 
 ## 2026-04-13 — Docs Site Rewrite: Phase 1 Tone & Nav Revision
 
