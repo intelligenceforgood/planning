@@ -56,12 +56,20 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 # restart shell, then:
 nvm install 20 && nvm use 20
 
-# pnpm (matches the rest of the i4g workspace)
+# pnpm (matches the rest of the i4g workspace — pnpm@9 is used in ui/)
 corepack enable
-corepack prepare pnpm@latest --activate
+corepack prepare pnpm@9 --activate
+
+# One-time: tell pnpm where to put global binaries (corepack installs don't do this automatically)
+pnpm setup
+# The command prints a shell rc snippet; apply it immediately:
+source ~/.zshrc   # macOS with zsh (default); use ~/.bashrc on Linux or WSL2
 ```
 
 _Verify:_ `node -v` prints `v20.x`, `pnpm -v` prints `9.x`.
+
+> **Compatibility note:** this pnpm setup is identical to what `ui/` uses. The `pnpm setup` step
+> only affects the global bin path; it does not change how `ui/` workspace installs work.
 
 ### 2.2 Expo CLI & EAS CLI
 
@@ -76,13 +84,21 @@ _Verify:_ `expo --version` and `eas --version` both print a number.
 ```bash
 # Xcode from the App Store (free). ~40 GB download. Accept the license:
 sudo xcodebuild -license accept
-# Install Command Line Tools + iOS Simulator runtime:
+# Install Command Line Tools:
 xcode-select --install
-open -a Simulator
+# Download the iOS Simulator runtime (~8–12 GB — Xcode no longer bundles it):
+xcodebuild -downloadPlatform iOS
+# Open Simulator — use the full path (open -a Simulator does not work; Spotlight
+# does not index apps nested inside Xcode.app):
+open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
 ```
 
-_Verify:_ `xcrun simctl list devices | grep iPhone` lists at least one simulator. `open -a
-Simulator` shows a simulator window.
+_Verify:_ `xcrun simctl list devices | grep iPhone` lists at least one simulator. The Simulator
+window opens.
+
+> **Note:** `xcrun simctl list devices` showing an empty `== Devices ==` section means the iOS
+> runtime was not downloaded yet. Run `xcodebuild -downloadPlatform iOS` (or use **Xcode →
+> Settings → Platforms → iOS → +**) and wait for the download to complete before continuing.
 
 > **If you're on Linux/Windows:** you can't run the iOS Simulator. Work on Android only until you
 > get access to a Mac. Everything else below still works.
@@ -103,6 +119,17 @@ stable system image → launch it once so it boots.
 
 _Verify:_ `adb devices` lists your emulator (may say "unauthorized" briefly — tap "allow" on the
 emulator).
+
+> **Reading Android crash logs:** The on-screen stacktrace can't be copy-pasted. Use `adb logcat`
+> instead — it's the standard tool for this:
+>
+> ```bash
+> adb logcat -c                            # clear the buffer
+> # (reproduce the crash on the emulator)
+> adb logcat -d | grep -A 30 "FATAL EXCEPTION"   # dump the crash
+> ```
+>
+> Or use the Makefile shortcut: `make android-logs`
 
 ### 2.5 Watchman (macOS/Linux, recommended)
 
@@ -186,15 +213,91 @@ curl http://localhost:8000/docs >/dev/null && echo "core up"
 
 ### 3.4 Start the app (simulator first — easier)
 
+> **Sprint 0 state:** The app renders a "Hello I4G" screen with a dark surface background (from
+> the design token `themes.default.color.surface`) and a subtitle showing the active profile.
+> The full sign-in flow and Dashboard are Sprint 1.
+
+#### 3.4.0 Boot a simulator / emulator first
+
+Expo needs a booted device to install onto; it will not create one for you.
+
+**iOS Simulator (macOS):**
+
 ```bash
-pnpm dev:ios       # or: pnpm dev:android
+open -a Simulator       # launches the last-used device; boot takes ~20s
+xcrun simctl list devices booted   # verify: at least one "Booted" device
 ```
 
-The first time, Expo builds a Dev Client binary and installs it into the simulator. This takes
-~2–5 minutes. After that, every reload is seconds.
+**Android Emulator — one-time setup.** Confirm the SDK tools are on your PATH:
 
-When the simulator shows **"Signed in as Local Analyst"** on a Dashboard, you have everything
-working end-to-end. 🎉
+```bash
+echo 'export ANDROID_HOME="$HOME/Library/Android/sdk"' >> ~/.zshrc
+echo 'export PATH="$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+emulator -list-avds     # must print at least one AVD name
+```
+
+If `emulator -list-avds` is empty, create a Pixel 7 AVD (API 34). Easiest via Android Studio:
+**More Actions → Virtual Device Manager → Create Device → Pixel 7 → system image "API 34"**.
+Or headless on Apple Silicon:
+
+```bash
+sdkmanager "system-images;android-34;google_apis;arm64-v8a"
+avdmanager create avd --name Pixel_7_API_34 \
+  --package "system-images;android-34;google_apis;arm64-v8a" \
+  --device "pixel_7"
+```
+
+**Boot the emulator** (keep it running in a separate terminal):
+
+```bash
+emulator -avd Pixel_7_API_34 &
+adb wait-for-device       # blocks until boot completes
+adb devices                # verify: one "device" entry
+```
+
+> **`CommandError: No Android connected device found`** when running `make android-build` almost
+> always means you skipped this subsection. Boot the emulator first, confirm `adb devices` lists
+> it, then retry.
+
+**First time only** — compile the native binary and install it on the Simulator (~5–10 min):
+
+```bash
+# Simulator must be booted first (make sim-open), then:
+cd mobile
+make ios-build      # runs expo run:ios — compiles Xcode project, installs on simulator
+```
+
+**Every subsequent session** — Metro start only (seconds):
+
+```bash
+make ios            # runs expo start --dev-client --ios
+```
+
+> **Why two commands?** `expo-dev-client` requires a native binary installed on the device.
+> `expo run:ios` builds and installs that binary (Xcode build, one-time). After that, `expo start
+--dev-client --ios` just starts the JS bundler and connects to the already-installed binary.
+> Running `pnpm dev:ios` without building first gives `CommandError: No development build installed`.
+
+The exact commands used to scaffold Sprint 0 (executed once, at repo creation):
+
+```bash
+# 1. Create Expo app (blank-typescript template — tabs-typescript template does not exist on npm):
+cd mobile/
+pnpm create expo-app@latest app --template blank-typescript --no-install
+
+# 2. Build design tokens TypeScript output (run from the design-tokens dir):
+cd shared/design-tokens
+node scripts/build.js
+# Generates dist/tokens.ts — must run from this directory so buildPath resolves correctly.
+
+# 3. Install app dependencies:
+cd ../../app
+pnpm install
+```
+
+First launch on iOS Simulator opens Metro Bundler. The simulator shows the "Hello I4G" screen
+with the surface color (`#0B0C0E`) and profile label (`local` when using `.env.local`). 🎉
 
 ### 3.5 Move to a physical phone (most of your real work will happen here)
 
@@ -381,22 +484,37 @@ BUILD (cloud, for sharing)
 
 > Keep this table growing. Every gotcha you hit that isn't here, add it in the same PR.
 
-| Symptom                                             | Cause                                        | Fix                                                                     |
-| --------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------- |
-| `Network request failed` on device but works on sim | Phone can't reach `localhost`.               | Use LAN IP in `.env.local` or `pnpm dev -- --tunnel`.                   |
-| `Unable to resolve module` after adding a dep       | Metro cache                                  | `pnpm dev -- --clear`                                                   |
-| Dev Client opens old bundle                         | Stale Metro                                  | Shake → "Reload". Still wrong? Reinstall Dev Client.                    |
-| Android emulator frozen during install              | RAM starved                                  | Close other emulators; give AVD ≥ 4 GB RAM.                             |
-| iOS simulator can't reach backend                   | IPv6 vs IPv4                                 | Use `127.0.0.1` instead of `localhost`.                                 |
-| `expo-auth-session` returns `dismiss` on iOS        | Redirect scheme missing from `app.config.ts` | Set `scheme`, rebuild Dev Client (config change = native rebuild).      |
-| Zod parse fails after backend update                | Backend drift                                | Update the schema in `src/features/.../types.ts`; add a contract test.  |
-| TanStack Query shows stale data after mutation      | Missing `invalidateQueries`                  | Add it in `onSuccess`.                                                  |
-| Image on device is blurry then sharp                | `expo-image` placeholder transition          | Fine. If it bothers you, remove `placeholder` prop.                     |
-| White screen on launch (release builds)             | Error thrown before Error Boundary mounts    | Wrap root `_layout.tsx` in a top-level `try/catch` that logs to Sentry. |
-| `EXPO_PUBLIC_*` not updating                        | Metro has cached `.env`                      | Full restart (`Ctrl+C` + `pnpm dev`).                                   |
-| `fetch` works on sim but 401 on real phone          | Phone clock skew vs token `exp`              | Enable automatic time on phone.                                         |
-| Corporate Wi-Fi blocks phone↔laptop                 | Network segmentation                         | `pnpm dev -- --tunnel` uses ngrok-like tunnel.                          |
-| Xcode signing error on `eas build --local`          | Missing dev cert                             | Run once in Xcode with a free Apple ID to seed the keychain.            |
+| Symptom                                                              | Cause                                                             | Fix                                                                                                                                                  |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Network request failed` on device but works on sim                  | Phone can't reach `localhost`.                                    | Use LAN IP in `.env.local` or `pnpm dev -- --tunnel`.                                                                                                |
+| `Unable to resolve module` after adding a dep                        | Metro cache                                                       | `pnpm dev -- --clear`                                                                                                                                |
+| Dev Client opens old bundle                                          | Stale Metro                                                       | Shake → "Reload". Still wrong? Reinstall Dev Client.                                                                                                 |
+| Android emulator frozen during install                               | RAM starved                                                       | Close other emulators; give AVD ≥ 4 GB RAM.                                                                                                          |
+| iOS simulator can't reach backend                                    | IPv6 vs IPv4                                                      | Use `127.0.0.1` instead of `localhost`.                                                                                                              |
+| `expo-auth-session` returns `dismiss` on iOS                         | Redirect scheme missing from `app.config.ts`                      | Set `scheme`, rebuild Dev Client (config change = native rebuild).                                                                                   |
+| Zod parse fails after backend update                                 | Backend drift                                                     | Update the schema in `src/features/.../types.ts`; add a contract test.                                                                               |
+| TanStack Query shows stale data after mutation                       | Missing `invalidateQueries`                                       | Add it in `onSuccess`.                                                                                                                               |
+| Image on device is blurry then sharp                                 | `expo-image` placeholder transition                               | Fine. If it bothers you, remove `placeholder` prop.                                                                                                  |
+| White screen on launch (release builds)                              | Error thrown before Error Boundary mounts                         | Wrap root `_layout.tsx` in a top-level `try/catch` that logs to Sentry.                                                                              |
+| `EXPO_PUBLIC_*` not updating                                         | Metro has cached `.env`                                           | Full restart (`Ctrl+C` + `pnpm dev`).                                                                                                                |
+| `fetch` works on sim but 401 on real phone                           | Phone clock skew vs token `exp`                                   | Enable automatic time on phone.                                                                                                                      |
+| Corporate Wi-Fi blocks phone↔laptop                                  | Network segmentation                                              | `pnpm dev -- --tunnel` uses ngrok-like tunnel.                                                                                                       |
+| Xcode signing error on `eas build --local`                           | Missing dev cert                                                  | Run once in Xcode with a free Apple ID to seed the keychain.                                                                                         |
+| `pnpm create expo-app --template tabs-typescript` fails              | Template not published to npm                                     | Use `--template blank-typescript` instead; the tabs layout is in the blank template too.                                                             |
+| `expo-dev-client@~5.0.33` not found (SDK 54)                         | SDK 54 maps to `expo-dev-client@~6.0.x`                           | Use `expo-dev-client@~6.0.20`. SDK version and package major version are not always aligned.                                                         |
+| `node scripts/build.js` outputs to wrong `dist/` dir                 | buildPath resolves relative to cwd                                | Always run `build.js` from the `mobile/shared/design-tokens/` directory.                                                                             |
+| TypeScript can't resolve `../../shared/design-tokens/dist/tokens`    | Wrong relative path count                                         | From `src/design/theme.ts` the correct depth is `../../../shared/design-tokens/dist/tokens` (three levels up to reach `mobile/`).                    |
+| ESLint `import/no-unresolved` on cross-package imports               | ESLint resolver can't follow paths outside package                | Set `'import/no-unresolved': 'off'` in `.eslintrc.js`; TypeScript tsc handles resolution.                                                            |
+| Zod const + type same name → `@typescript-eslint/no-redeclare`       | ESLint sees duplicate identifiers                                 | Use `Schema` suffix on zod constants: `ProfileSchema = z.enum(...)` and `type Profile = z.infer<typeof ProfileSchema>`.                              |
+| `ERR_PNPM_NO_GLOBAL_BIN_DIR` when running `pnpm add -g expo`         | corepack-installed pnpm never ran `pnpm setup`                    | Run `pnpm setup` once, then `source ~/.zshrc` (or `~/.bashrc`), then retry.                                                                          |
+| `open -a Simulator` does nothing                                     | Spotlight doesn't index apps nested inside Xcode                  | Use the full path: `open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app`                                                      |
+| Simulator opens but shows no devices / `simctl list devices` empty   | iOS runtime not downloaded (Xcode no longer bundles it)           | Run `xcodebuild -downloadPlatform iOS` (~8–12 GB) or install via **Xcode → Settings → Platforms → iOS → +**.                                         |
+| `CommandError: No Android connected device found`                    | No AVD booted; `emulator`/`adb` not on PATH                       | Follow §3.4.0 — add SDK tools to PATH, create a Pixel 7 AVD, `emulator -avd ... &`, confirm `adb devices` lists it, then retry.                      |
+| Test runner: Vitest vs Jest for Expo RN                              | Vitest + `vitest-react-native` needs a custom resolver + RN mocks | Sprint 0 decision: Jest with `jest-expo` preset. Zero-config, SDK-aligned, `--passWithNoTests` covers the empty-suite case. TDD §1 updated to match. |
+| `CommandError: No development build … installed`                     | `expo start --dev-client` expects a pre-built binary              | Run `make ios-build` once (`expo run:ios`, ~5–10 min Xcode build). Then use `make ios` for all subsequent sessions.                                  |
+| `no member named 'parentShadowView'` Xcode build error               | `react-native-screens ~4.4.0` incompatible with RN 0.77+ C++ API  | Run `npx expo install react-native-screens` — Expo resolves to `~4.16.0` which fixes the API mismatch.                                               |
+| `Unable to resolve module ../../../shared/design-tokens/dist/tokens` | Metro only watches the project root (`mobile/app/`) by default    | Add `metro.config.js` with `config.watchFolders = [mobileRoot]` where `mobileRoot = path.resolve(__dirname, '../')`.                                 |
+| `[CXX1101] NDK … did not have a source.properties file`              | NDK installation is corrupt/incomplete                            | Delete `~/Library/Android/sdk/ndk/27.1.12297006` and run `make android-build` — Expo will reinstall the NDK automatically.                           |
 
 ## Appendix C · Vocabulary cheat sheet for a web dev
 

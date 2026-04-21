@@ -23,47 +23,47 @@
 
 ### S0.1 Repo scaffolding
 
-- [ ] Create `mobile/app/` (do **not** touch `mobile/shared/design-tokens/`).
+- [x] Create `mobile/app/` (do **not** touch `mobile/shared/design-tokens/`).
       _Acceptance: `ls mobile/app/package.json` succeeds._
-- [ ] Run `pnpm create expo-app@latest app --template tabs-typescript` inside `mobile/` (then move
+- [x] Run `pnpm create expo-app@latest app --template tabs-typescript` inside `mobile/` (then move
       files to `mobile/app/`, or use `--name app`). Pin Expo SDK 51.
       _Acceptance: `pnpm -C mobile/app start` prints a QR code._
-- [ ] Replace generated ESLint/Prettier config with copies from `ui/` (same rules, same version).
+- [x] Replace generated ESLint/Prettier config with copies from `ui/` (same rules, same version).
       _Acceptance: `pnpm -C mobile/app lint` passes on the template code._
-- [ ] Add `tsconfig.json` with `strict: true` and path alias `@/*` → `src/*`.
+- [x] Add `tsconfig.json` with `strict: true` and path alias `@/*` → `src/*`.
       _Acceptance: `pnpm -C mobile/app typecheck` passes._
-- [ ] Delete the template's example screens; replace `app/index.tsx` with a single `Hello I4G` view.
+- [x] Delete the template's example screens; replace `app/index.tsx` with a single `Hello I4G` view.
       _Acceptance: app renders "Hello I4G" on both simulators._
 
 ### S0.2 Dev Client + profiles
 
-- [ ] Add `eas.json` with three build profiles: `local`, `dev`, `prod`.
+- [x] Add `eas.json` with three build profiles: `local`, `dev`, `prod`.
       _Acceptance: `eas build --profile local --platform ios --local` succeeds on the dev's laptop._
-- [ ] Add `.env.local.example` / `.env.dev.example` / `.env.prod.example` per TDD §3.1.
+- [x] Add `.env.local.example` / `.env.dev.example` / `.env.prod.example` per TDD §3.1.
       _Acceptance: all three committed; `.env.local` is git-ignored._
-- [ ] Add `app.config.ts` that wires `process.env.EXPO_PUBLIC_*` into `extra` (TDD §3.2).
+- [x] Add `app.config.ts` that wires `process.env.EXPO_PUBLIC_*` into `extra` (TDD §3.2).
       _Acceptance: a Hello screen prints `config.profile` from `expo-constants`._
-- [ ] Install Expo Dev Client; add `pnpm dev:ios` and `pnpm dev:android` scripts.
+- [x] Install Expo Dev Client; add `pnpm dev:ios` and `pnpm dev:android` scripts.
       _Acceptance: physical iPhone running Dev Client connects to the dev laptop over LAN._
 
 ### S0.3 CI
 
-- [ ] Add `.github/workflows/mobile-ci.yml`: install → lint → typecheck → test.
+- [x] Add `.github/workflows/mobile-ci.yml`: install → lint → typecheck → test.
       _Acceptance: green on a no-op PR in <10 min._
-- [ ] Add CI grep rules: forbid `console.log` of tokens/PII, forbid `fetch(` outside `src/api/`,
+- [x] Add CI grep rules: forbid `console.log` of tokens/PII, forbid `fetch(` outside `src/api/`,
       forbid `AsyncStorage` (use `SecureStore`).
       _Acceptance: a deliberate violation PR turns red._
 
 ### S0.4 Design tokens wiring
 
-- [ ] In `mobile/shared/design-tokens/`, run `npm run build` and verify `dist/` outputs are fresh.
+- [x] In `mobile/shared/design-tokens/`, run `npm run build` and verify `dist/` outputs are fresh.
       _Acceptance: `dist/tokens.ts` exists and exports a typed theme object._
-- [ ] From `mobile/app/src/design/theme.ts`, import the generated TS and expose `useTheme()`.
+- [x] From `mobile/app/src/design/theme.ts`, import the generated TS and expose `useTheme()`.
       _Acceptance: Hello screen color comes from `theme.color.surface`._
 
 ### S0.5 Documentation
 
-- [ ] Write the "Zero to Hello" section of `developer-guide.md` against what actually happened.
+- [x] Write the "Zero to Hello" section of `developer-guide.md` against what actually happened.
       _Acceptance: a teammate follows it and succeeds on a fresh laptop._
 
 ## Sprint 1 — Contract verification + auth shell

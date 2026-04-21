@@ -7,27 +7,28 @@
 
 ## 1. Tech stack (locked)
 
-| Concern            | Choice                                          | Version floor          | Why this one                                                                                                     |
-| ------------------ | ----------------------------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Language           | TypeScript                                      | 5.4+                   | Type safety; reuse of skills from `ui/`.                                                                         |
-| Framework          | React Native                                    | 0.74 (via Expo SDK 51) | Meets all targets; stable new architecture support.                                                              |
-| Toolchain          | Expo (Managed) + Dev Client                     | SDK 51+                | No Xcode/Gradle file editing in the 80% path.                                                                    |
-| Navigation         | Expo Router                                     | 3.x                    | File-based; familiar to anyone who's used Next.js app router.                                                    |
-| Server state       | TanStack Query                                  | 5.x                    | Caching, invalidation, retries — all for free.                                                                   |
-| UI state           | Zustand                                         | 4.x                    | Tiny; no Providers.                                                                                              |
-| Runtime validation | Zod                                             | 3.x                    | One DTO shape, runtime + TS.                                                                                     |
-| HTTP               | Native `fetch`                                  | —                      | No library needed; interceptor via a wrapper.                                                                    |
-| Auth               | `expo-auth-session` + `expo-web-browser`        | latest for SDK 51      | PKCE done right on both platforms.                                                                               |
-| Secure storage     | `expo-secure-store`                             | latest                 | Keychain + EncryptedSharedPrefs.                                                                                 |
-| Image/media        | `expo-image`, `react-native-pdf`                | latest                 | `expo-image` is faster and caches; `react-native-pdf` is the de facto PDF viewer.                                |
-| Design tokens      | `mobile/shared/design-tokens/`                  | existing               | Style Dictionary → TS theme.                                                                                     |
-| Testing (unit)     | Vitest (or Jest) + React Native Testing Library | latest                 | Vitest works well in an Expo RN project via `vitest-react-native`; fall back to Jest if Vitest friction is high. |
-| Testing (E2E)      | Maestro                                         | 1.36+                  | Simple YAML flows; RN-aware; no Detox build headaches.                                                           |
-| Lint / format      | ESLint + Prettier (mirror `ui/`)                | —                      | Consistent with the web repo.                                                                                    |
-| Telemetry          | `sentry-expo` (opt-in)                          | latest                 | Cross-platform; disabled in `local`.                                                                             |
+| Concern            | Choice                                                   | Version floor          | Why this one                                                                                                                                                 |
+| ------------------ | -------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Language           | TypeScript                                               | 5.4+                   | Type safety; reuse of skills from `ui/`.                                                                                                                     |
+| Framework          | React Native                                             | 0.81 (via Expo SDK 54) | Meets all targets; stable new architecture support. (Sprint 0 scaffold produced SDK 54 via `create-expo-app@latest`; we stayed on it rather than downgrade.) |
+| Toolchain          | Expo (Managed) + Dev Client                              | SDK 54+                | No Xcode/Gradle file editing in the 80% path.                                                                                                                |
+| Navigation         | Expo Router                                              | 3.x                    | File-based; familiar to anyone who's used Next.js app router.                                                                                                |
+| Server state       | TanStack Query                                           | 5.x                    | Caching, invalidation, retries — all for free.                                                                                                               |
+| UI state           | Zustand                                                  | 4.x                    | Tiny; no Providers.                                                                                                                                          |
+| Runtime validation | Zod                                                      | 3.x                    | One DTO shape, runtime + TS.                                                                                                                                 |
+| HTTP               | Native `fetch`                                           | —                      | No library needed; interceptor via a wrapper.                                                                                                                |
+| Auth               | `expo-auth-session` + `expo-web-browser`                 | latest for SDK 54      | PKCE done right on both platforms.                                                                                                                           |
+| Secure storage     | `expo-secure-store`                                      | latest                 | Keychain + EncryptedSharedPrefs.                                                                                                                             |
+| Image/media        | `expo-image`, `react-native-pdf`                         | latest                 | `expo-image` is faster and caches; `react-native-pdf` is the de facto PDF viewer.                                                                            |
+| Design tokens      | `mobile/shared/design-tokens/`                           | existing               | Style Dictionary → TS theme.                                                                                                                                 |
+| Testing (unit)     | Jest (`jest-expo` preset) + React Native Testing Library | latest                 | Picked during Sprint 0 scaffold (see Appendix B); Vitest + RN friction isn't worth the half-day.                                                             |
+| Testing (E2E)      | Maestro                                                  | 1.36+                  | Simple YAML flows; RN-aware; no Detox build headaches.                                                                                                       |
+| Lint / format      | ESLint + Prettier (mirror `ui/`)                         | —                      | Consistent with the web repo.                                                                                                                                |
+| Telemetry          | `sentry-expo` (opt-in)                                   | latest                 | Cross-platform; disabled in `local`.                                                                                                                         |
 
-> **If Vitest fights Expo:** use Jest with `jest-expo` preset. Do not burn more than half a day on
-> test-runner setup; that is a yak-shaving hole.
+> **Test runner decision (settled in Sprint 0):** Jest with `jest-expo` preset. Vitest was listed
+> as the preferred option in earlier drafts but was never adopted — the Sprint 0 Executor went
+> straight to Jest to stay under the half-day budget.
 
 ## 2. Directory layout (inside `mobile/app/`)
 
