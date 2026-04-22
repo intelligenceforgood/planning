@@ -2,6 +2,18 @@
 
 Last updated: 22 Apr 2026
 
+## 2026-04-22 — Mobile Sprint 5: Settings, Telemetry, Polish, Dogfood
+
+Sprint 5 work: full Settings screen, Sentry wiring with PII redaction, filter-aware auto-pop (Sprint 4 follow-up), OAuth docs, and developer-guide updates.
+
+- S5.1 Settings screen: Full implementation replacing stub — profile label (`LOCAL · direct · mock`), app version from `expo-constants`, Sentry toggle (Zustand `sentryEnabled`), sign-out (`auth.signOut` + `clearUser` + `router.replace('/sign-in')`), dev-only profile switcher via `SecureStore` + `DevSettings.reload`.
+- S5.2 Filter-aware auto-pop: `handleDecisionSuccess` in `case/[id].tsx` reads `currentQueueFilter` from store, computes post-decision status, and calls `router.replace('/(tabs)/queue')` when filter no longer matches. `currentQueueFilter` slice added to `ui.ts`. `queue.tsx` syncs local `filter` to store on change (deviation from files list — necessary consequence).
+- S5.3 OAuth client config: Documented GCP console click-path in `developer-guide.md` §5.5. Live sign-in test deferred — requires human at GCP console and physical device.
+- S5.4 Sentry wiring: `@sentry/react-native` 8.8.0 installed. `src/lib/sentry.ts` created (`initSentry`, `sentryEnabled`). `redactEvent` extended for full Sentry event shape (user, request, extra, contexts, tags, breadcrumbs). Logger production branch wired with `addBreadcrumb`. Expo plugin added to `app.config.ts`.
+- S5.5 Docs / cleanup: `mobile/docs/release-flow.md`, `contributing.md`, `token-flow.md` created. `developer-guide.md` updated with OAuth section, Sprint 5 gotchas (Sentry install, DSN, `beforeSend` type), and Appendix D DoD checklist. Design tokens build confirmed clean. **Post-sprint cleanup:** `planning/proposals/mobile-prototype/{architecture,tdd,developer-guide}.md` moved to `mobile/docs/`; `prd.md` renamed to `planning/prd_mobile_prototype.md`; interim `implementation-plan.md` and `README.md` deleted (git history preserves them).
+- Tests: 5 new test files added (sentry, redact.event, settings component, CaseDetailScreen filter logic, queue filter sync) — all pass. `pnpm lint` exits 0. `pnpm typecheck` and `pnpm test` both inherit pre-existing failures from main (16 `theme.color.error/on/priority` missing-token errors; 3 test suites `CaseHeader`/`DecisionSheet`/`CaseDetailScreen` affected by the same) — **not introduced by Sprint 5**; tracked as a Sprint-6 theme-token follow-up.
+- Deferred: Live Sentry crash-report validation (needs real DSN + device); live OAuth sign-in against `dev.intelligenceforgood.org` (needs human at GCP console); second-developer acceptance test (needs willing second dev); `mobile-prototype-v0.1` git tag (manual push after human validation).
+
 ## 2026-04-22 — Mobile Sprint 4: Approve / Reject decision flow
 
 Sprint 4 write-side work: full Approve / Reject round-trip wired on mobile. S4.1–S4.3 acceptance criteria satisfied.
