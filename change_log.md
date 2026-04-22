@@ -2,6 +2,44 @@
 
 Last updated: 22 Apr 2026
 
+## 2026-04-22 — Mobile Prototype Sprint 3 (Case Detail, Evidence, Reports)
+
+Delivered J4 (Case Detail) and J5 (Report Viewer) screens against `i4g-local`. Endpoint gaps from Sprint 1 fully resolved. Split-model flow: Planner manifest → Executor (Sonnet) → Planner verify → inline drift fixes (Planner). Verdict: Pass (after inline fixes).
+
+**Code changes (mobile only):**
+
+- New screens: `app/case/[id].tsx` (multi-section Case Detail), `app/case/[id]/evidence/[eid].tsx` (pinch-to-zoom Evidence Detail), `app/case/[id]/report.tsx` (PDF viewer via `react-native-pdf`)
+- New features: `src/features/evidence/` (types, queries, `EvidenceGrid` component), `src/features/reports/` (types, queries)
+- New components: `CaseHeader`, `CaseSummarySection`, `CaseClassificationSection`, `CaseTimelineSection`, `AuditLogSection` (collapsible FlatList), `SectionErrorBoundary` (per-section error isolation)
+- `src/features/reviews/types.ts` — `CaseDetail` schema replaced with verified shape from `GET /cases/{case_id}`; new `CaseArtifact`, `CaseTimelineEntry` schemas. `ReviewPriority` kept as `.catch('medium')` for defensive parsing of unknown server values.
+- `src/features/reviews/queries.ts` — added `useCaseFull(reviewId)` fan-out (review + case + audit in parallel). `useCase` repointed to `ReviewDetail`; `useDecide` optimistic-update key updated in sync.
+- `app/(tabs)/queue.tsx` — rows now tappable (`TouchableOpacity` wrapper, `router.push('/case/${id}')`).
+- `app/_layout.tsx` — root wrapped in `GestureHandlerRootView` for pinch-to-zoom support.
+- `e2e/flows/happy-path.yaml` — extended with Queue → Case Detail → Evidence → back → Report flow.
+- New tests: `EvidenceGrid.test.tsx`, `CaseHeader.test.tsx`, `AuditLogSection.test.tsx`, `reports.queries.test.tsx` (MSW contract: signed-URL + bearer-stream + 404 branches).
+- `src/design/tokens.ts` — added `color.priority.{critical,high,medium,low}`, `color.error.*`, `color.on.badge` semantic tokens.
+- Planner inline fixes: replaced all hardcoded `#RRGGBB` literals in Sprint 3 files with new semantic tokens.
+
+**New dependencies added (mobile/app):**
+`expo-image ~3.0.11`, `react-native-pdf ^7.0.4`, `react-native-blob-util ^0.24.7`, `react-native-gesture-handler ~2.28.0`, `react-native-reanimated ~4.1.7`
+
+**Endpoint verification completed:**
+`planning/proposals/mobile-prototype/sprint3-endpoint-verification.md` — all three Sprint 1 gaps resolved:
+
+- `GET /cases/{case_id}` → `CaseDetail` (description=summary, tags=classification, timeline included)
+- `GET /cases/{case_id}/evidence` → `EvidenceList` with `available` flag for binary-only docs
+- `GET /reports/{report_id}/download` → bearer-auth stream (no signed-URL redirect); worker must be running
+
+**Follow-ups for Sprint 4 / cleanup:**
+
+- Replace hardcoded colors in Sprint 2 files (`FilterBar.tsx`, `QueueRow.tsx`) with theme tokens — same pattern already fixed for Sprint 3 files.
+- Fix Zustand "update during render" warning in `dashboard.tsx` (tracked from Sprint 2).
+- Reviews coverage gate still at 57% for legacy hooks; add coverage when those hooks are touched in Sprint 4.
+
+**No infra, no backend, no env var changes. Mobile repo only.**
+
+---
+
 ## 2026-04-22 — Mobile Prototype Sprint 2 (Dashboard + Reviews Queue)
 
 Delivered J2 (Dashboard) and J3 (Reviews Queue) screens against `i4g-local`. Split-model flow: Planner manifest → Executor (Sonnet) → Planner verify. Verdict: Pass with follow-ups.

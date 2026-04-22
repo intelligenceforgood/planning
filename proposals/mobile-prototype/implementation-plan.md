@@ -145,28 +145,28 @@
 
 ### S3.1 Case Detail
 
-- [ ] Implement `useCase(id)` + `CaseDetail` screen. Sections: header, summary, classification,
+- [x] Implement `useCase(id)` + `CaseDetail` screen. Sections: header, summary, classification,
       timeline, evidence grid, audit log (collapsible).
       _Acceptance: all sections render; each has its own error boundary._
-- [ ] Header action: a single "Decide…" button (opens a sheet — wired in Sprint 4).
+- [x] Header action: a single "Decide…" button (opens a sheet — wired in Sprint 4).
       _Acceptance: button is visible only for `pending` / `in_review` statuses._
 
 ### S3.2 Evidence Detail
 
-- [ ] Use `expo-image` for thumbnails and full images; support pinch-to-zoom via a community lib or
+- [x] Use `expo-image` for thumbnails and full images; support pinch-to-zoom via a community lib or
       simple gesture handler.
       _Acceptance: large images don't crash on a 3 GB-RAM Android emulator._
-- [ ] Metadata pane: capture-time, source, hash, classification tags.
+- [x] Metadata pane: capture-time, source, hash, classification tags.
 
 ### S3.3 Report viewer
 
-- [ ] Use `react-native-pdf`. Handle signed-URL vs bearer cases per §12 verification.
+- [x] Use `react-native-pdf`. Handle signed-URL vs bearer cases per §12 verification.
       _Acceptance: approved report opens and scrolls on both platforms._
 
 ### S3.4 Testing
 
-- [ ] Component snapshot for each section.
-- [ ] Maestro flow extended to open a case + preview one evidence item + open report.
+- [x] Component snapshot for each section.
+- [x] Maestro flow extended to open a case + preview one evidence item + open report.
 
 ## Sprint 4 — The write: Approve / Reject
 
