@@ -1,6 +1,32 @@
 # Planning Change Log (active items only)
 
-Last updated: 15 Apr 2026
+Last updated: 22 Apr 2026
+
+## 2026-04-22 — Mobile Prototype Sprint 2 (Dashboard + Reviews Queue)
+
+Delivered J2 (Dashboard) and J3 (Reviews Queue) screens against `i4g-local`. Split-model flow: Planner manifest → Executor (Sonnet) → Planner verify. Verdict: Pass with follow-ups.
+
+**Code changes (mobile only):**
+
+- `mobile/app/app/(tabs)/dashboard.tsx` — full Dashboard: whoami header, `MetricCard` grid, recent-activity list, pull-to-refresh, skeleton/empty/error states
+- `mobile/app/app/(tabs)/queue.tsx` — Reviews Queue with `FilterBar`, debounced `SearchBox`, progressive `limit` pagination, pull-to-refresh, scroll-to-top, error banner + retry
+- `mobile/app/src/features/dashboard/queries.ts` — removed silent try/catch; TanStack Query `isError` now drives UI
+- `mobile/app/src/features/reviews/queries.ts` — `useReviewsQueue({ status, limit })` with `URLSearchParams`, query key includes params
+- New: `src/features/{dashboard,reviews}/components/` (MetricCard, ActivityRow, QueueRow, FilterBar, SearchBox), `src/lib/useDebouncedValue.ts`, `e2e/flows/happy-path.yaml` (Maestro, file only — not wired to CI)
+- New tests: 5 component/hook tests + 2 screen-level contract tests using `jest.spyOn(global, 'fetch')`. 88 tests pass, lint + typecheck clean.
+
+**Backend-discovered constraints honoured:**
+
+- `GET /reviews/queue` only supports `status` + `limit`; priority + search done client-side; pagination is progressive-limit (no offset).
+
+**Follow-ups tracked for Sprint 3 / cleanup:**
+
+- Replace hard-coded colors in `FilterBar.tsx`, `QueueRow.tsx`, `queue.tsx`, `dashboard.tsx` with semantic tokens in `src/design/theme.ts` (or `mobile/shared/design-tokens`).
+- Fix Zustand "update during render" warning in `dashboard.tsx` whoami hydration (wrap in `useEffect`).
+- Reviews coverage gate at 57% (target 70%) because manifest forbade touching legacy hooks `useCase`/`useAuditLog`/`useDecide`/`useWhoAmI`; add tests for these in Sprint 4 alongside case-detail + decide work.
+- Strengthen Maestro assertion to target an actual queue-row test-id instead of the "load more" footer.
+
+**No infra, no backend, no env var changes.**
 
 ## 2026-04-15 — Gemini API Key Auth Migration
 

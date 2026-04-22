@@ -115,27 +115,27 @@
 
 ### S2.1 Dashboard
 
-- [ ] Implement `useDashboard()` hook; shape depends on §12 verification.
+- [x] Implement `useDashboard()` hook; shape depends on §12 verification.
       _Acceptance: Dashboard shows 3 counts and a recent-items list, refreshing on pull._
-- [ ] Add skeleton loading + empty state + inline error (TDD §8 row for Dashboard).
+- [x] Add skeleton loading + empty state + inline error (TDD §8 row for Dashboard).
       _Acceptance: disabling network shows the error banner with retry._
 
 ### S2.2 Reviews Queue
 
-- [ ] Implement `useReviewsQueue(params)` with pagination (`offset`/`limit`).
+- [x] Implement `useReviewsQueue(params)` with pagination (`offset`/`limit`).
       _Acceptance: scrolling to bottom triggers next-page fetch._
-- [ ] Filter bar: status (pending | approved | rejected | in*review), priority.
+- [x] Filter bar: status (pending | approved | rejected | in*review), priority.
       \_Acceptance: changing filter re-keys the query and re-fetches.*
-- [ ] Search box: debounced 300 ms; clears with an "x".
+- [x] Search box: debounced 300 ms; clears with an "x".
       _Acceptance: typing doesn't fire a request per keystroke (verified via network inspector)._
-- [ ] Pull-to-refresh + scroll-to-top button.
+- [x] Pull-to-refresh + scroll-to-top button.
       _Acceptance: both work on a physical device._
 
 ### S2.3 Testing
 
-- [ ] Component tests for Queue row, filter bar, empty/error states.
-- [ ] Contract tests with MSW: queue happy + paginated + error.
-- [ ] Update Maestro happy-path to include "sign-in → queue loads".
+- [x] Component tests for Queue row, filter bar, empty/error states.
+- [x] Contract tests with MSW: queue happy + paginated + error.
+- [x] Update Maestro happy-path to include "sign-in → queue loads".
 
 ## Sprint 3 — Case Detail, Evidence, Reports
 
