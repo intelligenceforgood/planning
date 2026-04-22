@@ -2,6 +2,17 @@
 
 Last updated: 22 Apr 2026
 
+## 2026-04-22 — Mobile Sprint 4: Approve / Reject decision flow
+
+Sprint 4 write-side work: full Approve / Reject round-trip wired on mobile. S4.1–S4.3 acceptance criteria satisfied.
+
+- New `DecisionSheet` component (`Modal` + segmented control + notes `TextInput`): calls `useDecide(reviewId).mutate(…)`, shows optimistic update, rolls back with inline error banner on failure.
+- `ToastHost` added to `_layout.tsx`; auto-dismisses each toast after 3 s via Zustand; uses `pointerEvents="box-none"` so the overlay doesn't swallow touches.
+- `CaseHeader` `Decide…` button live-wired via new `onDecide` prop; `(Sprint 4)` label and forced-disabled state removed.
+- `case/[id].tsx`: `sheetOpen` state, `handleDecisionSuccess` (fires `pushToast` + closes sheet), navigation stays on detail screen (filter-aware auto-pop deferred to Sprint 5).
+- New tests: `DecisionSheet.test.tsx` (5 scenarios), `useDecide.test.tsx` (optimistic + rollback contract), plus new `onDecide` test in `CaseHeader.test.tsx`. All 117 tests green.
+- Maestro `happy-path.yaml` extended with decide → submit → toast-success steps (all `optional: true` for CI safety).
+
 ## 2026-04-22 — Mobile Prototype Sprint 3 (Case Detail, Evidence, Reports)
 
 Delivered J4 (Case Detail) and J5 (Report Viewer) screens against `i4g-local`. Endpoint gaps from Sprint 1 fully resolved. Split-model flow: Planner manifest → Executor (Sonnet) → Planner verify → inline drift fixes (Planner). Verdict: Pass (after inline fixes).

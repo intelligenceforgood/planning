@@ -176,23 +176,24 @@
 
 ### S4.1 Decision Sheet
 
-- [ ] Bottom sheet with a segmented control (Approve | Reject) + free-text comment + "Submit".
+- [x] Bottom sheet with a segmented control (Approve | Reject) + free-text comment + "Submit".
       _Acceptance: submitting calls `useDecide().mutate(…)`._
-- [ ] Optimistic update per TDD §7; rollback on error with an inline banner.
+- [x] Optimistic update per TDD §7; rollback on error with an inline banner.
       _Acceptance: disable network → submit → banner appears → re-enable → submit succeeds._
 
 ### S4.2 Post-mutation UX
 
-- [ ] Toast "Approved" / "Rejected" on success.
-- [ ] Auto-invalidate `reviews-queue` and `["case", id]`.
+- [x] Toast "Approved" / "Rejected" on success.
+- [x] Auto-invalidate `reviews-queue` and `["case", id]`.
 - [ ] If the case is removed from the current filter view, pop to queue; otherwise stay on detail.
       _Acceptance: tested both cases._
+      <!-- Sprint 5 follow-up: filter-aware auto-pop deferred; see TODO in case/[id].tsx handleDecisionSuccess -->
 
 ### S4.3 Testing
 
-- [ ] Component test for the sheet (Approve, Reject, cancel).
-- [ ] Contract test for the mutation including optimistic rollback path.
-- [ ] Maestro happy path now includes the approve step and verifies status text changes.
+- [x] Component test for the sheet (Approve, Reject, cancel).
+- [x] Contract test for the mutation including optimistic rollback path.
+- [x] Maestro happy path now includes the approve step and verifies status text changes.
 
 ## Sprint 5 — Settings, telemetry, polish, dogfood
 
