@@ -75,37 +75,37 @@
 
 ### S1.1 Endpoint catalog verification (TDD §12)
 
-- [ ] Stand up `i4g-local` per `core/docs/runbooks/local-aio.md` on the dev's laptop.
+- [x] Stand up `i4g-local` per `core/docs/runbooks/local-aio.md` on the dev's laptop.
       _Acceptance: `curl http://localhost:8000/docs` opens Swagger._
-- [ ] For each row in TDD §12, `curl` the endpoint against local-aio and capture the real payload.
+- [x] For each row in TDD §12, `curl` the endpoint against local-aio and capture the real payload.
       Paste findings into a scratch note; update the Zod schemas in `src/features/*/types.ts` to match.
       _Acceptance: every assumed path + payload is either verified or noted as a gap._
-- [ ] **Resolve PRD §10 open questions** via the Swagger exploration. Amend PRD if needed.
+- [x] **Resolve PRD §10 open questions** via the Swagger exploration. Amend PRD if needed.
       _Acceptance: PRD §10 has no open items marked "blocker"._
 
 ### S1.2 ApiClient
 
-- [ ] Implement `ApiClient` per TDD §4 with unit tests (happy, 401, 404, 500, schema-drift).
+- [x] Implement `ApiClient` per TDD §4 with unit tests (happy, 401, 404, 500, schema-drift).
       _Acceptance: unit tests pass; coverage of `src/api/` ≥ 80%._
-- [ ] Add `createApiClient(auth)` + singleton getter; wire into `_layout.tsx` root.
+- [x] Add `createApiClient(auth)` + singleton getter; wire into `_layout.tsx` root.
       _Acceptance: `useReviewsQueue()` called from a stub screen fetches data from local-aio._
 
 ### S1.3 Auth (mock)
 
-- [ ] Implement `mockProvider` per TDD §5.2 with a `/auth/whoami` bootstrap call.
+- [x] Implement `mockProvider` per TDD §5.2 with a `/auth/whoami` bootstrap call.
       _Acceptance: on launch, Dashboard shows the mock user's email and roles._
-- [ ] Implement Sign-in screen with a single button `Continue as Local Analyst`.
+- [x] Implement Sign-in screen with a single button `Continue as Local Analyst`.
       _Acceptance: tapping it calls `auth.signIn()` and navigates to Dashboard._
 
 ### S1.4 Auth (google-pkce-iap) — stubbed
 
-- [ ] Implement `google-pkce-iap` per TDD §5.3 but gated behind `config.authProvider`. Do **not**
+- [x] Implement `google-pkce-iap` per TDD §5.3 but gated behind `config.authProvider`. Do **not**
       wire to a real OAuth client yet; just make the module compile and the unit tests pass.
       _Acceptance: unit test with a mocked `AuthRequest` + token exchange passes; screen flow compiles._
 
 ### S1.5 Global state + providers
 
-- [ ] Set up TanStack Query provider, Zustand store, Error Boundary, Toast host in `_layout.tsx`.
+- [x] Set up TanStack Query provider, Zustand store, Error Boundary, Toast host in `_layout.tsx`.
       _Acceptance: a deliberately-thrown error in a screen shows the boundary UI, not a red-screen._
 
 ## Sprint 2 — Dashboard + Reviews Queue

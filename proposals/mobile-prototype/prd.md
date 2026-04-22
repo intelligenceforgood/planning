@@ -153,10 +153,10 @@ to the bare workflow and gradually replace screens. This is documented in the ar
 
 ## 10. Open questions (track in implementation-plan, resolve before sprint starts)
 
-1. Does the existing review-decision endpoint accept a free-text comment, or only a status enum? (**TDD blocker for J6.**)
-2. Do reports come back as a signed URL or as a proxied stream? Affects whether the PDF viewer opens a URL directly or downloads first. (**TDD blocker for J5.**)
-3. Is there an endpoint that returns dashboard counts cheaply, or do we derive from `/reviews/search?limit=0`? (**PRD scope question for J2.**)
-4. For IAP + PKCE, do we need the LEO Google Workspace domain whitelist in dev, or is a personal Google account enough? (**Developer-guide question.**)
+1. ~~Does the existing review-decision endpoint accept a free-text comment, or only a status enum?~~ **Resolved (Sprint 1):** `POST /reviews/{id}/decision` accepts `notes: string` (free text) plus `auto_generate_report: bool`. J6 is unblocked.
+2. Do reports come back as a signed URL or as a proxied stream? Affects whether the PDF viewer opens a URL directly or downloads first. (**TDD blocker for J5.** — Sprint 3 follow-up; could not verify locally with empty library.)
+3. ~~Is there an endpoint that returns dashboard counts cheaply, or do we derive from `/reviews/search?limit=0`?~~ **Resolved (Sprint 1):** `GET /dashboard/overview` exists and returns `{metrics, alerts, activity}`. PRD scope for J2 resolved.
+4. For IAP + PKCE, do we need the LEO Google Workspace domain whitelist in dev, or is a personal Google account enough? (**Developer-guide question.** — Sprint 4 follow-up; cannot verify locally.)
 
 ## 11. Acceptance (prototype)
 
