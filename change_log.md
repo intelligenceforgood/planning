@@ -1,6 +1,6 @@
 # Planning Change Log (active items only)
 
-Last updated: 22 Apr 2026
+Last updated: 23 Apr 2026
 
 ## 2026-04-22 — Mobile Sprint 5: Settings, Telemetry, Polish, Dogfood
 
@@ -2246,3 +2246,36 @@ Completed Phase 4 of the docs site rewrite.
 - Review 7 existing screenshots for currency
 
 **Repos affected:** `docs/`, `planning/`
+
+## 2026-04-23 — PhishDestroy Integration: Sprint 0 Guardrails Landed
+
+Deterministic Sprint 0 deliverables completed inline (no manifest — below handoff threshold).
+Live-measurement spikes and budget decisions deferred to user-action follow-ups under the
+quota-gating contract, NOT blocking Sprint 1.1 start.
+
+- **Provenance contract** (`copilot/.github/shared/phishdestroy-provenance.instructions.md`):
+  frozen JSON shape, `record_id` rules, allowed `source` vocabulary (18 values), pinned
+  upstream SHAs, idempotency key `(source, team, commit_sha, record_id)`, `sensitive=True`
+  column marker with downstream enforcement rules.
+- **Provider-gating contract** (`copilot/.github/shared/phishdestroy-provider-gating.instructions.md`):
+  `ProviderGate` + `SkippedResult` pattern; `[providers.<name>]` TOML schema; UI / API /
+  dossier / metrics surfacing rules; PRD §10 acceptance-metric deferral convention; rotation
+  hooks.
+- **Pinned SHAs:** ScamIntelLogs `83d03074…` (2026-03-01), DestroyScammers `c40cbbf5…`
+  (2025-11-30), merklemap-cli `550cb04a…` (2024-10-06).
+- **Settings slots:** `[providers.merklemap|whoxy|ghunt]` added to `core/config/settings.default.toml`
+  + `core/config/settings.local.toml` (paste-in), `ssi/config/settings.default.toml` +
+  `ssi/config/settings.dev.toml` (Secret Manager references). All ship disabled.
+- **Merklemap probe** (`ssi/scripts/spike_merklemap.py`): standalone SSE client, writes
+  `data/reports/spikes/merklemap.json`. User runs it with a rotated key to size Sprint 1.5
+  throughput; until then Sprint 1.5 ships conservative defaults.
+- **Sprint 0 checklist updated** in `planning/tasks/phishdestroy_integration_tasks.md` —
+  deterministic items checked, user-action items listed with exact commands.
+- **Security note:** merklemap + whoxy dev keys were pasted in chat during planning and must
+  be rotated before use. User-action item logged in the task plan.
+
+**Repos affected:** `copilot/`, `core/`, `ssi/`, `planning/`
+
+**Next step:** Start a fresh chat in Opus and run `/handoff` against Sprint 1.1 of
+`planning/tasks/phishdestroy_integration_tasks.md`. Then switch to the Executor model for
+`/execute-manifest`.
