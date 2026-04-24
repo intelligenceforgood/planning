@@ -51,10 +51,10 @@ cannot make. Sprint 1 is unblocked for all items except the merklemap tail throu
 ### Deterministic (done this session)
 
 - [x] **Provenance contract frozen** — `copilot/.github/shared/phishdestroy-provenance.instructions.md`
-  (JSON shape, `record_id` rules, allowed `source` vocabulary, pinned SHAs, idempotency key,
-  `sensitive=True` marker).
+      (JSON shape, `record_id` rules, allowed `source` vocabulary, pinned SHAs, idempotency key,
+      `sensitive=True` marker).
 - [x] **Provider-gating contract frozen** — `copilot/.github/shared/phishdestroy-provider-gating.instructions.md`
-  (`ProviderGate` pattern, `SkippedResult` surfacing, PRD §10 deferral rule, rotation hooks).
+      (`ProviderGate` pattern, `SkippedResult` surfacing, PRD §10 deferral rule, rotation hooks).
 - [x] **Source-material snapshot** — pinned in provenance doc §4:
   - `ScamIntelLogs` → `83d0307420fcc865fcb8a34b8c454acbc6d56f1f` (2026-03-01)
   - `DestroyScammers` → `c40cbbf527dd9e5e232090346e1a8ceab32d1683` (2025-11-30)
@@ -65,7 +65,7 @@ cannot make. Sprint 1 is unblocked for all items except the merklemap tail throu
   - `ssi/config/settings.default.toml` (commented placeholders)
   - `ssi/config/settings.dev.toml` (Secret Manager binding references)
 - [x] **Merklemap probe script** — `ssi/scripts/spike_merklemap.py`. Standalone, no SSI imports;
-  writes `data/reports/spikes/merklemap.json`.
+      writes `data/reports/spikes/merklemap.json`.
 
 ### Quota-gated / user-action required (deferred, NOT blocking Sprint 1 start)
 
@@ -147,13 +147,14 @@ merklemap tail has produced ≥ 1 auto-enqueued SSI scan end-to-end.
 Each module implements the existing `scan(...)` contract in `src/ssi/osint/` and is opted in via
 config flag in the orchestrator. No changes to existing modules.
 
-- [ ] `blocklist_aggregator.py` — queries 8 sources (MetaMask, ScamSniffer, OpenPhish, SEAL,
+- [x] `blocklist_aggregator.py` — queries 8 sources (MetaMask, ScamSniffer, OpenPhish, SEAL,
       Enkrypt, destroylist, Polkadot, CryptoFirewall); 6h cache; emits one `blocklist_hits`-shaped
-      record per (indicator, source)
-- [ ] `ctlog_lookup.py` — crt.sh JSON; subdomain enumeration; handles rate limits + back-off
-- [ ] `merklemap_client.py` — SSE tail client (per Sprint 0 decision); exposes async iterator
-- [ ] Unit tests per module with recorded fixtures; no live network in CI
-- [ ] Register modules in `ssi/osint/__init__.py` behind config flags
+      record per (indicator, source) <!-- 2026-04-24 manifest 2026-04-24-phishdestroy-sprint-1-phaseA -->
+- [x] `ctlog_lookup.py` — crt.sh JSON; subdomain enumeration; handles rate limits + back-off
+- [x] `merklemap_client.py` — SSE tail client (per Sprint 0 decision); exposes async iterator
+- [x] Unit tests per module with recorded fixtures; no live network in CI <!-- 44 tests passing, no live network -->
+- [x] Register modules in `ssi/osint/__init__.py` behind config flags <!-- PHISHDESTROY_PROVIDERS + phishdestroy_provider_enabled() -->
+- [x] **(bonus)** Shared provider-gating primitive `ssi/src/ssi/providers/gate.py` (`ProviderGate` + `SkippedResult`) hoisted for reuse across Sprint 1.5+ providers
 
 ### 1.4 Ingestion: destroylist (core/)
 

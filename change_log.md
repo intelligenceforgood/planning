@@ -1,6 +1,23 @@
 # Planning Change Log (active items only)
 
-Last updated: 23 Apr 2026
+Last updated: 24 Apr 2026
+
+## 2026-04-24 — PhishDestroy Sprint 1 Phase A: SSI OSINT modules + provider gate
+
+Phase A of Sprint 1 (§1.3 in `tasks/phishdestroy_integration_tasks.md`) landed in `ssi/`. Three OSINT modules + a shared provider-gating primitive + 44 unit tests, all opt-in (every provider `enabled = false` by default). No `core/`, `infra/`, `ui/`, or `docs/` changes — Phases B–E ship as their own manifests.
+
+- **New SSI modules** (`ssi/src/ssi/osint/`):
+  - `blocklist_aggregator.py` — 8-source feed scanner (MetaMask, ScamSniffer, OpenPhish, SEAL, Enkrypt, destroylist, Polkadot, CryptoFirewall); 6h file cache keyed by `sha256(url + ingest_date_bucket)`; per-source circuit breaker (3 consecutive failures → skip rest of run); emits one record per `(indicator, source)` with full `source_provenance` (SHA-1 commit_sha pin).
+  - `ctlog_lookup.py` — crt.sh JSON subdomain enumeration; exponential backoff on 429 (`2^n` capped at 30s, max 5 retries); each entry carries `source_provenance(source="ctlog.crtsh", record_id=f"crtsh:{entry_id}")`.
+  - `merklemap_client.py` — async SSE tail via `httpx.AsyncClient`; reconnect with exponential backoff capped at 30s; gates on `ProviderGate("merklemap")` and yields `SkippedResult(reason="quota_gated")` when disabled (default).
+- **New shared primitive** (`ssi/src/ssi/providers/gate.py`) — `ProviderGate` + `SkippedResult` with `SkipReason = Literal["quota_gated", "auth_expired", "rate_limited", "disabled"]`. Hoisted into its own home file so Sprint 1.5+ providers (whoxy, ghunt) can import without redefining.
+- **Settings** — new `[phishdestroy]` section + 3 sub-sections in `ssi/config/settings.default.toml`; `PhishDestroySettings` wired into root `Settings`. Reads via `get_settings().phishdestroy.<name>.enabled`. No env-var direct reads in osint/__init__.py.
+- **Spike-script update** — `ssi/scripts/spike_merklemap.py` `DEFAULT_URL` corrected to `/live-domains?no_throttle=true` after confirming against `merklemap-cli/src/lib.rs @ 550cb04`.
+- **Tests** — 44 unit tests passing (`tests/unit/providers/test_gate.py`, `tests/unit/osint/test_{blocklist_aggregator,ctlog_lookup,merklemap_client}.py`). All use `httpx.MockTransport` — zero live network calls. Covers gate enable/disable, env-var prefix, circuit breaker, 429 backoff cap, SSE reconnect.
+- **Repos affected:** `ssi/` only.
+- **Env vars / config:** New opt-in flags `SSI_PHISHDESTROY__BLOCKLIST_AGGREGATOR__ENABLED`, `SSI_PHISHDESTROY__CTLOG_LOOKUP__ENABLED`, `SSI_PHISHDESTROY__MERKLEMAP_CLIENT__ENABLED` (all default `false`). No production env-var changes required.
+- **Manifest:** `planning/handoffs/2026-04-24-phishdestroy-sprint-1-phaseA.manifest.md`. Supersedes the L-scope five-phase bundle (`2026-04-24-phishdestroy-sprint-1.manifest.md`) which failed fidelity and was retired.
+- **Workflow note:** Pre-merge review for the failed bundle prompted a new `copilot/.github/shared/handoff-manifest.instructions.md` "Scope cap: one phase per manifest" section (heuristics: > 8 turns, > 1 repo, > 1 commit checkpoint, > 8 files → split). Phase A re-issued under that cap shipped clean in 6 turns.
 
 ## 2026-04-22 — Mobile Sprint 5: Settings, Telemetry, Polish, Dogfood
 
