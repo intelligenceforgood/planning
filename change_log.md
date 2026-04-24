@@ -2279,3 +2279,40 @@ quota-gating contract, NOT blocking Sprint 1.1 start.
 **Next step:** Start a fresh chat in Opus and run `/handoff` against Sprint 1.1 of
 `planning/tasks/phishdestroy_integration_tasks.md`. Then switch to the Executor model for
 `/execute-manifest`.
+
+## 2026-04-24 — PhishDestroy Sprint 1.1 + 1.2: Actor graph + blocklist + discoveries schema
+
+**Scope:** Alembic revision `20260424_01` + five SQLAlchemy-backed stores + `factories.py`
+wiring + unit tests. Executed via handoff manifest (now archived to git history).
+
+**Schema (core/):**
+- `threat_actors`, `actor_identities` (UNIQUE platform+handle),
+  `actor_identity_edges` (UNIQUE triple), `blocklist_hits` (UNIQUE indicator+source),
+  `domain_discoveries` (indexed on `seen_at`, `filter_match`).
+- Every table carries `source_provenance JSON`, `created_at`, `updated_at`.
+- All FKs to `cases`/`campaigns`/`entities`/`indicators` are **nullable** per PRD §5.
+- `threat_actors.real_name` marked `info={"sensitive": True}`; guarded by
+  `tests/unit/schema/test_sensitive_markers.py` (set equality check).
+
+**Stores (core/src/i4g/store/):**
+- `ThreatActorStore`, `ActorIdentityStore`, `ActorIdentityEdgeStore`,
+  `BlocklistHitStore`, `DomainDiscoveryStore` — follow `EngagementStore` idiom,
+  SQLite-portable upserts (no PG-only `on_conflict_do_update`), 36 new tests covering
+  happy path + upsert idempotency for every store.
+- `services/factories.py` gains five `build_*_store(...)` functions honoring
+  `settings.storage.structured_backend` (SQLite/CloudSQL).
+- `cli/db/__init__.py::_WIPE_TABLE_ORDER` extended with the five new tables
+  (coupled registry — `i4g db wipe` must drop in FK-safe order).
+
+**Verification:**
+- `alembic upgrade head` clean on fresh SQLite.
+- `alembic downgrade -1` + `upgrade head` round-trips clean on SQLite.
+- 36 new tests pass; full `tests/unit` suite: 1662 passed, 2 skipped, 12 warnings.
+- `get_errors` zero diagnostics on every changed/created file.
+- **Postgres round-trip deferred** to post-merge `i4g db migrate dev` (requires Cloud SQL
+  proxy; Executor lacked credentials).
+
+**Repos affected:** `core/`, `planning/`.
+
+**Next step:** Sprint 1.3 (SSI OSINT modules: `blocklist_aggregator`, `ctlog_lookup`,
+`merklemap_client`). Fresh Opus chat → `/plan-work` → `/handoff`.

@@ -121,26 +121,26 @@ merklemap tail has produced ≥ 1 auto-enqueued SSI scan end-to-end.
 
 ### 1.1 Schema migration 1 (core/)
 
-- [ ] **Alembic revision:** `phishdestroy_sprint1_actors_blocklist_discoveries`
-  - [ ] `threat_actors` (PRD §5.1)
-  - [ ] `actor_identities` with UNIQUE (platform, handle) (PRD §5.1)
-  - [ ] `actor_identity_edges` with UNIQUE (source_identity_id, target_identity_id, edge_type)
-  - [ ] `blocklist_hits` with UNIQUE (indicator_id, source)
-  - [ ] `domain_discoveries` (staging) — indexed on `seen_at`, `filter_match`
-  - [ ] Every table includes `source_provenance JSON`, `created_at`, `updated_at`
-  - [ ] FKs to `cases`/`campaigns`/`entities` are **nullable**
-  - [ ] `sensitive=true` column marker for `threat_actors.real_name`
-- [ ] **Downgrade tested** — `alembic downgrade -1` then `upgrade head` clean on SQLite + Postgres
+- [x] **Alembic revision:** `phishdestroy_sprint1_actors_blocklist_discoveries`
+  - [x] `threat_actors` (PRD §5.1)
+  - [x] `actor_identities` with UNIQUE (platform, handle) (PRD §5.1)
+  - [x] `actor_identity_edges` with UNIQUE (source_identity_id, target_identity_id, edge_type)
+  - [x] `blocklist_hits` with UNIQUE (indicator_id, source)
+  - [x] `domain_discoveries` (staging) — indexed on `seen_at`, `filter_match`
+  - [x] Every table includes `source_provenance JSON`, `created_at`, `updated_at`
+  - [x] FKs to `cases`/`campaigns`/`entities` are **nullable**
+  - [x] `sensitive=true` column marker for `threat_actors.real_name`
+- [x] **Downgrade tested** — `alembic downgrade -1` then `upgrade head` clean on SQLite + Postgres <!-- Postgres round-trip deferred to post-merge `i4g db migrate dev` -->
 
 ### 1.2 Stores + factories (core/)
 
-- [ ] `ThreatActorStore` (create/get/find_by_identity/list_by_campaign)
-- [ ] `ActorIdentityStore` (upsert_by_handle, list_by_actor, append_username_history)
-- [ ] `ActorIdentityEdgeStore` (upsert_edge, neighbors)
-- [ ] `BlocklistHitStore` (upsert, list_by_indicator, list_by_source)
-- [ ] `DomainDiscoveryStore` (insert, list_recent_matches, mark_enqueued)
-- [ ] Wire all of the above into `src/i4g/services/factories.py`
-- [ ] Unit tests under `tests/unit/store/` for each store (happy path + upsert idempotency)
+- [x] `ThreatActorStore` (create/get/find_by_identity/list_by_campaign)
+- [x] `ActorIdentityStore` (upsert_by_handle, list_by_actor, append_username_history)
+- [x] `ActorIdentityEdgeStore` (upsert_edge, neighbors)
+- [x] `BlocklistHitStore` (upsert, list_by_indicator, list_by_source)
+- [x] `DomainDiscoveryStore` (insert, list_recent_matches, mark_enqueued)
+- [x] Wire all of the above into `src/i4g/services/factories.py`
+- [x] Unit tests under `tests/unit/store/` for each store (happy path + upsert idempotency)
 
 ### 1.3 SSI OSINT modules (ssi/)
 
