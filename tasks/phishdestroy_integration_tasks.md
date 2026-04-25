@@ -184,7 +184,7 @@ config flag in the orchestrator. No changes to existing modules.
 - [ ] Next.js route `apps/web/app/discoveries/page.tsx`
 - [ ] List view: recent `domain_discoveries` where `filter_match=true`; columns: domain,
       seen_at, filter_reason, enqueued_scan_id, actions
-- [ ] One-click "Enqueue passive scan" + "Dismiss" (calls proxy route → core API)
+- [ ] One-click "Enqueue passive scan" + "Dismiss" (calls proxy route → core API) <!-- core API landed Phase E1 2026-04-25; UI binding pending Phase E2 -->
 - [ ] Proxy route `apps/web/app/api/discoveries/route.ts`
 - [ ] `pnpm format && pnpm lint && pnpm build` clean; `get_errors` clean on all changed files
 
