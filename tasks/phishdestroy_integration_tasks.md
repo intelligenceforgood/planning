@@ -158,12 +158,12 @@ config flag in the orchestrator. No changes to existing modules.
 
 ### 1.4 Ingestion: destroylist (core/)
 
-- [ ] `i4g jobs ingest destroylist` CLI command
-  - [ ] Pulls from pinned commit SHA (Sprint 0 decision)
-  - [ ] Idempotent by `source_provenance.commit_sha + domain`
-  - [ ] Writes `blocklist_hits` with `source="phishdestroy"`
-- [ ] Smoke test: `I4G_ENV=local i4g jobs ingest destroylist` produces ≥ 1k rows
-- [ ] Docs: env var table + job manifest updated in `core/docs/config/`
+- [x] `i4g jobs ingest-destroylist` CLI command (note: dash-separated, not space-separated — sub-app refactor deferred)
+  - [x] Pulls from pinned commit SHA (Sprint 0 decision)
+  - [x] Idempotent by `source_provenance.commit_sha + domain`
+  - [x] Writes `blocklist_hits` with `source="phishdestroy.destroylist"`
+- [x] Smoke test: `I4G_ENV=local i4g jobs ingest-destroylist` produces ≥ 1k rows (23,561 rows on first run; 0 inserted on second run — idempotency confirmed)
+- [ ] Docs: env var table + job manifest updated in `core/docs/config/` (deferred to Phase C)
 
 ### 1.5 Merklemap tail worker (core/ + infra/)
 

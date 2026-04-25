@@ -11,7 +11,7 @@ Phase A of Sprint 1 (§1.3 in `tasks/phishdestroy_integration_tasks.md`) landed 
   - `ctlog_lookup.py` — crt.sh JSON subdomain enumeration; exponential backoff on 429 (`2^n` capped at 30s, max 5 retries); each entry carries `source_provenance(source="ctlog.crtsh", record_id=f"crtsh:{entry_id}")`.
   - `merklemap_client.py` — async SSE tail via `httpx.AsyncClient`; reconnect with exponential backoff capped at 30s; gates on `ProviderGate("merklemap")` and yields `SkippedResult(reason="quota_gated")` when disabled (default).
 - **New shared primitive** (`ssi/src/ssi/providers/gate.py`) — `ProviderGate` + `SkippedResult` with `SkipReason = Literal["quota_gated", "auth_expired", "rate_limited", "disabled"]`. Hoisted into its own home file so Sprint 1.5+ providers (whoxy, ghunt) can import without redefining.
-- **Settings** — new `[phishdestroy]` section + 3 sub-sections in `ssi/config/settings.default.toml`; `PhishDestroySettings` wired into root `Settings`. Reads via `get_settings().phishdestroy.<name>.enabled`. No env-var direct reads in osint/__init__.py.
+- **Settings** — new `[phishdestroy]` section + 3 sub-sections in `ssi/config/settings.default.toml`; `PhishDestroySettings` wired into root `Settings`. Reads via `get_settings().phishdestroy.<name>.enabled`. No env-var direct reads in osint/**init**.py.
 - **Spike-script update** — `ssi/scripts/spike_merklemap.py` `DEFAULT_URL` corrected to `/live-domains?no_throttle=true` after confirming against `merklemap-cli/src/lib.rs @ 550cb04`.
 - **Tests** — 44 unit tests passing (`tests/unit/providers/test_gate.py`, `tests/unit/osint/test_{blocklist_aggregator,ctlog_lookup,merklemap_client}.py`). All use `httpx.MockTransport` — zero live network calls. Covers gate enable/disable, env-var prefix, circuit breaker, 429 backoff cap, SSE reconnect.
 - **Repos affected:** `ssi/` only.
@@ -2281,8 +2281,8 @@ quota-gating contract, NOT blocking Sprint 1.1 start.
 - **Pinned SHAs:** ScamIntelLogs `83d03074…` (2026-03-01), DestroyScammers `c40cbbf5…`
   (2025-11-30), merklemap-cli `550cb04a…` (2024-10-06).
 - **Settings slots:** `[providers.merklemap|whoxy|ghunt]` added to `core/config/settings.default.toml`
-  + `core/config/settings.local.toml` (paste-in), `ssi/config/settings.default.toml` +
-  `ssi/config/settings.dev.toml` (Secret Manager references). All ship disabled.
+  - `core/config/settings.local.toml` (paste-in), `ssi/config/settings.default.toml` +
+    `ssi/config/settings.dev.toml` (Secret Manager references). All ship disabled.
 - **Merklemap probe** (`ssi/scripts/spike_merklemap.py`): standalone SSE client, writes
   `data/reports/spikes/merklemap.json`. User runs it with a rotated key to size Sprint 1.5
   throughput; until then Sprint 1.5 ships conservative defaults.
@@ -2303,6 +2303,7 @@ quota-gating contract, NOT blocking Sprint 1.1 start.
 wiring + unit tests. Executed via handoff manifest (now archived to git history).
 
 **Schema (core/):**
+
 - `threat_actors`, `actor_identities` (UNIQUE platform+handle),
   `actor_identity_edges` (UNIQUE triple), `blocklist_hits` (UNIQUE indicator+source),
   `domain_discoveries` (indexed on `seen_at`, `filter_match`).
@@ -2312,6 +2313,7 @@ wiring + unit tests. Executed via handoff manifest (now archived to git history)
   `tests/unit/schema/test_sensitive_markers.py` (set equality check).
 
 **Stores (core/src/i4g/store/):**
+
 - `ThreatActorStore`, `ActorIdentityStore`, `ActorIdentityEdgeStore`,
   `BlocklistHitStore`, `DomainDiscoveryStore` — follow `EngagementStore` idiom,
   SQLite-portable upserts (no PG-only `on_conflict_do_update`), 36 new tests covering
@@ -2322,6 +2324,7 @@ wiring + unit tests. Executed via handoff manifest (now archived to git history)
   (coupled registry — `i4g db wipe` must drop in FK-safe order).
 
 **Verification:**
+
 - `alembic upgrade head` clean on fresh SQLite.
 - `alembic downgrade -1` + `upgrade head` round-trips clean on SQLite.
 - 36 new tests pass; full `tests/unit` suite: 1662 passed, 2 skipped, 12 warnings.
