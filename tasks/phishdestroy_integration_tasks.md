@@ -167,14 +167,14 @@ config flag in the orchestrator. No changes to existing modules.
 
 ### 1.5 Merklemap tail worker (core/ + infra/)
 
-- [ ] `src/i4g/worker/jobs/merklemap_tail.py` — streaming worker
-  - [ ] Reads merklemap SSE → upsert into `domain_discoveries` (cheap staging)
-  - [ ] Filter: brand-regex list from config (Trust Wallet, Coinbase, Ledger, MetaMask, …)
-  - [ ] On match → enqueue SSI passive via `review_queue` / `ssi_scan` paths
-  - [ ] Metrics: domains/sec, match rate, scans enqueued
-  - [ ] Graceful reconnect on stream drop; bounded memory
+- [x] `src/i4g/worker/jobs/merklemap_tail.py` — streaming worker
+  - [x] Reads merklemap SSE → upsert into `domain_discoveries` (cheap staging)
+  - [x] Filter: brand-regex list from config (Trust Wallet, Coinbase, Ledger, MetaMask, …)
+  - [x] On match → enqueue SSI passive via `review_queue` / `ssi_scan` paths
+  - [x] Metrics: domains/sec, match rate, scans enqueued
+  - [x] Graceful reconnect on stream drop; bounded memory
 - [ ] **(infra/)** Cloud Run job `merklemap-tail-dev` with Secret Manager binding for
-      `MERKLEMAP_API_KEY`; `terraform fmt -check` clean
+      `MERKLEMAP_API_KEY`; `terraform fmt -check` clean <!-- deferred to Phase D manifest -->
 - [ ] **(infra/)** Cloud Scheduler for 6h blocklist aggregator run (dev)
 - [ ] **[manual]** Populate `MERKLEMAP_API_KEY` secret in `i4g-dev` Secret Manager
 - [ ] E2E dev smoke: tail runs ≥ 30 min, produces ≥ 1 filter match, scan appears in review queue
