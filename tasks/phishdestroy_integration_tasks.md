@@ -174,8 +174,8 @@ config flag in the orchestrator. No changes to existing modules.
   - [x] Metrics: domains/sec, match rate, scans enqueued
   - [x] Graceful reconnect on stream drop; bounded memory
 - [ ] **(infra/)** Cloud Run job `merklemap-tail-dev` with Secret Manager binding for
-      `MERKLEMAP_API_KEY`; `terraform fmt -check` clean <!-- deferred to Phase D manifest -->
-- [ ] **(infra/)** Cloud Scheduler for 6h blocklist aggregator run (dev)
+      `MERKLEMAP_API_KEY`; `terraform fmt -check` clean <!-- code landed Phase D1 2026-04-25; plan/apply + smoke deferred to Phase D2 (GCP billing paused) -->
+- [ ] **(infra/)** Cloud Scheduler for 6h blocklist aggregator run (dev) <!-- deferred to Sprint 4 — no aggregator CLI exists yet -->
 - [ ] **[manual]** Populate `MERKLEMAP_API_KEY` secret in `i4g-dev` Secret Manager
 - [ ] E2E dev smoke: tail runs ≥ 30 min, produces ≥ 1 filter match, scan appears in review queue
 
