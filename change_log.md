@@ -2,6 +2,28 @@
 
 Last updated: 25 Apr 2026
 
+## 2026-04-25 — PhishDestroy Sprint 1 Wrap-up: E1 cleanups + Phase D-local smoke + Phase F docs
+
+Closes Sprint 1 (Phases A–E2). All remaining GCP-gated items (Phase D2: `terraform apply`,
+secret population, 30-min Cloud Run smoke) are deferred to Sprint 2 once billing is restored.
+
+- **E1 drift cleanups (`core/`):** renamed `_trigger_ssi_scan` → `enqueue_passive_scan_for_domain`
+  (public helper; caller no longer passes `settings=`); added `DomainDiscoveryStore.get()`
+  public accessor; rewrote router `_get_row_or_404` to use the public accessor instead of
+  reaching into `store._session_factory()`. Removed unused `get_settings` import from the
+  router. Tests updated to match new helper name.
+- **Local smoke script (`core/scripts/smoke_merklemap_tail_local.py`):** validates
+  `PHISHDESTROY__MERKLEMAP_TAIL__API_KEY` and prints (does NOT execute) the `docker run`
+  command for a no-GCP rehearsal of the `ingest-job:dev` image.
+- **Dev doc (`core/docs/design/phishdestroy-integration.md`):** architecture overview, data
+  model, stores/factories, settings table, provider-gating + provenance contract links,
+  worker lifecycle, API surface, local smoke pointer, open items.
+- **End-user doc (`docs/book/analyst-guide/discoveries.md`):** analyst walkthrough of the
+  /discoveries page — columns, Enqueue/Dismiss actions, typical workflow.
+- **SUMMARY.md:** added Discoveries entry under Intelligence Tools.
+- **Manifest:** `planning/handoffs/2026-04-25-phishdestroy-sprint-1-wrapup.manifest.md`.
+- **Repos affected:** `core/`, `docs/`, `planning/`.
+
 ## 2026-04-25 — PhishDestroy Sprint 1 Phase D1: merklemap-tail Terraform (no apply)
 
 Phase D1 lands all Terraform code for the dev `merklemap-tail` Cloud Run job — Secret Manager

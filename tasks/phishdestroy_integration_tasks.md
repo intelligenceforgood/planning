@@ -177,6 +177,7 @@ config flag in the orchestrator. No changes to existing modules.
       `MERKLEMAP_API_KEY`; `terraform fmt -check` clean <!-- code landed Phase D1 2026-04-25; plan/apply + smoke deferred to Phase D2 (GCP billing paused) -->
 - [ ] **(infra/)** Cloud Scheduler for 6h blocklist aggregator run (dev) <!-- deferred to Sprint 4 — no aggregator CLI exists yet -->
 - [ ] **[manual]** Populate `MERKLEMAP_API_KEY` secret in `i4g-dev` Secret Manager
+- [x] Local Docker smoke harness `scripts/smoke_merklemap_tail_local.py` <!-- Wrap-up 2026-04-25; operator-run, no GCP -->
 - [ ] E2E dev smoke: tail runs ≥ 30 min, produces ≥ 1 filter match, scan appears in review queue
 
 ### 1.6 `/discoveries` UI (ui/)
@@ -190,11 +191,11 @@ config flag in the orchestrator. No changes to existing modules.
 
 ### 1.7 Docs + verification
 
-- [ ] `docs/design/phishdestroy-integration.md` (developer-facing, in `core/docs/`) describing
-      provenance model + data flow
-- [ ] `docs/book/analyst-guide/discoveries.md` (end-user, in `docs/`) — short walkthrough
-- [ ] `SUMMARY.md` updated
-- [ ] Change-log entry in `planning/change_log.md`
+- [x] `docs/design/phishdestroy-integration.md` (developer-facing, in `core/docs/`) describing
+      provenance model + data flow <!-- Wrap-up 2026-04-25 -->
+- [x] `docs/book/analyst-guide/discoveries.md` (end-user, in `docs/`) — short walkthrough <!-- Wrap-up 2026-04-25 -->
+- [x] `SUMMARY.md` updated <!-- Wrap-up 2026-04-25 -->
+- [x] Change-log entry in `planning/change_log.md` <!-- Wrap-up 2026-04-25 -->
 
 **Sprint 1 risks to carry forward**
 
