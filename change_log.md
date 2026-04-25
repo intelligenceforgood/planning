@@ -1,6 +1,110 @@
 # Planning Change Log (active items only)
 
-Last updated: 24 Apr 2026
+Last updated: 25 Apr 2026
+
+## 2026-04-25 — PhishDestroy Sprint 1 Phase D1: merklemap-tail Terraform (no apply)
+
+Phase D1 lands all Terraform code for the dev `merklemap-tail` Cloud Run job — Secret Manager
+resource, `run_jobs` map entry (dev `enabled=true`, prod mirrored with `enabled=false` per
+parity rule), and `sa-ingest` invoker grant on `ssi-svc`. **No `terraform plan` / `apply` and
+no live smoke** — those are Phase D2 (deferred until GCP billing on `i4g-dev` is restored).
+
+- **Infra (`infra/stacks/app/main.tf`):** new `google_secret_manager_secret.merklemap_api_key`
+  resource (auto replication, `service=phishdestroy` label); `module "run_ssi_service"` invoker
+  list extended with `sa-ingest` so the merklemap-tail core image can POST `/trigger/investigate`.
+- **Infra (`infra/environments/app/dev/terraform.tfvars`):** `merklemap_tail` job — reuses
+  `ingest-job:dev` image, runs `i4g jobs merklemap-tail --max-runtime-seconds=1800` (30-min
+  bounded), CloudSQL via `sa-ingest@i4g-dev.iam`, secret env `PHISHDESTROY__MERKLEMAP_TAIL__API_KEY`
+  + `I4G_CRYPTO__PII_KEY`. SSI URL is a `https://ssi-svc-PLACEHOLDER-uc.a.run.app` placeholder
+  — Phase D2 must replace with the live URL before `terraform apply`.
+- **Infra (`infra/environments/app/prod/terraform.tfvars`):** parity mirror, `enabled=false`,
+  `i4g-prod` project / image / secrets. Stays inert until Sprint 4 SLO sign-off.
+- **Verification:** `terraform fmt -check -recursive` clean; `terraform validate` clean in both
+  dev and prod (offline `init -backend=false`). Diff scoped to the three intended files.
+- **Workflow:** This manifest was a corrective re-issue of the original Phase D bundle that
+  conflated local Terraform code with `plan`/`apply`/live smoke — when GCP billing was paused,
+  the bundle became unblockable. Lessons recorded as Planner rules **7** (predecessor gates check
+  commit existence, not push state) and **8** (split manifests at the local/external boundary)
+  in `copilot/.github/shared/handoff-manifest.instructions.md`.
+- **Manifest:** `planning/handoffs/2026-04-25-phishdestroy-sprint-1-phaseD1.manifest.md`.
+- **Repos affected:** `infra/`, `planning/`, `copilot/` (workflow rules update).
+
+**Deferred to Phase D2 (when GCP billing restored):**
+
+```bash
+cd infra/environments/app/dev && make plan       # confirm only intended deltas
+cd infra/environments/app/dev && make apply      # apply secret + job
+gcloud secrets versions add merklemap-api-key \
+  --data-file=- --project=i4g-dev                # paste rotated key on stdin
+# Replace I4G_SSI__SERVICE_URL placeholder with live ssi-svc URL:
+gcloud run services describe ssi-svc \
+  --region=us-central1 --project=i4g-dev --format='value(status.url)'
+# Confirm ingest-job:dev image rebuilt AFTER Phase C commit 40a69eb:
+gcloud artifacts docker images list \
+  us-central1-docker.pkg.dev/i4g-dev/applications/ingest-job \
+  --include-tags --filter='tags:dev'
+gcloud run jobs execute merklemap-tail --wait \
+  --region=us-central1 --project=i4g-dev          # 30-min smoke
+```
+
+## 2026-04-24 — PhishDestroy Sprint 1 Phase C: merklemap-tail worker (core/)
+
+Phase C lands the `merklemap-tail` streaming worker in `core/`. SSE client + bounded
+async pipeline → `domain_discoveries` upserts → brand-regex filter match → enqueue passive
+SSI scan via `ssi_scan` row. Worker runs to completion under `--max-runtime-seconds`
+or `--max-events`; honors SIGTERM for Cloud Run job graceful shutdown.
+
+- **Client (`core/src/i4g/clients/merklemap.py`):** async SSE consumer (`httpx.AsyncClient`),
+  exponential reconnect backoff capped at 30s, JSON-line parsing with malformed-line skip,
+  per-event `source_provenance(source="merklemap.tail", record_id=f"merklemap:{event_id}")`.
+- **Worker (`core/src/i4g/worker/jobs/merklemap_tail.py`):** orchestrates client + stores;
+  upserts every event to `domain_discoveries`; matches against
+  `phishdestroy.merklemap_tail.brand_regexes` (8 brands by default — Trust Wallet, Coinbase,
+  Ledger, MetaMask, Binance, Phantom, Uniswap, OpenSea); on match enqueues `ssi_scan` row
+  with `kind="passive"`. Emits per-minute metrics: domains/sec, match rate, scans enqueued.
+  Bounded memory (single-event scope, no buffering).
+- **CLI (`core/src/i4g/cli/jobs/__init__.py`):** `i4g jobs merklemap-tail` — flags
+  `--max-runtime-seconds`, `--max-events`, `--brand-regex` (repeatable override), `--dry-run`
+  (no enqueue, log only). Reuses settings via `get_settings().phishdestroy.merklemap_tail`.
+- **Settings (`core/src/i4g/settings/sections/jobs.py`):** new `MerklemapTailSettings`
+  block — `enabled`, `api_key` (Secret Manager), `sse_url`, `brand_regexes`, `request_timeout`.
+  Env vars `PHISHDESTROY__MERKLEMAP_TAIL__*` (provider-gated; default disabled).
+- **Tests:** 230 LOC of unit tests for the worker (filter match, enqueue contract, SIGTERM
+  handling, max-runtime/max-events caps) + 129 LOC for the client (reconnect backoff cap,
+  malformed-line skip, provenance shape) + 42 LOC for settings. All use `httpx.MockTransport`;
+  zero live network in CI.
+- **Settings drift (`core/docs/config/settings_manifest.yaml` + `docs/config/settings_manifest.yaml`):**
+  53-line `phishdestroy.merklemap_tail.*` block added to both copies (drift-check requires both).
+- **Manifest:** `planning/handoffs/2026-04-24-phishdestroy-sprint-1-phaseC.manifest.md`.
+- **Repos affected:** `core/`, `docs/`, `planning/`.
+
+## 2026-04-24 — PhishDestroy Sprint 1 Phase B: destroylist ingestion (core/)
+
+Phase B lands the `i4g jobs ingest-destroylist` CLI command and the underlying
+ingestion module. Pulls from the pinned DestroyScammers `data.json` commit
+(`c40cbbf5…`, 2025-11-30); idempotent on `(source, commit_sha, record_id)`.
+
+- **Ingestion (`core/src/i4g/ingestion/phishdestroy/destroylist.py`):** fetches `data.json`
+  at the pinned SHA from `raw.githubusercontent.com`; per-record provenance built by
+  `build_source_provenance(source="phishdestroy.destroylist", commit_sha=PINNED, record_id=...)`;
+  emits `BlocklistHit` upserts. Idempotent — second run on same SHA inserts 0 rows.
+- **Worker job (`core/src/i4g/worker/jobs/phishdestroy_destroylist.py`):** Cloud-Run-friendly
+  entry point; honors `--dry-run`, returns ingest counts in structured logs.
+- **CLI (`core/src/i4g/cli/jobs/__init__.py`):** `i4g jobs ingest-destroylist` (dash-separated;
+  sub-app refactor deferred). Reads provenance pin + endpoint from settings.
+- **Settings (`core/src/i4g/settings/sections/jobs.py`):** new `PhishDestroyDestroyListSettings`
+  block — `enabled`, `commit_sha` (pinned), `data_url`. Env vars `PHISHDESTROY__DESTROYLIST__*`.
+- **Tests:** 156 LOC for ingestion (idempotency, malformed records, partial network failure),
+  47 LOC for shared `build_source_provenance` helper, 51 LOC for settings; fixtures committed
+  under `tests/unit/ingestion/phishdestroy/fixtures/destroylist_sample.json`.
+- **Smoke:** `I4G_ENV=local i4g jobs ingest-destroylist` produced 23,561 rows on first run; 0
+  inserted on second run (idempotency confirmed).
+- **Settings drift (`core/docs/config/settings_manifest.yaml`):** 27-line
+  `phishdestroy.destroylist.*` block added.
+- **Provenance contract clarification (`copilot/.github/shared/phishdestroy-provenance.instructions.md`):**
+  one-line edit confirming `record_id` is sourced from `data.json` rows, not registrants.
+- **Manifest:** `planning/handoffs/2026-04-24-phishdestroy-sprint-1-phaseB.manifest.md`.
+- **Repos affected:** `core/`, `copilot/`, `planning/`.
 
 ## 2026-04-24 — PhishDestroy Sprint 1 Phase A: SSI OSINT modules + provider gate
 

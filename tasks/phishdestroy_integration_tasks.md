@@ -163,7 +163,7 @@ config flag in the orchestrator. No changes to existing modules.
   - [x] Idempotent by `source_provenance.commit_sha + domain`
   - [x] Writes `blocklist_hits` with `source="phishdestroy.destroylist"`
 - [x] Smoke test: `I4G_ENV=local i4g jobs ingest-destroylist` produces ≥ 1k rows (23,561 rows on first run; 0 inserted on second run — idempotency confirmed)
-- [ ] Docs: env var table + job manifest updated in `core/docs/config/` (deferred to Phase C)
+- [x] Docs: env var table + job manifest updated in `core/docs/config/` <!-- Phase B added `phishdestroy.destroylist.*`; Phase C added `phishdestroy.merklemap_tail.*` to both `core/docs/config/settings_manifest.yaml` and `docs/config/settings_manifest.yaml` (drift-check requires both copies) -->
 
 ### 1.5 Merklemap tail worker (core/ + infra/)
 
