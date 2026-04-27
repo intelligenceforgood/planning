@@ -253,10 +253,11 @@ with data.
 - [ ] Parse-failure rate < 1% on the full archive (acceptance metric)
 
 ### 2.4 Evidence blob storage (core/)
+<!-- Phase C: chat exports + photos + panel captures landed; bucket lifecycle remains an operator action. -->
 
-- [ ] Route chat exports, photos, panel source maps through existing `storage/evidence.py`
-- [ ] SHA-256 pointer recorded in owning row (`chat_sessions.evidence_blob_sha256` etc.)
-- [ ] Verify dossier signing picks up new evidence types
+- [x] Route chat exports, photos, panel source maps through existing `storage/evidence.py`
+- [x] SHA-256 pointer recorded in owning row (`chat_sessions.evidence_blob_sha256` etc.)
+- [x] Verify dossier signing picks up new evidence types
 - [ ] **[manual]** Confirm storage bucket lifecycle rules cover new blob shape
 
 ### 2.5 Campaign-page UI cards (ui/)
