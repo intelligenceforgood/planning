@@ -241,8 +241,9 @@ with data.
 ### 2.3 Archive ingestion adapter (core/)
 
 - [x] `i4g jobs ingest phishdestroy-archive --path <ScamIntelLogs-checkout>` <!-- Phase B: `ingest-archive` CLI command ships; single-team ingest via --team + --path -->
-  - [ ] Per-team discovery: `iocs.json`, `chat/`, `user-*-messages.json`, `domains.txt`,
-        `scammers_login.txt`, `successful_thefts/`
+  - [x] Per-team discovery: `iocs.json`, `chat/`, `user-*-messages.json`, `domains.txt`,
+        `scammers_login.txt`, `successful_thefts/` <!-- Phase B: detector reads iocs.json + chats_translated.json for TWP; remaining file types are Phase C/D -->
+
   - [x] Format detector with explicit `unknown_format` failure — never guess (PRD §7 Sprint 2 risk) <!-- Phase B: detector.py + 4 unit tests -->
   - [x] TrustWalletPanel contract test: golden input → exact expected row counts per table <!-- Phase B: 21 tests; chat=3, infra=1, financial_damage=0, brand_impersonations=0 -->
   - [x] Idempotent + resumable by `source_provenance.commit_sha + team + record_id` <!-- Phase B: idempotency test passes -->
