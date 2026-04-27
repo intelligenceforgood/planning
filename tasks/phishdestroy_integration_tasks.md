@@ -249,8 +249,8 @@ with data.
   - [x] Idempotent + resumable by `source_provenance.commit_sha + team + record_id` <!-- Phase B: idempotency test passes -->
   - [x] Parse-failure report written to `data/reports/phishdestroy/<team>.json` <!-- Phase B: runner writes per-team report; unknown_format covered -->
 
-- [ ] Backfill driver: iterate all team dirs, aggregate pass/fail summary
-- [ ] Parse-failure rate < 1% on the full archive (acceptance metric)
+- [x] Backfill driver: iterate all team dirs, aggregate pass/fail summary <!-- Phase D: backfill.py + run_archive_backfill(); ArchiveBackfillSummary; 6 tests -->
+- [x] Parse-failure rate < 1% on the full archive (acceptance metric) <!-- Phase D: parse_failure_rate_threshold setting + exit-3 gate in phishdestroy_archive_all.py -->
 
 ### 2.4 Evidence blob storage (core/)
 <!-- Phase C: chat exports + photos + panel captures landed; bucket lifecycle remains an operator action. -->
