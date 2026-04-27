@@ -223,20 +223,20 @@ with data.
 
 ### 2.1 Schema migration 2 (core/)
 
-- [ ] **Alembic revision:** `phishdestroy_sprint2_chats_damage_infra_brands`
-  - [ ] `chat_sessions` (PRD §5.2) — `evidence_blob_sha256` pointer
-  - [ ] `financial_damage_claims` (PRD §5.3) — INDEX (campaign_id, currency)
-  - [ ] `infrastructure_profiles` (PRD §5.4)
-  - [ ] `brand_impersonations` (PRD §5.5) — INDEX (brand)
-  - [ ] All tables have `source_provenance JSON` + timestamps
-  - [ ] Downgrade tested
+- [x] **Alembic revision:** `phishdestroy_sprint2_chats_damage_infra_brands`
+  - [x] `chat_sessions` (PRD §5.2) — `evidence_blob_sha256` pointer
+  - [x] `financial_damage_claims` (PRD §5.3) — INDEX (campaign_id, currency)
+  - [x] `infrastructure_profiles` (PRD §5.4)
+  - [x] `brand_impersonations` (PRD §5.5) — INDEX (brand)
+  - [x] All tables have `source_provenance JSON` + timestamps
+  - [x] Downgrade tested
 
 ### 2.2 Stores + factories (core/)
 
-- [ ] `ChatSessionStore`, `FinancialDamageStore`, `InfrastructureProfileStore`,
+- [x] `ChatSessionStore`, `FinancialDamageStore`, `InfrastructureProfileStore`,
       `BrandImpersonationStore`
-- [ ] Wire into `factories.py`
-- [ ] Unit tests (happy path + upsert idempotency by source_provenance key)
+- [x] Wire into `factories.py`
+- [x] Unit tests (happy path + upsert idempotency by source_provenance key)
 
 ### 2.3 Archive ingestion adapter (core/)
 
