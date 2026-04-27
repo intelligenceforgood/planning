@@ -248,6 +248,7 @@ with data.
   - [x] TrustWalletPanel contract test: golden input → exact expected row counts per table <!-- Phase B: 21 tests; chat=3, infra=1, financial_damage=0, brand_impersonations=0 -->
   - [x] Idempotent + resumable by `source_provenance.commit_sha + team + record_id` <!-- Phase B: idempotency test passes -->
   - [x] Parse-failure report written to `data/reports/phishdestroy/<team>.json` <!-- Phase B: runner writes per-team report; unknown_format covered -->
+
 - [ ] Backfill driver: iterate all team dirs, aggregate pass/fail summary
 - [ ] Parse-failure rate < 1% on the full archive (acceptance metric)
 
