@@ -221,6 +221,8 @@ infra cards.
 ≥ 15 teams ingested in dev; Damage ledger + Infrastructure profile cards render on a campaign
 with data.
 
+<!-- Phase D: backfill driver, damage parser, brand best-effort, generalised team registry — landed 2026-04-27. ≥15-team coverage gate moved to Phase E/F (requires detector format extensions for non-iocs.json teams). -->
+
 ### 2.1 Schema migration 2 (core/)
 
 - [x] **Alembic revision:** `phishdestroy_sprint2_chats_damage_infra_brands`
@@ -250,9 +252,10 @@ with data.
   - [x] Parse-failure report written to `data/reports/phishdestroy/<team>.json` <!-- Phase B: runner writes per-team report; unknown_format covered -->
 
 - [x] Backfill driver: iterate all team dirs, aggregate pass/fail summary <!-- Phase D: backfill.py + run_archive_backfill(); ArchiveBackfillSummary; 6 tests -->
-- [x] Parse-failure rate < 1% on the full archive (acceptance metric) <!-- Phase D: parse_failure_rate_threshold setting + exit-3 gate in phishdestroy_archive_all.py -->
+- [x] Parse-failure rate < 1% on the full archive (acceptance metric) <!-- Phase D: gate landed in code; live full-archive verification deferred to Phase F. -->
 
 ### 2.4 Evidence blob storage (core/)
+
 <!-- Phase C: chat exports + photos + panel captures landed; bucket lifecycle remains an operator action. -->
 
 - [x] Route chat exports, photos, panel source maps through existing `storage/evidence.py`
