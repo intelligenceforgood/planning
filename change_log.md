@@ -2,6 +2,14 @@
 
 Last updated: 29 Apr 2026
 
+## 2026-04-29 — Gemini CLI Workflow: Wrap-up and Merge Routine
+
+Added a new "Sprint Wrap-Up and Merge" routine to the Gemini configuration. This chains the sprint-wrapup and merge prompts to streamline the end-of-sprint workflow.
+
+- **Prompts & Snippets:** Created `@prompts/wrapup-and-merge.md` and registered the `gca-wrapup-merge` snippet.
+- **Workflow Memories:** Bootstrapped `memories/repo/` with `lessons-learned.md` and `workflow-patterns.md`, documenting mitigation strategies for destructive updates to trackers by AI executors.
+- **Repos affected:** `gemini/`.
+
 ## 2026-04-29 — PhishDestroy Sprint 0.5: Unblocking & Resumption
 
 Resumed work on the PhishDestroy integration, addressing pending blockers and preparing for local-only development due to zero-budget constraints.
