@@ -1,6 +1,17 @@
 # Planning Change Log (active items only)
 
-Last updated: 25 Apr 2026
+Last updated: 29 Apr 2026
+
+## 2026-04-29 — PhishDestroy Sprint 0.5: Unblocking & Resumption
+
+Resumed work on the PhishDestroy integration, addressing pending blockers and preparing for local-only development due to zero-budget constraints.
+
+- **Design Execution:** Drafted wireframes for the UI cards (Damage Ledger, Infra Profile) and the `/actors` view in `ui/docs/design/phishdestroy_ui_wireframes.md`.
+- **ML Schema Definition:** Defined the BigQuery schema for `i4g_ml.actor_features` in `ml/docs/schema/actor_features.md`.
+- **Budget Constraints:** Configured the plan to develop all features but add configuration flags to disable API calls and use free tiers or local mock data where possible.
+- **Keys and Approvals:** Rotated Merklemap and Whoxy API keys and obtained Counsel sign-off on PII storage.
+- **Repos affected:** `ui/`, `ml/`, `planning/`.
+
 
 ## 2026-04-25 — PhishDestroy Sprint 1 Wrap-up: E1 cleanups + Phase D-local smoke + Phase F docs
 
