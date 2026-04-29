@@ -2,6 +2,15 @@
 
 Last updated: 29 Apr 2026
 
+## 2026-04-29 — PhishDestroy Sprint 2 Phase F: Campaign UI & Verification
+
+Completed Sprint 2 by implementing the Campaign page UI cards (Damage Ledger, Infrastructure Profile, Actors placeholder), feature-flagging dossier template changes, running the full archive backfill in dev to verify the <1% parse failure rate, and verifying audit logs.
+
+- **UI Implementation**: Added Damage ledger, Infrastructure profile, and Actors placeholder to the Campaign detail page (`campaigns/[id]/page.tsx`).
+- **Dossier Template**: Wrapped Sprint 2 additions in a feature-flag check in `lea_dossier.md.j2`.
+- **Verification & Backfill**: Executed full archive backfill with 0% parse failures on synthetic and TWP datasets. Verified audit-log entries are generated for ingested PII-bearing rows (`chat_sessions`).
+- **Repos affected:** `core/`, `ui/`, `planning/`.
+
 ## 2026-04-29 — Gemini CLI Workflow: Wrap-up and Merge Routine
 
 Added a new "Sprint Wrap-Up and Merge" routine to the Gemini configuration. This chains the sprint-wrapup and merge prompts to streamline the end-of-sprint workflow.

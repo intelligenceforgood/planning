@@ -236,7 +236,8 @@ infra cards.
 ≥ 15 teams ingested in dev; Damage ledger + Infrastructure profile cards render on a campaign
 with data.
 
-<!-- Phase D: backfill driver, damage parser, brand best-effort, generalised team registry — landed 2026-04-27. ≥15-team coverage gate moved to Phase E/F (requires detector format extensions for non-iocs.json teams). -->
+<!-- Phase D: backfill driver, damage parser, brand best-effort, generalised team registry — landed 2026-04-27. -->
+<!-- Phase E: Detector format extensions (FLAT_FILES) — landed 2026-04-29. -->
 
 ### 2.1 Schema migration 2 (core/)
 
@@ -259,7 +260,7 @@ with data.
 
 - [x] `i4g jobs ingest phishdestroy-archive --path <ScamIntelLogs-checkout>` <!-- Phase B: `ingest-archive` CLI command ships; single-team ingest via --team + --path -->
   - [x] Per-team discovery: `iocs.json`, `chat/`, `user-*-messages.json`, `domains.txt`,
-        `scammers_login.txt`, `successful_thefts/` <!-- Phase B: detector reads iocs.json + chats_translated.json for TWP; remaining file types are Phase C/D -->
+        `scammers_login.txt`, `successful_thefts/` <!-- Phase B: detector reads iocs.json + chats_translated.json for TWP; remaining file types are Phase C/D/E -->
 
   - [x] Format detector with explicit `unknown_format` failure — never guess (PRD §7 Sprint 2 risk) <!-- Phase B: detector.py + 4 unit tests -->
   - [x] TrustWalletPanel contract test: golden input → exact expected row counts per table <!-- Phase B: 21 tests; chat=3, infra=1, financial_damage=0, brand_impersonations=0 -->
@@ -280,18 +281,18 @@ with data.
 
 ### 2.5 Campaign-page UI cards (ui/)
 
-- [ ] Campaign detail page: **Damage ledger** card (per-currency totals, claimed vs confirmed)
-- [ ] Campaign detail page: **Infrastructure profile** card (tech_stack, subdomain_roles,
+- [x] Campaign detail page: **Damage ledger** card (per-currency totals, claimed vs confirmed)
+- [x] Campaign detail page: **Infrastructure profile** card (tech_stack, subdomain_roles,
       source_maps_exposed, auth_model)
-- [ ] Campaign detail page: **Actors** tab placeholder (populated in Sprint 3)
-- [ ] Feature-flag dossier-template changes until reviewed
-- [ ] `get_errors` clean on all changed files
+- [x] Campaign detail page: **Actors** tab placeholder (populated in Sprint 3)
+- [x] Feature-flag dossier-template changes until reviewed
+- [x] `get_errors` clean on all changed files
 
 ### 2.6 Verification
 
-- [ ] Run full backfill in dev; attach summary to the Sprint 2 verify-handoff report
-- [ ] Audit-log entries present for every ingested PII-bearing row
-- [ ] Change-log entry
+- [x] Run full backfill in dev; attach summary to the Sprint 2 verify-handoff report
+- [x] Audit-log entries present for every ingested PII-bearing row
+- [x] Change-log entry
 
 **Sprint 2 gate (prod):** Counsel sign-off on chat-transcript storage + dossier surfacing
 (PRD §11 Q3) **before** prod deploy.
@@ -373,7 +374,7 @@ PII fields gated to `role=senior_analyst` with 100% audit coverage in dev.
 
 - [ ] End-to-end analyst walkthrough in dev (record findings)
 - [ ] Confirm 100% audit coverage: every PII read produces a log row
-- [ ] Change-log entry
+- [x] Change-log entry
 
 **Sprint 3 risks**
 
