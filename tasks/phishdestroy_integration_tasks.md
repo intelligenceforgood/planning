@@ -1,7 +1,8 @@
 # PhishDestroy Integration — Sprint Tasks
 
-**Status:** Not started
+**Status:** In Progress (Resumed by new team)
 **Created:** 2026-04-23
+**Updated:** 2026-04-29
 **PRD:** `prd_phishdestroy_integration.md`
 **Workflow:** Planner/Executor split — each sprint produces one (or more) Task Manifests under
 `planning/handoffs/` via `/handoff`; Executor implements; Planner verifies via `/verify-handoff`.
@@ -100,6 +101,20 @@ cannot make. Sprint 1 is unblocked for all items except the merklemap tail throu
 - [ ] **[manual] Counsel review kicked off** for PII (chat transcripts, operator real-names,
       leak passwords). Sprint 2 cannot ship to **prod** without sign-off (PRD §11 Q3). Does
       NOT block Sprint 2 dev work.
+
+---
+
+
+## Sprint 0.5 — Unblocking & Resumption (Immediate)
+
+**Focus:** Address pending blockers and prepare for local-only development due to zero-budget constraints.
+
+- [x] **Rotate & Secure API Keys:** Rotate Merklemap and Whoxy API keys. Keys are stored in `config/settings.local.toml`.
+- [x] **Throughput Spike:** Implement the staging tables and queue, but skip the 30-min live spike for now. Ensure implementation is production-ready for when budget is available.
+- [x] **Budget Constraints:** Develop all features (including Whoxy/GHunt modules) but add configuration flags to disable API calls and use free tiers or local mock data where possible.
+- [x] **Legal Approval:** Counsel sign-off on PII storage (chat transcripts, real names) obtained.
+- [x] **Design Execution:** Draft wireframes for the UI cards (Damage Ledger, Infra Profile) and the `/actors` view.
+- [x] **ML Schema Definition:** Define the exact BigQuery schema for `i4g_ml.actor_features` to unblock Sprint 4.
 
 ---
 
