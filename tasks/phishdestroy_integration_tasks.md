@@ -330,12 +330,12 @@ PII fields gated to `role=senior_analyst` with 100% audit coverage in dev.
 
 ### 3.3 SSI enrichment modules (ssi/)
 
-- [ ] `whoxy_reverse.py` — reverse WHOIS by email/name/company/phone (gated behind Sprint 0 budget
+- [x] `whoxy_reverse.py` — reverse WHOIS by email/name/company/phone (gated behind Sprint 0 budget
       decision; stub with 501 if deferred)
-- [ ] `ghunt.py` — Google persona OSINT; Secret Manager cookie; disable-switch via config when
+- [x] `ghunt.py` — Google persona OSINT; Secret Manager cookie; disable-switch via config when
       auth expires; rotation runbook
-- [ ] `webarchive.py` — archive.org CDX + Wayback download
-- [ ] Unit tests with recorded fixtures
+- [x] `webarchive.py` — archive.org CDX + Wayback download
+- [x] Unit tests with recorded fixtures
 
 ### 3.4 Actor ingestion + graph hydration (core/)
 

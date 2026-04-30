@@ -3,6 +3,14 @@
 Last updated: 30 Apr 2026
 
 
+## 2026-04-30 — PhishDestroy Sprint 3 Phase 2: SSI Enrichment Modules
+
+Implemented Sprint 3 Phase 2 (SSI Enrichment Modules) for the PhishDestroy integration.
+
+- **OSINT Modules:** Added `whoxy_reverse.py`, `ghunt.py`, and `webarchive.py` to `ssi/osint/`.
+- **Tests:** Added unit tests with recorded fixtures.
+- **Repos affected:** `ssi/`.
+
 ## 2026-04-30 — PhishDestroy Sprint 3 Phase 1: Schema & Stores
 
 Implemented Sprint 3 Phase 1 (Schema & Stores) for the PhishDestroy integration.
