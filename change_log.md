@@ -2,6 +2,16 @@
 
 Last updated: 30 Apr 2026
 
+
+## 2026-04-30 — PhishDestroy Sprint 3 Phase 1: Schema & Stores
+
+Implemented Sprint 3 Phase 1 (Schema & Stores) for the PhishDestroy integration.
+
+- **Schema:** Added `leak_records` and `registrant_pivots` ORM models and generated the corresponding Alembic migration.
+- **Stores & Factories:** Created `LeakRecordStore` and `RegistrantPivotStore`, wired them into `factories.py`.
+- **Tests:** Added comprehensive unit tests for both stores.
+- **Repos affected:** `core/`.
+
 ## 2026-04-30 — Gemini CLI Workflow: Planner/Executor mitigations
 
 Added new mitigations for Planner/Executor interface mismatches and hallucinated file modifications to workflow patterns.

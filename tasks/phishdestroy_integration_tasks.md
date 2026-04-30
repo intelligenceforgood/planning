@@ -317,16 +317,16 @@ PII fields gated to `role=senior_analyst` with 100% audit coverage in dev.
 
 ### 3.1 Schema migration 3 (core/)
 
-- [ ] **Alembic revision:** `phishdestroy_sprint3_leaks_pivots`
-  - [ ] `leak_records` (PRD §5.5)
-  - [ ] `registrant_pivots` with UNIQUE (pivot_type, pivot_value)
-  - [ ] Downgrade tested
+- [x] **Alembic revision:** `phishdestroy_sprint3_leaks_pivots`
+  - [x] `leak_records` (PRD §5.5)
+  - [x] `registrant_pivots` with UNIQUE (pivot_type, pivot_value)
+  - [x] Downgrade tested
 
 ### 3.2 Stores + factories (core/)
 
-- [ ] `LeakRecordStore`, `RegistrantPivotStore`
-- [ ] Wire into `factories.py`
-- [ ] Unit tests
+- [x] `LeakRecordStore`, `RegistrantPivotStore`
+- [x] Wire into `factories.py`
+- [x] Unit tests
 
 ### 3.3 SSI enrichment modules (ssi/)
 
