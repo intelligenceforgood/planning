@@ -1,6 +1,13 @@
 # Planning Change Log (active items only)
 
-Last updated: 29 Apr 2026
+Last updated: 30 Apr 2026
+
+## 2026-04-30 — Gemini CLI Workflow: Planner/Executor mitigations
+
+Added new mitigations for Planner/Executor interface mismatches and hallucinated file modifications to workflow patterns.
+
+- **Workflow Memories:** Updated `memories/repo/workflow-patterns.md` with rules for Executor adherence to structural contracts and diff verification for requested file modifications.
+- **Repos affected:** `gemini/`, `planning/`.
 
 ## 2026-04-29 — PhishDestroy Sprint 2 Phase F: Campaign UI & Verification
 
