@@ -348,13 +348,13 @@ PII fields gated to `role=senior_analyst` with 100% audit coverage in dev.
 
 ### 3.5 Actor API + RBAC + audit (core/)
 
-- [ ] `GET /actors` (filter: role, campaign, activity window, threat-level)
-- [ ] `GET /actors/{id}` (identity panel, edges, linked campaigns, chats, damage, leaks, brands)
-- [ ] PII fields (`threat_actors.real_name`, chat transcripts, leak passwords) return only for
+- [x] `GET /actors` (filter: role, campaign, activity window, threat-level)
+- [x] `GET /actors/{id}` (identity panel, edges, linked campaigns, chats, damage, leaks, brands)
+- [x] PII fields (`threat_actors.real_name`, chat transcripts, leak passwords) return only for
       `role=senior_analyst`
-- [ ] Every PII-bearing read emits `audit_log.log_action` with actor identity + reason code
-- [ ] Reason code required on PII requests (`?reason=...` or header)
-- [ ] Unit + integration tests for RBAC denial paths
+- [x] Every PII-bearing read emits `audit_log.log_action` with actor identity + reason code
+- [x] Reason code required on PII requests (`?reason=...` or header)
+- [x] Unit + integration tests for RBAC denial paths
 
 ### 3.6 Actor UI (ui/)
 

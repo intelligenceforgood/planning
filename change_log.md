@@ -3,6 +3,18 @@
 Last updated: 30 Apr 2026
 
 
+## 2026-05-01 — PhishDestroy Sprint 3.5: Actor API + RBAC + audit
+
+Implemented Sprint 3.5 (Actor API + RBAC + audit) for the PhishDestroy integration.
+
+- **Actors API:** Added `GET /actors` and `GET /actors/{id}` endpoints in `phishdestroy_actors.py`.
+- **Filtering:** Added role, campaign, activity window, and threat-level filtering to `list_actors` in `ThreatActorStore`.
+- **RBAC & PII Gating:** Enforced `role=senior_analyst` requirement for viewing PII fields (`real_name`, `password_cleartext`, `transcript`).
+- **Auditing:** Wired up `audit_log.log_action` on every PII-bearing read requiring a `reason` query param or `x-reason` header.
+- **Tests:** Wrote unit tests for RBAC denial paths.
+- **Repos affected:** `core/`.
+
+
 
 
 ## 2026-05-01 — PhishDestroy Sprint 3 Phase 3: Actor Ingestion
