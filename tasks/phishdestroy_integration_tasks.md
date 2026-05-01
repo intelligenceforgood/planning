@@ -358,17 +358,17 @@ PII fields gated to `role=senior_analyst` with 100% audit coverage in dev.
 
 ### 3.6 Actor UI (ui/)
 
-- [ ] `/actors` list page (filters per PRD §6)
-- [ ] `/actors/[id]` detail page with:
-  - [ ] Identity panel + username/display-name timelines
-  - [ ] Co-membership graph (force-directed, e.g. d3-force or similar — reuse existing viz lib)
-  - [ ] Linked campaigns + top chat sessions
-  - [ ] Financial-damage ledger
-  - [ ] Screenshot gallery (evidence)
-  - [ ] Leak indicators + brand-impersonation badges
-- [ ] PII unlock flow: modal requires reason; sends reason to API; surfaces "PII — audited" tag
-- [ ] Campaign page **Actors** tab wired
-- [ ] `get_errors` clean; a11y pass (keyboard, alt text)
+- [x] `/actors` list page (filters per PRD §6)
+- [x] `/actors/[id]` detail page with:
+  - [x] Identity panel + username/display-name timelines
+  - [x] Co-membership graph (force-directed, e.g. d3-force or similar — reuse existing viz lib)
+  - [x] Linked campaigns + top chat sessions
+  - [x] Financial-damage ledger
+  - [x] Screenshot gallery (evidence)
+  - [x] Leak indicators + brand-impersonation badges
+- [x] PII unlock flow: modal requires reason; sends reason to API; surfaces "PII — audited" tag
+- [x] Campaign page **Actors** tab wired
+- [x] `get_errors` clean; a11y pass (keyboard, alt text)
 
 ### 3.7 Verification
 
