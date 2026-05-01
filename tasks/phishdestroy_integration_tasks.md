@@ -402,12 +402,12 @@ runbooks complete; collaboration packet reviewed.
 
 ### 4.1 Merklemap filter v2 (core/)
 
-- [ ] Typosquat score: Levenshtein distance vs. protected-brand list
-- [ ] Blocklist cross-check: consult `blocklist_hits` before enqueue
+- [x] Typosquat score: Levenshtein distance vs. protected-brand list
+- [x] Blocklist cross-check: consult `blocklist_hits` before enqueue
 - [ ] Combined score → enqueue decision; record `filter_reason` (brand-regex | typosquat |
       blocklist | combo)
-- [ ] Tune thresholds on a replay of 24h of dev staging data
-- [ ] Metrics: false-positive rate, scans-enqueued/hour
+- [ ] Tune thresholds on a replay of 24h of dev staging data (skipped per user constraints)
+- [x] Metrics: false-positive rate, scans-enqueued/hour
 
 ### 4.2 ML feature group (ml/ — handoff only)
 

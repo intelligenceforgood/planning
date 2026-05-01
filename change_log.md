@@ -2548,3 +2548,10 @@ wiring + unit tests. Executed via handoff manifest (now archived to git history)
 
 **Next step:** Sprint 1.3 (SSI OSINT modules: `blocklist_aggregator`, `ctlog_lookup`,
 `merklemap_client`). Fresh Opus chat → `/plan-work` → `/handoff`.
+
+### 2026-05-01 - Merklemap Filter v2
+- **Implemented Typosquatting Check**: Added Levenshtein distance check against `protected_brands`.
+- **Implemented Blocklist Cross-Check**: Consults `blocklist_hits` before enqueuing a domain.
+- **Combined Score & Filter Reason**: Records matches as a `|` separated list in `filter_reason` (e.g. `brand-regex|typosquat|blocklist`).
+- **Metrics Added**: False-positive rate and scans-enqueued/hour are now logged during execution.
+- **Skipped Tuning**: Threshold tuning on 24h dev staging data was skipped per user instructions due to GCP billing issues.
