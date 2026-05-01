@@ -3,6 +3,16 @@
 Last updated: 30 Apr 2026
 
 
+## 2026-05-01 - PhishDestroy Sprint 3.7: Verification
+
+Completed Sprint 3.7 (Verification) for the PhishDestroy integration.
+
+- **Audit Coverage:** Fixed `get_actor` endpoint in `phishdestroy_actors.py` to ensure every individual PII read (threat actor real name, leak record cleartext passwords, chat session transcripts) produces a distinct audit log entry with the appropriate `resource_type` and `resource_id`.
+- **Tests:** Updated `test_phishdestroy_actors.py` to assert the correct audit log `resource_type` for threat actors.
+- **Verification:** Completed the end-to-end analyst walkthrough in dev to verify the new audit logs.
+- **Repos affected:** `core/`, `planning/`.
+
+
 ## 2026-05-01 — PhishDestroy Sprint 3.5: Actor API + RBAC + audit
 
 Implemented Sprint 3.5 (Actor API + RBAC + audit) for the PhishDestroy integration.

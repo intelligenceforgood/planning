@@ -372,8 +372,8 @@ PII fields gated to `role=senior_analyst` with 100% audit coverage in dev.
 
 ### 3.7 Verification
 
-- [ ] End-to-end analyst walkthrough in dev (record findings)
-- [ ] Confirm 100% audit coverage: every PII read produces a log row
+- [x] End-to-end analyst walkthrough in dev (record findings)
+- [x] Confirm 100% audit coverage: every PII read produces a log row
 - [x] Change-log entry
 
 **Sprint 3 risks**
