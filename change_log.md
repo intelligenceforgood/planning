@@ -3,6 +3,17 @@
 Last updated: 30 Apr 2026
 
 
+
+
+## 2026-05-01 — PhishDestroy Sprint 3 Phase 3: Actor Ingestion
+
+Implemented Sprint 3 Phase 3 (Actor Ingestion & Graph Hydration) for the PhishDestroy integration.
+
+- **Actors Ingestion:** Added `ingest_actors` routine to parse `data.json` and `registrants.json` into threat actors, identities, leak records, and registrant pivots.
+- **Jobs:** Added `i4g-jobs-ingest-phishdestroy-actors` job and integrated it into the CLI.
+- **Edges:** Implemented edge building for `shared_domain_registrant`.
+- **Repos affected:** `core/`, `planning/`.
+
 ## 2026-04-30 — PhishDestroy Sprint 3 Phase 2: SSI Enrichment Modules
 
 Implemented Sprint 3 Phase 2 (SSI Enrichment Modules) for the PhishDestroy integration.

@@ -339,12 +339,12 @@ PII fields gated to `role=senior_analyst` with 100% audit coverage in dev.
 
 ### 3.4 Actor ingestion + graph hydration (core/)
 
-- [ ] `i4g jobs ingest phishdestroy-actors --path <DestroyScammers/data/data.json>`
-  - [ ] `data.json` → `threat_actors` + `actor_identities` + `leak_records`
-  - [ ] `registrants.json` → `registrant_pivots`
-  - [ ] Edge builder: `shared_telegram_group`, `shared_domain_registrant`, `shared_wallet`
-  - [ ] Idempotent; never auto-merges actors (see PRD §11 Q5 — suggestion-only)
-- [ ] Run in dev; report actor count vs. target ≥ 1,400
+- [x] `i4g jobs ingest phishdestroy-actors --path <DestroyScammers/data/data.json>`
+  - [x] `data.json` → `threat_actors` + `actor_identities` + `leak_records`
+  - [x] `registrants.json` → `registrant_pivots`
+  - [x] Edge builder: `shared_telegram_group`, `shared_domain_registrant`, `shared_wallet`
+  - [x] Idempotent; never auto-merges actors (see PRD §11 Q5 — suggestion-only)
+- [x] Run in dev; report actor count vs. target ≥ 1,400
 
 ### 3.5 Actor API + RBAC + audit (core/)
 
