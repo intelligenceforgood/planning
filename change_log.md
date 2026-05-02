@@ -2,6 +2,19 @@
 
 Last updated: 02 May 2026
 
+
+## 2026-05-02 - PhishDestroy Sprint 4.4: SLO dashboards
+
+Staged Sprint 4.4 (SLO dashboards) for the PhishDestroy integration. Note: due to billing issues, GCP deployments are skipped, and items are marked as implemented but not tested `[-]`.
+
+- **Terraform:** Created `infra/modules/monitoring/dashboards.tf` containing a `google_monitoring_dashboard` resource for `phishdestroy_slo`.
+- **Panels Added:**
+  - Per-service daily-quota utilisation (`provider_quota_usage`)
+  - p50 ingest-to-enqueue latency panel (`ingest_latency`)
+  - Parse-failure rate per team (`parse_failure_rate`)
+  - Blocklist-aggregator source health (`blocklist_source_health`)
+- **Repos affected:** `infra/`, `planning/`.
+
 ## 2026-05-02 - PhishDestroy Sprint 4.3: Prod deployment (infra/ + core/)
 
 Staged Sprint 4.3 (Prod deployment) for the PhishDestroy integration. Note: due to billing issues, GCP deployments are skipped, and items are marked as implemented but not tested `[-]`.

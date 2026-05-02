@@ -429,10 +429,10 @@ runbooks complete; collaboration packet reviewed.
 
 ### 4.4 SLO dashboards
 
-- [ ] Per-service daily-quota utilisation (merklemap, urlscan, virustotal, whoxy)
-- [ ] p50 ingest-to-enqueue latency panel (< 60 s target per PRD §10)
-- [ ] Parse-failure rate per team (< 1% target)
-- [ ] Blocklist-aggregator source health (8/8 up)
+- [-] Per-service daily-quota utilisation (merklemap, urlscan, virustotal, whoxy)
+- [-] p50 ingest-to-enqueue latency panel (< 60 s target per PRD §10)
+- [-] Parse-failure rate per team (< 1% target)
+- [-] Blocklist-aggregator source health (8/8 up)
 
 ### 4.5 Runbooks (`gemini/docs/` or `core/docs/`)
 
