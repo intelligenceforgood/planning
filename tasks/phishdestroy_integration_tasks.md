@@ -418,11 +418,11 @@ runbooks complete; collaboration packet reviewed.
 
 ### 4.3 Prod deployment (infra/ + core/)
 
-- [ ] Cloud Run job `merklemap-tail-prod`
-- [ ] Cloud Scheduler `blocklist-aggregator-prod` (6h)
-- [ ] Cloud Run job specs for `phishdestroy-archive` + `phishdestroy-actors` (re-sync cadence)
-- [ ] Secret Manager entries in prod: `MERKLEMAP_API_KEY`, `WHOXY_API_KEY` (if live), GHunt blob
-- [ ] `terraform fmt -check` clean; pre-merge review per
+- [-] Cloud Run job `merklemap-tail-prod`
+- [-] Cloud Scheduler `blocklist-aggregator-prod` (6h)
+- [-] Cloud Run job specs for `phishdestroy-archive` + `phishdestroy-actors` (re-sync cadence)
+- [-] Secret Manager entries in prod: `MERKLEMAP_API_KEY`, `WHOXY_API_KEY` (if live), GHunt blob
+- [-] `terraform fmt -check` clean; pre-merge review per
       `copilot/.github/shared/pre-merge-checklist.instructions.md`
 - [ ] **[manual]** Run `i4g db migrate prod` for Sprint 1/2/3 migrations at deploy time
 - [ ] **[manual]** Verify counsel sign-off on file before prod ingest of chat transcripts
@@ -434,7 +434,7 @@ runbooks complete; collaboration packet reviewed.
 - [ ] Parse-failure rate per team (< 1% target)
 - [ ] Blocklist-aggregator source health (8/8 up)
 
-### 4.5 Runbooks (`copilot/docs/` or `core/docs/`)
+### 4.5 Runbooks (`gemini/docs/` or `core/docs/`)
 
 - [ ] Upstream re-sync (bumping commit SHA + running archive/actors jobs)
 - [ ] API-key rotation: merklemap, whoxy, virustotal, urlscan, GHunt

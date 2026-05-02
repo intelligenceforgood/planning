@@ -1,6 +1,18 @@
 # Planning Change Log (active items only)
 
-Last updated: 30 Apr 2026
+Last updated: 02 May 2026
+
+## 2026-05-02 - PhishDestroy Sprint 4.3: Prod deployment (infra/ + core/)
+
+Staged Sprint 4.3 (Prod deployment) for the PhishDestroy integration. Note: due to billing issues, GCP deployments are skipped, and items are marked as implemented but not tested `[-]`.
+
+- **Terraform:** Configured `infra/environments/app/prod/terraform.tfvars` for production jobs:
+  - Enabled `merklemap_tail` Cloud Run job.
+  - Added `blocklist_aggregator` Cloud Scheduler.
+  - Added `phishdestroy_archive` and `phishdestroy_actors` ingest jobs.
+- **Secrets:** Added Secret Manager resource configs for `WHOXY_API_KEY` and `GHUNT_COOKIE_BLOB` in `infra/stacks/app/main.tf` under `ssi_secrets`.
+- **Validation:** Executed `terraform fmt` and verified formatting with `terraform fmt -check` clean in `infra/stacks/app` and `infra/environments/app/prod`.
+- **Repos affected:** `infra/`, `planning/`.
 
 
 ## 2026-05-01 - PhishDestroy Sprint 3.7: Verification
