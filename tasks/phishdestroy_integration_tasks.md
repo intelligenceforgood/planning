@@ -442,9 +442,9 @@ runbooks complete; collaboration packet reviewed.
 
 ### 4.6 Collaboration packet (docs/ + planning/)
 
-- [ ] Short document for the upstream author describing: what we built, sources consumed,
+- [x] Short document for the upstream author describing: what we built, sources consumed,
       provenance preserved, what could flow back
-- [ ] Proposed two-way interface sketch (no code) — deferred PRD
+- [x] Proposed two-way interface sketch (no code) — deferred PRD
 - [ ] **[manual]** Review with team before any outreach
 
 ### 4.7 Acceptance (PRD §10) — check each metric
