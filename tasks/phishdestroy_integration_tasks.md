@@ -411,10 +411,10 @@ runbooks complete; collaboration packet reviewed.
 
 ### 4.2 ML feature group (ml/ — handoff only)
 
-- [ ] BigQuery view `i4g_ml.actor_features` with: co-membership degree, cross-campaign domain
+- [-] BigQuery view `i4g_ml.actor_features` with: co-membership degree, cross-campaign domain
       count, leak count, blocklist hit count, damage-confirmed total
-- [ ] Document the contract in `ml/docs/` and notify ML team
-- [ ] No consumption code here — ML team owns
+- [-] Document the contract in `ml/docs/` and notify ML team
+- [-] No consumption code here — ML team owns
 
 ### 4.3 Prod deployment (infra/ + core/)
 

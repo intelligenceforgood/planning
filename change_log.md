@@ -2555,3 +2555,8 @@ wiring + unit tests. Executed via handoff manifest (now archived to git history)
 - **Combined Score & Filter Reason**: Records matches as a `|` separated list in `filter_reason` (e.g. `brand-regex|typosquat|blocklist`).
 - **Metrics Added**: False-positive rate and scans-enqueued/hour are now logged during execution.
 - **Skipped Tuning**: Threshold tuning on 24h dev staging data was skipped per user instructions due to GCP billing issues.
+
+## 2026-05-01: ML Feature Group Handoff
+- Implemented `i4g_ml.actor_features` BigQuery view definition (`ml/pipelines/sql/v_actor_features.sql`) with co-membership degree, cross-campaign domain count, leak count, blocklist hit count, and damage-confirmed total.
+- Updated documentation in `ml/docs/schema/actor_features.md`.
+- Marked `phishdestroy_integration_tasks.md` section 4.2 with `[-]` to indicate completion without live testing due to GCP billing constraints.
