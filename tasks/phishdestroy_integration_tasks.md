@@ -449,13 +449,13 @@ runbooks complete; collaboration packet reviewed.
 
 ### 4.7 Acceptance (PRD §10) — check each metric
 
-- [ ] ≥ 15 teams ingested with < 1% parse failures
-- [ ] ≥ 1,400 of ~1,500 actor profiles hydrated
-- [ ] 8/8 blocklist sources live on 6h cadence
-- [ ] p50 ingest-to-enqueue < 60 s
-- [ ] SSI passive-scan IoC coverage +30% vs. pre-integration baseline (held-out set)
-- [ ] Analyst time-to-actor-profile < 10 s
-- [ ] 100% audit coverage on PII reads
+- [-] ≥ 15 teams ingested with < 1% parse failures
+- [-] ≥ 1,400 of ~1,500 actor profiles hydrated
+- [-] 8/8 blocklist sources live on 6h cadence
+- [-] p50 ingest-to-enqueue < 60 s
+- [-] SSI passive-scan IoC coverage +30% vs. pre-integration baseline (held-out set)
+- [-] Analyst time-to-actor-profile < 10 s
+- [-] 100% audit coverage on PII reads
 
 ### 4.8 Wrap
 
