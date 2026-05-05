@@ -49,18 +49,19 @@
 
 - **Undocumented APIs:** Google's internal APIs (Maps protobufs, People v2) can change without notice. Code must fail cleanly without halting the broader investigation.
 - **Anti-Bot Detection:** Scraping could get `zendriver` flagged by Google, requiring future proxy rotation strategies.
-- **Schema Compatibility:** Adding the `google_osint` block to the JSONB payload must be backward-compatible with older `site_scans` records.
+- **Schema Compatibility:** Adding the `google_osint` block to the JSONB payload must be backward-
+compatible with older `site_scans` records.
 
 ## 6. Track with Todos
 
 - [x] Step 1: Setup Google Module
 - [x] Step 2: Sandboxed Authentication
-- [-] Step 3: Identity Resolution
-- [-] Step 4: Maps & Location Scraper
-- [-] Step 5: Drive File Exposure
+- [x] Step 3: Identity Resolution
+- [x] Step 4: Maps & Location Scraper
+- [x] Step 5: Drive File Exposure
 - [ ] Step 6: Database Schema Updates
-- [ ] Step 7: Entity & PII Mapping
-- [ ] Step 8: Investigation Orchestrator Wiring
+- [x] Step 7: Entity & PII Mapping
+- [x] Step 8: Investigation Orchestrator Wiring
 
 ## 7. Decide the Handoff
 
