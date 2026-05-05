@@ -53,11 +53,11 @@
 
 ## 6. Track with Todos
 
-- [ ] Step 1: Setup Google Module
-- [ ] Step 2: Sandboxed Authentication
-- [ ] Step 3: Identity Resolution
-- [ ] Step 4: Maps & Location Scraper
-- [ ] Step 5: Drive File Exposure
+- [x] Step 1: Setup Google Module
+- [x] Step 2: Sandboxed Authentication
+- [-] Step 3: Identity Resolution
+- [-] Step 4: Maps & Location Scraper
+- [-] Step 5: Drive File Exposure
 - [ ] Step 6: Database Schema Updates
 - [ ] Step 7: Entity & PII Mapping
 - [ ] Step 8: Investigation Orchestrator Wiring
