@@ -28,5 +28,5 @@
 
 ## 6. Track with Todos
 
-- [ ] Step 1: Resolve Browser State for OSINT
-- [ ] Step 2: Database Schema Updates
+- [x] Step 1: Resolve Browser State for OSINT
+- [x] Step 2: Database Schema Updates
