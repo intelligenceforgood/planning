@@ -1,7 +1,16 @@
 # Planning Change Log (active items only)
 
-Last updated: 02 May 2026
+Last updated: 06 May 2026
 
+## 2026-05-06 - PhishDestroy Dashboard: Phase 1 (Backend API)
+
+Completed Phase 1 of the PhishDestroy Dashboard Integration plan. 
+
+- **Dashboard API:** Created `src/i4g/api/phishdestroy_dashboard.py` providing `/stats`, `/actors`, and `/graph` endpoints to serve dashboard widgets.
+- **Store Additions:** Added `count_actors()`, `list_all_identities()`, and `list_all_edges()` to respective backend stores to support the new endpoints.
+- **Testing:** Unit tests added for all three endpoints in `tests/unit/api/test_phishdestroy_dashboard.py`.
+- **Planning:** Created `proposals/phishdestroy_dashboard_assessment.md` and `tasks/phishdestroy_dashboard_plan.md` to guide UI integration.
+- **Repos affected:** `core/`, `planning/`.
 
 ## 2026-05-02 - PhishDestroy Sprint 4.4: SLO dashboards
 

@@ -4,8 +4,7 @@
 **Created:** 2026-04-23
 **Updated:** 2026-04-29
 **PRD:** `prd_phishdestroy_integration.md`
-**Workflow:** Planner/Executor split — each sprint produces one (or more) Task Manifests under
-`planning/handoffs/` via `/handoff`; Executor implements; Planner verifies via `/verify-handoff`.
+**Workflow:** Planner/Executor split — each sprint produces one (or more) Task Plans; Executor implements via `/work-on-task`; Planner verifies via `/sprint-wrapup` and `/merge`.
 **Archive after completion:** Summarize outcomes in `change_log.md`, then move this file to `archive/`.
 
 ---
@@ -14,13 +13,12 @@
 
 - This is the **north-star checklist** spanning all four sprints. Check off (`- [x]`) items
   **immediately** when done so progress is visible across long sessions and model switches.
-- Each sprint is broken into units small enough to become one Executor manifest (3–15 files,
-  single concern, testable). Sprint-level manifests are acceptable when scope is coherent
+- Each sprint is broken into units small enough to execute smoothly (3–15 files,
+  single concern, testable).
   (see `plan-work` skip-threshold guidance).
 - Order inside a sprint is dependency-ordered: **migration → stores → services/jobs → API → UI**.
 - Flagged manual steps (`[manual]`) are Planner/operator actions — not for the Executor.
-- Risk / acceptance notes live under each sprint and must be restated in every manifest's
-  `<verification>` block.
+- Risk / acceptance notes live under each sprint and must be restated in every verification step.
 
 ### Repo impact map
 
@@ -30,7 +28,7 @@
 | `ssi/`   | New OSINT modules (`blocklist_aggregator`, `ctlog_lookup`, `merklemap_client`, ...)  |
 | `ui/`    | `/discoveries`, `/actors`, `/actors/[id]`, campaign-page cards, RBAC surfacing       |
 | `infra/` | Cloud Run job for merklemap tail, Secret Manager entries, Scheduler for blocklist 6h |
-| `ml/`    | BigQuery feature-group view (Sprint 4 handoff only — ML team owns consumption)       |
+| `ml/`    | BigQuery feature-group view (Sprint 4 task only — ML team owns consumption)          |
 | `docs/`  | End-user docs for actor view + discoveries; developer docs live in `core/docs/`      |
 
 ---
@@ -122,7 +120,7 @@ cannot make. Sprint 1 is unblocked for all items except the merklemap tail throu
 **Goal:** First upstream bytes land in I4G. Blocklist ingestion + live discovery feed working
 end-to-end in `i4g-dev`, with the smallest schema slice needed to support them.
 
-**Suggested manifest split:**
+**Suggested task split:**
 
 1. Migration 1 + stores + factories (`core/`)
 2. SSI modules (`blocklist_aggregator`, `ctlog_lookup`, `merklemap_client`) (`ssi/`)
@@ -223,7 +221,7 @@ config flag in the orchestrator. No changes to existing modules.
 **Goal:** Full archive (≥ 15 teams) ingested with < 1% parse failures; dossiers show damage +
 infra cards.
 
-**Suggested manifest split:**
+**Suggested task split:**
 
 1. Migration 2 + stores + factories
 2. Per-team format-detection + adapter (TrustWalletPanel first as contract test)
@@ -289,7 +287,7 @@ with data.
 
 ### 2.6 Verification
 
-- [x] Run full backfill in dev; attach summary to the Sprint 2 verify-handoff report
+- [x] Run full backfill in dev; attach summary to the Sprint 2 wrap-up report
 - [x] Audit-log entries present for every ingested PII-bearing row
 - [x] Change-log entry
 
@@ -303,7 +301,7 @@ with data.
 **Goal:** Actor-centric view live. Enrichment modules power pivots that weren't possible before.
 PII gating wired and audited.
 
-**Suggested manifest split:**
+**Suggested task split:**
 
 1. Migration 3 + stores + factories
 2. SSI modules (`whoxy_reverse`, `ghunt`, `webarchive`)
@@ -388,7 +386,7 @@ PII fields gated to `role=senior_analyst` with 100% audit coverage in dev.
 **Goal:** Everything from Sprints 1–3 in prod with SLOs. ML feature group published. Collaboration
 packet ready.
 
-**Suggested manifest split:**
+**Suggested task split:**
 
 1. Merklemap filter v2 (typosquat + blocklist cross-check) + metrics
 2. ML BigQuery feature-group view (`ml/`)
