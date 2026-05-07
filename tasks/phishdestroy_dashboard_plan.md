@@ -21,11 +21,11 @@ All necessary context from the external `ScamIntelLogs` and `DestroyScammers` re
   - **Files:** `@folder:i4g/core/src/i4g/api/`
 
 **Phase 2: UI Kit Components**
-- [x] **Step 4:** Build React Stats Card components (to display Total Actors, Active Domains, etc.).
+- [ ] **Step 4:** Build React Stats Card components (to display Total Actors, Active Domains, etc.).
   - **Files:** `@folder:i4g/ui/packages/ui-kit/src/components/stats/`
-- [x] **Step 5:** Build React Data Table components for "Threat Actors" and "Active Threats". Columns needed: Actor Name, Aliases, Target Brands, Associated Domains, Financial Damage.
+- [ ] **Step 5:** Build React Data Table components for "Threat Actors" and "Active Threats". Columns needed: Actor Name, Aliases, Target Brands, Associated Domains, Financial Damage.
   - **Files:** `@folder:i4g/ui/packages/ui-kit/src/components/tables/`
-- [x] **Step 6:** Build the Relationship Graph component. Wrap `d3.js` in a `useEffect` hook or implement using React Flow to render the `nodes` and `links` from the API.
+- [ ] **Step 6:** Build the Relationship Graph component. Wrap `d3.js` in a `useEffect` hook or implement using React Flow to render the `nodes` and `links` from the API.
   - **Files:** `@folder:i4g/ui/packages/ui-kit/src/components/graph/`
 
 **Phase 3: UI Dashboard Integration**
