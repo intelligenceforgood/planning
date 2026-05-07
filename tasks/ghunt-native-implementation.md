@@ -50,7 +50,7 @@
 - **Undocumented APIs:** Google's internal APIs (Maps protobufs, People v2) can change without notice. Code must fail cleanly without halting the broader investigation.
 - **Anti-Bot Detection:** Scraping could get `zendriver` flagged by Google, requiring future proxy rotation strategies.
 - **Schema Compatibility:** Adding the `google_osint` block to the JSONB payload must be backward-
-  compatible with older `site_scans` records.
+compatible with older `site_scans` records.
 
 ## 6. Track with Todos
 
@@ -63,8 +63,8 @@
 - [x] Step 7: Entity & PII Mapping
 - [x] Step 8: Investigation Orchestrator Wiring
 
-## 7. Decide the Next Step
+## 7. Decide the Handoff
 
-**Decision: Use `/work-on-task` / Agent Mode Batch Sprints**
+**Decision: Use `/handoff` / Agent Mode Batch Sprints**
 
 _Reasoning:_ This spans 8 distinct steps, touches multiple repositories (`ssi/` and `core/`), updates database schemas, and integrates with complex underlying tools (`zendriver` and `orchestrator.py`). The skip-threshold is safely exceeded. The work should be executed with Agent Mode **ON**, working iteratively through the tracked phases while heavily scoping context per file.
