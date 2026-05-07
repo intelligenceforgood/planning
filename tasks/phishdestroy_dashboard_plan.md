@@ -29,9 +29,9 @@ All necessary context from the external `ScamIntelLogs` and `DestroyScammers` re
   - **Files:** `@folder:i4g/ui/packages/ui-kit/src/components/graph/`
 
 **Phase 3: UI Dashboard Integration**
-- [x] **Step 7:** Implement the sub-routed layout based on the assessment recommendation. Create native route groups for tabs: `/threat-intel` (Overview), `/threat-intel/graph` (Network Graph), `/threat-intel/actors` (Actor Table).
+- [ ] **Step 7:** Implement the sub-routed layout based on the assessment recommendation. Create native route groups for tabs: `/threat-intel` (Overview), `/threat-intel/graph` (Network Graph), `/threat-intel/actors` (Actor Table).
   - **Files:** `@folder:i4g/ui/apps/web/app/(dashboard)/threat-intel/`
-- [x] **Step 8:** Integrate API data fetching (via tRPC or React Query) into the new page routes to hydrate the UI components.
+- [ ] **Step 8:** Integrate API data fetching (via tRPC or React Query) into the new page routes to hydrate the UI components.
   - **Files:** `@folder:i4g/ui/apps/web/app/(dashboard)/threat-intel/`
 
 ### 3. Required Data Schemas (Extracted Context)
