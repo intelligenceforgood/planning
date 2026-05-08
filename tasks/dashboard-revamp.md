@@ -12,18 +12,18 @@
   - `@file:core/src/i4g/api/dashboard.py`
   - `@file:core/src/i4g/api/response_models.py`
 
-- [ ] Step 2: Update UI SDK types to reflect the expanded dashboard payload and remove any remaining `.passthrough()` schemas.
+- [x] Step 2: Update UI SDK types to reflect the expanded dashboard payload and remove any remaining `.passthrough()` schemas.
   - `@file:ui/packages/sdk/src/domain.ts`
   - `@folder:ui/packages/sdk/src/schemas/`
 
-- [ ] Step 3: Create responsive KPI Sparkline Cards and Engagement Progress components utilizing the updated design tokens.
+- [x] Step 3: Create responsive KPI Sparkline Cards and Engagement Progress components utilizing the updated design tokens.
   - `@folder:ui/packages/ui-kit/src/components/`
   - `@file:ui/apps/web/src/components/dashboard-kpi-cards.tsx`
 
-- [ ] Step 4: Redesign the main dashboard page layout to replace stale text with interactive metrics, alerts, and recent activity feeds.
+- [x] Step 4: Redesign the main dashboard page layout to replace stale text with interactive metrics, alerts, and recent activity feeds.
   - `@file:ui/apps/web/src/app/(console)/dashboard/page.tsx`
   - `@file:ui/apps/web/src/app/(console)/dashboard/loading.tsx`
 
-- [ ] Step 5: Update unit and Playwright smoke tests to verify the new dashboard rendering and engagement-scoping logic.
+- [x] Step 5: Update unit and Playwright smoke tests to verify the new dashboard rendering and engagement-scoping logic.
   - `@file:ui/apps/web/tests/smoke/dashboard.spec.ts`
   - `@file:ui/apps/web/tests/unit/dashboard.test.tsx`
