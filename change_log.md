@@ -1,7 +1,15 @@
 # Planning Change Log (active items only)
 
-Last updated: 02 May 2026
+Last updated: 08 May 2026
 
+## 2026-05-08 - Dashboard Revamp Phase 1: Backend Metrics
+
+Implemented Phase 1 (Backend & Data Contract) for the Analyst Console Dashboard Revamp.
+
+- **Backend Metrics:** Added `_get_engagement_completion`, `_get_loss_linkages`, and `_get_campaign_risk_scores` metrics to `GET /dashboard/overview` endpoint in `core/src/i4g/api/dashboard.py`.
+- **Alerts:** Modified `_get_alerts` to return recent high priority cases and active campaign alerts.
+- **Tests:** Created `core/tests/unit/api/test_dashboard.py` to verify the dashboard overview endpoint successfully returns the new metrics.
+- **Repos affected:** `core/`.
 
 ## 2026-05-02 - PhishDestroy Sprint 4.4: SLO dashboards
 
