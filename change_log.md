@@ -1,6 +1,24 @@
 # Planning Change Log (active items only)
 
-Last updated: 08 May 2026
+Last updated: 09 May 2026
+
+## 2026-05-09 - Impact Pages Modernization Phase 4: Architecture & Data Fetching Refactor
+
+Implemented Phase 4 (Architecture & Data Fetching Refactor) for the Impact Pages Modernization.
+
+- **Server-Side Fetching:** Transitioned `GeographyView` and `TaxonomyExplorer` to fetch initial data on the server side via their respective `page.tsx` components using the `getI4GClient` SDK methods.
+- **Navigation Consolidation:** Removed the redundant `/impact/taxonomy` link from the Impact section in `navigation.tsx` and renamed the `/impact/taxonomy-explorer` label to "Taxonomy" to clean up the navigation menu.
+- **Tests:** Updated `sprint4-views.test.tsx` to pass the required initial props (`initialSummaries` and `initialSankeyData`) to the React components. Verified all unit tests pass successfully.
+- **Repos affected:** `ui/`, `planning/`.
+
+## 2026-05-09 - Impact Pages Modernization Phase 3: Geography View
+
+Implemented Phase 3 (Geography View Enhancement) for the Impact Pages Modernization.
+
+- **Visual Map Integration:** Replaced the text list in `ui/apps/web/src/app/(console)/impact/geography/geography-view.tsx` with an interactive SVG world map using `react-simple-maps` and `i18n-iso-countries`. Color-coded countries based on case volume.
+- **Richer Drill-Down Context:** Enhanced the detail view to include `victimCount` aggregate metrics alongside total cases and loss, plus recent cases.
+- **Linting:** Fixed TypeScript and ESLint warnings for unused imports and explicit `any`.
+- **Repos affected:** `ui/`, `planning/`.
 
 ## 2026-05-08 - Intelligence Pages Modernization Phase 3: Entity & Campaign Management
 
