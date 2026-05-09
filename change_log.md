@@ -2,6 +2,26 @@
 
 Last updated: 08 May 2026
 
+## 2026-05-08 - Intelligence Pages Modernization Phase 3: Entity & Campaign Management
+
+Implemented Phase 3 (Entity and Campaign Management) for the Intelligence Pages Modernization.
+
+- **Bulk Entity Operations:** Added checkbox selection and a bulk action bar to `entity-explorer.tsx` to handle "Flag Selected" and "Add to Watchlist" actions via the `/api/intelligence/entities/bulk` endpoint.
+- **Entity Status Toggling:** Replaced the static status badge in `entity-detail-panel.tsx` with an inline dropdown to manually update entity status using the `/api/intelligence/entities/status` endpoint.
+- **Campaign Management Modal:** Implemented a new Client Component `manage-campaign-modal.tsx` and integrated it into the Campaign detail page (`campaigns/[id]/page.tsx`) to edit campaign status and name via `/api/intelligence/campaigns/{campaign_id}/manage`.
+- **Validation:** Verified syntactic correctness using `eslint`.
+- **Repos affected:** `ui/`, `planning/`.
+
+## 2026-05-08 - Dashboard Revamp Phase 1: Frontend Enhancements
+
+Implemented Phase 1 (Frontend Enhancements) for the Intelligence Dashboard Modernization.
+
+- **Dashboard Charts:** Refactored Loss Trend Visualization in `ui/apps/web/src/app/(console)/intelligence/page.tsx` to render a `Recharts` area chart.
+- **Chart Sharing:** Added `ShareDashboardButton` to the dashboard header that uses the `POST /charts/share` endpoint to generate an embed link.
+- **Backend Fix:** Corrected the `user` dependency injection typing in `core/src/i4g/api/intelligence.py`'s `create_chart_share_token` endpoint.
+- **Tests:** Ran existing unit tests and linting to ensure no regressions.
+- **Repos affected:** `core/`, `ui/`, `planning/`.
+
 ## 2026-05-08 - Dashboard Revamp Phase 1: Backend Metrics
 
 Implemented Phase 1 (Backend & Data Contract) for the Analyst Console Dashboard Revamp.
