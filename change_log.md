@@ -548,3 +548,14 @@ New API endpoint `GET /intelligence/entities/{type}/{value}/cases` with paginate
 Schema normalization (migration `20260404_01`): `cases.description` column added, `scam_records.classification_result` and `tags` removed, FK constraints on `review_queue` and `scam_records` to `cases`. Display reads (dashboard, case detail, analytics, dossier bundler) now join `cases` directly instead of `scam_records`. Entity extraction keys aligned between NER rules and worker job. New API: `GET /cases/{id}/related` (entity-overlap ranking). UI: Extracted Entities card on case detail, Related Cases card, graph deep-linking from entity explorer, edge click detail with linked case IDs, help modal on network graph. SSI `sql.py` synced with core schema changes.
 
 **Repos affected:** `core/`, `ssi/`, `ui/`, `copilot/`, `planning/`
+
+## 2026-05-12 - Sec-Gemini SDK Integration into SSI
+
+Implemented the Sec-Gemini SDK integration as a feature-flagged, optional enrichment provider in SSI's Phase 1 pipeline.
+
+- **Provider Implementation:** Created `ssi/providers/sec_gemini/` module encompassing an async SDK wrapper, prompt builder for email/infra analysis, response parser for structured JSON extraction, and data models (`SecGeminiAnalysis`, `EmailSecurityPosture`, `InfraFingerprint`, `VulnerabilityFinding`).
+- **Orchestrator Integration:** Wired `_run_sec_gemini_enrichment` into Phase 1 of `ssi.investigator.orchestrator.run_investigation`. It runs securely after eCrimeX and gracefully builds context from existing OSINT to prevent redundant AI lookups.
+- **Config & Settings:** Added `SecGeminiSettings` feature-flag block (`[sec_gemini]`) to `settings.default.toml` (disabled by default) and registered it in the core Pydantic configuration. Supported API key injection via Secret Manager.
+- **Documentation:** Updated `ssi/docs/tdd.md` to document both the newly added Sec-Gemini enrichment (§6.8) and the previously undocumented Google OSINT integration (§6.7).
+- **Testing:** Implemented 31 mocked unit tests for parser, settings, and orchestrator boundaries. Full SSI regression tests passed. Added `sec-gemini` as an optional dependency in `pyproject.toml`.
+- **Repos affected:** `ssi/`, `planning/`.
