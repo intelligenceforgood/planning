@@ -2,6 +2,14 @@
 
 Last updated: 09 Jun 2026
 
+## 2026-06-09 - Antigravity 2.0 Model Routing & Token Economy Enhancements
+
+Implemented standardized model routing rules and token budgeting guidelines across documentation, skills, and rules to optimize development costs and token efficiency in Antigravity 2.0.
+
+- **Model Routing Rules:** Routed planning-tier skills strictly to Opus 4.6 (avoiding Gemini Pro for architecture), code review tasks to Sonnet 4.6, and implementation/execution-tier tasks to specific Gemini 3.5 Flash (H/M/L) and Gemini 3.1 Pro (H/L) variants.
+- **Token Economy Guidelines:** Added guidelines for targeted search-and-replace edits, editor tab hygiene, subagent token budgets, and Gemini context strategies to `context-budget.md`.
+- **Repos affected:** `antigravity/`, `planning/`.
+
 ## 2026-06-09 - Antigravity Workflow Migration and Scraper Test Fix
 
 Migrated the GCA-style workflows into Antigravity-native configurations and resolved a critical mock-patch issue in the Google scraper tests.
