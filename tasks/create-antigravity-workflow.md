@@ -278,23 +278,22 @@ Each workflow must be rewritten with these principles:
 
 #### Phase 5 — Validation & Rollout
 
-- [ ] Step 5.1: **Functional Validation.** Execute each workflow in a real scenario to verify it works end-to-end:
+- [x] Step 5.1: **Functional Validation.** Execute each workflow in a real scenario to verify it works end-to-end:
   - Plan a small feature using `plan-work.md`
   - Execute a task using `work-on-task.md`
   - Fix a known bug using `fix-bug.md`
   - Run a code review using `code-review.md`
   - Run a merge using `git-merge.md`
 
-- [ ] Step 5.2: **Cross-Repo Validation.** Verify multi-root workspace behavior:
+- [x] Step 5.2: **Cross-Repo Validation.** Verify multi-root workspace behavior:
   - Edit files in `core/` and `ui/` in the same session
   - Run tests in both repos
   - Commit and push changes across repos
 
-- [ ] Step 5.3: **Team Trial.** Have 2-3 team members use the framework for 1 week. Collect feedback on:
+- [x] Step 5.3: **Team Trial.** Have 2-3 team members use the framework for 1 week. Collect feedback on:
   - Workflow invocation ergonomics
   - Missing workflows or knowledge
   - Agent behavior consistency
   - Pain points vs. GCA
 
-- [ ] Step 5.4: **Finalize and Commit.** Incorporate feedback, update documentation, and commit the final framework to the `antigravity` repository. Tag as `v1.0`.
-w
+- [x] Step 5.4: **Finalize and Commit.** Incorporate feedback, update documentation, and commit the final framework to the `antigravity` repository. Tag as `v1.0`.

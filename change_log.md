@@ -1,6 +1,15 @@
 # Planning Change Log (active items only)
 
-Last updated: 09 May 2026
+Last updated: 09 Jun 2026
+
+## 2026-06-09 - Antigravity Workflow Migration and Scraper Test Fix
+
+Migrated the GCA-style workflows into Antigravity-native configurations and resolved a critical mock-patch issue in the Google scraper tests.
+
+- **Antigravity Workflows:** Added YAML frontmatter headers to standard files under `knowledge/standards/` to support repository-specific routing. Restructured the Antigravity workflows and skills under `.agent/` and `.agents/` directories.
+- **Scraper Tests:** Fixed `tests/unit/osint/google/test_scrapers.py` by correcting quote formatting for the JSONP Maps response string and switching from `@pytest.mark.asyncio` to `@pytest.mark.anyio`. Swapped global `httpx.AsyncClient.get` mocking with a clean local `AsyncClient` mock.
+- **Failed Experiment Cleanup:** Removed the temporary `bin/ag_headroom.sh` script and reverted all `gemini_api_base` proxy settings/routing changes in `core` and `ssi`.
+- **Repos affected:** `antigravity/`, `ssi/`, `planning/`.
 
 ## 2026-05-09 - Impact Pages Modernization Phase 4: Architecture & Data Fetching Refactor
 
