@@ -2,7 +2,7 @@
 
 > **Owner:** Product + Architecture Lead
 > **Repos:** `ssi/`, `core/`
-> **Status:** Draft — Pending Review
+> **Status:** Completed & Archived
 
 ---
 
