@@ -576,3 +576,15 @@ Implemented the Sec-Gemini SDK integration as a feature-flagged, optional enrich
 - **Documentation:** Updated `ssi/docs/tdd.md` to document both the newly added Sec-Gemini enrichment (§6.8) and the previously undocumented Google OSINT integration (§6.7).
 - **Testing:** Implemented 31 mocked unit tests for parser, settings, and orchestrator boundaries. Full SSI regression tests passed. Added `sec-gemini` as an optional dependency in `pyproject.toml`.
 - **Repos affected:** `ssi/`, `planning/`.
+
+## 2026-06-17 — Module Status Tracking & Error Reporting in SSI
+
+Implemented standardized execution status tracking and error reporting for all 11 investigation modules in the SSI repository.
+
+- **Model Layer:** Added `ModuleStatus` enum (`success`, `disabled`, `skipped`, `failed`), `ModuleOutcome` metadata model, and `module_statuses: dict[str, ModuleOutcome]` field on `InvestigationResult` (supporting full backward compatibility with default factories).
+- **Orchestrator Integration:** Instrumented all 11 module calls in `orchestrator.py` with wall-clock duration timing and outcome recording. Added `_sanitize_error()` to strip traceback logs and cap exception message lengths to 200 characters.
+- **Reporting & Templates:** Updated HTML/PDF report templates (`report.md.j2` and `leo_report.md.j2`) to include a "Module Execution Summary" overview table and render stylized badges explaining any disabled, skipped, or failed modules rather than omitting the sections.
+- **Testing:** Added `tests/unit/test_module_status.py` with 19 unit tests validating models, helpers, backward compatibility, and error sanitization logic.
+
+**Repos affected:** `ssi/`, `planning/`
+
