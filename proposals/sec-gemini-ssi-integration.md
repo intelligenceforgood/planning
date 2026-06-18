@@ -98,7 +98,7 @@ Key characteristics:
 | Threat intel synthesis | ⚠️ Basic (classification only) | AI-reasoned cross-correlation | **Medium** |
 | Browser automation | ✅ Native (zendriver + Playwright) | Not applicable | None |
 | Wallet extraction | ✅ Native | Not applicable | None |
-| Google OSINT | ✅ Native (People, Maps) | Not applicable | None |
+| Google OSINT | ❌ Deprecated & Deleted | Not applicable | None |
 
 ### 2.2 Where Sec-Gemini Complements SSI
 
@@ -496,13 +496,11 @@ The SSI pipeline is a three-phase system (see `ssi/docs/tdd.md` §6):
 
 - **Phase 1 — Passive Recon**: WHOIS, DNS, SSL, GeoIP, VirusTotal, urlscan, eCrimeX, **Sec-Gemini†**
 - **Phase 2 — Active Interaction**: AI agent browser automation, wallet extraction
-- **Phase 2.7 — Google OSINT**: Native Google identity resolution (People API, Maps contributions) using browser session cookies
+- **Phase 2.7 — Google OSINT**: [DEPRECATED & DELETED] Native Google identity resolution (People API, Maps contributions) using browser session cookies
 - **Phase 3 — Classification & Evidence**: Five-axis fraud taxonomy, report generation, STIX bundle
 
 † Sec-Gemini is feature-flagged (`SSI_SEC_GEMINI__ENABLED`, default: off).
 
 Sec-Gemini integrates into **Phase 1 only**, as an additional enrichment source after the existing OSINT modules complete. It receives the existing OSINT results as context (to avoid redundant lookups) and returns structured analysis that merges into the standard `InvestigationResult`.
 
-> **Note:** The Google OSINT integration (Phase 2.7) was implemented in a prior sprint
-> (see `planning/tasks/google-osint-implementation.md`) and is now documented in
-> `ssi/docs/tdd.md` §6.7.
+> **Note:** The Google OSINT integration (Phase 2.7) was deprecated and removed in June 2026.

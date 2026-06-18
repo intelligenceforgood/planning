@@ -65,7 +65,7 @@ His repos stay upstream. I4G is a consumer that ingests + enriches. Interfaces a
 | Reverse-WHOIS pivot engine (by email, registrant name, company, phone)                                                                              | `DestroyScammers/scripts/whoxy_lookup.py`                         | **Missing.** SSI has WHOIS lookup but no reverse-pivot.                         |
 | CT-log subdomain enumeration (crt.sh)                                                                                                               | `DestroyScammers/scripts/crtsh_lookup.py`                         | **Missing.**                                                                    |
 | Real-time CT-log discovery stream (merklemap.com `tail`)                                                                                            | `merklemap-cli`                                                   | **Missing.**                                                                    |
-| Google persona OSINT (GHunt `person_id`, services, maps activity)                                                                                   | `DestroyScammers/scripts/ghunt_lookup.py`                         | **Missing.**                                                                    |
+| Google persona OSINT (GHunt) [DEPRECATED]                                                                                                          | `DestroyScammers/scripts/ghunt_lookup.py`                         | **Deprecated & Removed.**                                                       |
 | Web-archive lookup (snapshot discovery + download)                                                                                                  | `DestroyScammers/scripts/webarchive_lookup.py`                    | **Missing.**                                                                    |
 | Leak / credential records per actor (breach DB, password count)                                                                                     | `DestroyScammers/data/data.json.leak_extended`                    | **Missing.**                                                                    |
 | Brand-impersonation dedup set per domain                                                                                                            | `DestroyScammers/data/data.json.blacklist[*].brand_impersonation` | Partial — classification taxonomy covers brands but not as a per-indicator set. |
@@ -137,7 +137,7 @@ All live under `ssi/src/ssi/osint/`. Each module implements the existing scan co
 | `ctlog_lookup.py` (crt.sh) | `DestroyScammers/scripts/crtsh_lookup.py`                              | crt.sh JSON                      |
 | `merklemap_client.py`      | (wraps `merklemap-cli` Rust client via subprocess OR reimpl in Python) | MERKLEMAP_API_KEY                |
 | `webarchive.py`            | `DestroyScammers/scripts/webarchive_lookup.py`                         | archive.org CDX + Wayback        |
-| `ghunt.py`                 | `DestroyScammers/scripts/ghunt_lookup.py`                              | GHunt auth blob (secret)         |
+| `ghunt.py` [DEPRECATED]    | `DestroyScammers/scripts/ghunt_lookup.py`                              | Deprecated and Deleted           |
 | `whoxy_reverse.py`         | `DestroyScammers/scripts/whoxy_lookup.py`                              | WHOXY_API_KEY (paid)             |
 
 Existing `virustotal.py`, `urlscan.py`, `whois_lookup.py`, `dns_lookup.py`, `ssl_inspect.py` unchanged.
@@ -325,12 +325,12 @@ Each sprint is ~2 weeks. "MVP-done" = deployed to `i4g-dev` + smoke tests green.
 ### Sprint 3 — Actor graph + enrichment + UI
 
 - Alembic migration 3: `leak_records`, `registrant_pivots`.
-- SSI modules: `whoxy_reverse.py`, `ghunt.py`, `webarchive.py`.
+- SSI modules: `whoxy_reverse.py`, `ghunt.py` (Deprecated & Deleted), `webarchive.py`.
 - `i4g jobs ingest phishdestroy-actors` — hydrates actor graph from `DestroyScammers/data/data.json` + `registrants.json`.
 - Actor list + actor detail UI pages. Co-membership graph rendered from `actor_identity_edges`.
 - RBAC gating for PII fields wired to existing role middleware.
 
-**Risk:** GHunt requires Google cookie auth — must live in Secret Manager with a rotation runbook; document failure-mode when cookie expires.
+**Risk:** [DEPRECATED] GHunt requires Google cookie auth — must live in Secret Manager with a rotation runbook; document failure-mode when cookie expires (Deprecated & Removed).
 
 ### Sprint 4 — Polish + ML hook-in + readiness
 
@@ -338,7 +338,7 @@ Each sprint is ~2 weeks. "MVP-done" = deployed to `i4g-dev` + smoke tests green.
 - Pass actor + financial-damage signals to ML team (`ml/` repo) as a new feature group for classifier training (documented handoff only; ML team owns consumption).
 - Prod deployment of all Cloud Run jobs; dashboard SLOs.
 - Full analyst walkthrough + feedback pass.
-- Runbooks for: upstream re-sync, API-key rotation (merklemap, whoxy, virustotal, urlscan, GHunt), PII-access audit review.
+- Runbooks for: upstream re-sync, API-key rotation (merklemap, whoxy, virustotal, urlscan, GHunt [DEPRECATED]), PII-access audit review.
 - Prepare a collaboration packet for him describing what we built, what he could consume back, and a proposed two-way interface (no code in this sprint — preparation for a future collaboration discussion).
 
 ---
@@ -386,7 +386,7 @@ Each sprint is ~2 weeks. "MVP-done" = deployed to `i4g-dev` + smoke tests green.
 1. **Collaboration cadence.** Once the plan is built, do we share read-only API access with him as a gesture before formal collaboration?
 2. **destroylist two-way.** Can we auto-contribute newly-confirmed malicious domains back into `phishdestroy/destroylist` via PR? Deferred to post-Sprint 4.
 3. **Telegram chat re-distribution.** We ingest and store; do we ever expose chat transcripts in dossier exports to law enforcement partners? Needs counsel sign-off before Sprint 2 ships to prod.
-4. **GHunt cookie ops.** If Google kills GHunt auth, do we have a fallback? Document the risk and a "disable module" switch.
+4. **GHunt cookie ops.** [DEPRECATED & DELETED] If Google kills GHunt auth, do we have a fallback? Document the risk and a "disable module" switch.
 5. **Actor identity merge UX.** When the same operator appears across teams (Sprint 2+3 integration point), who approves merges? Proposal: `role=senior_analyst` in the new `/actors/merge` flow; default to **suggested-only** never auto-merge.
 
 ---

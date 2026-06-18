@@ -1,4 +1,9 @@
-# GHunt vs. SSI Gap Analysis & Implementation Plan
+# GHunt vs. SSI Gap Analysis & Implementation Plan [DEPRECATED]
+
+> [!WARNING]
+> **DEPRECATION & REMOVAL NOTICE (2026-06-18):**
+> The integration of GHunt and native Google OSINT (Phase 2.7) has been completely deprecated and removed from the SSI repository.
+> This gap analysis and implementation plan is retained for historical reference only.
 
 ## 1. Executive Summary
 Currently, SSI relies on GHunt as an external dependency to perform Google-specific OSINT. This creates fragility, increases investigation cost overhead, and breaks the integrated resilience model (e.g., our `@with_retries` decorator and budget trackers). This report outlines the capabilities GHunt provides, the specific Google endpoints it targets, and a technical plan to rebuild these features natively within `ssi.osint`, allowing us to deprecate GHunt entirely.

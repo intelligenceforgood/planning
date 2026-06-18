@@ -1,8 +1,13 @@
-# Plan: Native Google OSINT Intelligence Scrapers
+# Plan: Native Google OSINT Scrapers [DEPRECATED & DELETED]
+
+> [!WARNING]
+> **DEPRECATION & REMOVAL NOTICE (2026-06-18):**
+> The native Google OSINT scraper module (Phase 2.7) has been completely deprecated and removed from the SSI repository.
+> This document remains for historical reference only. None of the described plans, auth managers, endpoints, or lifecycles are active.
 
 > **Owner:** Product + Architecture Lead
 > **Repos:** `ssi/`, `core/`
-> **Status:** Completed & Archived
+> **Status:** Deprecated & Deleted
 
 ---
 

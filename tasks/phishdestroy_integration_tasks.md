@@ -60,7 +60,7 @@ cannot make. Sprint 1 is unblocked for all items except the merklemap tail throu
   - `ScamIntelLogs` → `83d0307420fcc865fcb8a34b8c454acbc6d56f1f` (2026-03-01)
   - `DestroyScammers` → `c40cbbf527dd9e5e232090346e1a8ceab32d1683` (2025-11-30)
   - `merklemap-cli` → `550cb04aa633c000724c339ada085c59444d5b78` (2024-10-06)
-- [x] **Settings TOML slots added** for `merklemap`, `whoxy`, `ghunt`:
+- [x] **Settings TOML slots added** for `merklemap`, `whoxy`, `ghunt` [DEPRECATED]:
   - `core/config/settings.default.toml` (commented placeholders)
   - `core/config/settings.local.toml` (real empty slots — paste rotated keys here)
   - `ssi/config/settings.default.toml` (commented placeholders)
@@ -88,10 +88,10 @@ cannot make. Sprint 1 is unblocked for all items except the merklemap tail throu
       that fits budget, set `monthly_query_cap` in `ssi/config/settings.dev.toml`. If
       cost-prohibitive, leave `enabled = false`; Sprint 3.3 `whoxy_reverse.py` ships as a
       `SkippedResult(reason="quota_gated")` stub per provider-gating contract.
-- [ ] **[quota:ghunt][user-action] GHunt auth spike** — follow upstream GHunt docs to generate
+- [ ] **[quota:ghunt][user-action] GHunt auth spike** [DEPRECATED] — follow upstream GHunt docs to generate
       cookie blob, store under `ssi/config/settings.local.toml`
       `[providers.ghunt] cookie_blob_path`. If lifecycle < 14 days, defer Sprint 3.3 ghunt to
-      post-MVP and leave `enabled = false`.
+      post-MVP and leave `enabled = false`. (Deprecated & Removed)
 - [ ] **Implementation choice: Python SSE** (default decision, revisit if probe shows parse
       issues). Python stdlib + `httpx` handles SSE well; no need to wrap the Rust binary.
       Rationale recorded here, not a separate spike report.
@@ -306,7 +306,7 @@ PII gating wired and audited.
 **Suggested manifest split:**
 
 1. Migration 3 + stores + factories
-2. SSI modules (`whoxy_reverse`, `ghunt`, `webarchive`)
+2. SSI modules (`whoxy_reverse`, `ghunt` [DEPRECATED], `webarchive`)
 3. `phishdestroy-actors` ingestion job + edge builder
 4. Actor API routes + RBAC + audit
 5. `/actors` + `/actors/[id]` UI including co-membership graph
@@ -331,7 +331,7 @@ PII fields gated to `role=senior_analyst` with 100% audit coverage in dev.
 
 - [x] `whoxy_reverse.py` — reverse WHOIS by email/name/company/phone (gated behind Sprint 0 budget
       decision; stub with 501 if deferred)
-- [x] `ghunt.py` — Google persona OSINT; Secret Manager cookie; disable-switch via config when
+- [x] `ghunt.py` [DEPRECATED & DELETED] — Google persona OSINT; Secret Manager cookie; disable-switch via config when
       auth expires; rotation runbook
 - [x] `webarchive.py` — archive.org CDX + Wayback download
 - [x] Unit tests with recorded fixtures
@@ -420,7 +420,7 @@ runbooks complete; collaboration packet reviewed.
 - [-] Cloud Run job `merklemap-tail-prod`
 - [-] Cloud Scheduler `blocklist-aggregator-prod` (6h)
 - [-] Cloud Run job specs for `phishdestroy-archive` + `phishdestroy-actors` (re-sync cadence)
-- [-] Secret Manager entries in prod: `MERKLEMAP_API_KEY`, `WHOXY_API_KEY` (if live), GHunt blob
+- [-] Secret Manager entries in prod: `MERKLEMAP_API_KEY`, `WHOXY_API_KEY` (if live), GHunt blob [DEPRECATED]
 - [-] `terraform fmt -check` clean; pre-merge review per
   `copilot/.github/shared/pre-merge-checklist.instructions.md`
 - [ ] **[manual]** Run `i4g db migrate prod` for Sprint 1/2/3 migrations at deploy time
@@ -436,9 +436,9 @@ runbooks complete; collaboration packet reviewed.
 ### 4.5 Runbooks (`core/docs/runbooks/`)
 
 - [-] Upstream re-sync (bumping commit SHA + running archive/actors jobs)
-- [-] API-key rotation: merklemap, whoxy, virustotal, urlscan, GHunt
+- [-] API-key rotation: merklemap, whoxy, virustotal, urlscan, GHunt [DEPRECATED]
 - [-] PII-access audit review (weekly cadence — surface via audit log queries)
-- [-] GHunt cookie-expiry recovery
+- [-] GHunt cookie-expiry recovery [DEPRECATED]
 
 ### 4.6 Collaboration packet (docs/ + planning/)
 

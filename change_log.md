@@ -588,3 +588,14 @@ Implemented standardized execution status tracking and error reporting for all 1
 
 **Repos affected:** `ssi/`, `planning/`
 
+## 2026-06-18 — Deprecation & Removal of Google OSINT Scraper (Phase 2.7)
+
+Completely deprecated and removed the native Google OSINT scraper module (Phase 2.7) and the legacy GHunt integration from the SSI codebase. Updated all planning and proposal documents, task lists, and collaboration documentation to reflect this deprecation and removal.
+
+- **Deprecation Notice Added:** `planning/archive/google-osint-implementation.md` and `planning/proposals/ghunt_ssi_gap_analysis.md` updated with deprecation warnings.
+- **Pipeline References Cleaned:** References to Phase 2.7 Google OSINT removed or marked as deprecated in `planning/proposals/sec-gemini-ssi-integration.md` and `planning/prd_phishdestroy_integration.md`.
+- **Tasks & Runbooks Marked:** GHunt-related tasks, Secret Manager config references, and rotation runbooks marked as deprecated in `planning/tasks/phishdestroy_integration_tasks.md`.
+- **End-User Docs Updated:** Removed GHunt reference from the bi-directional sync sketch in `docs/book/admin-guide/phishdestroy-collaboration-packet.md`.
+
+**Repos affected:** `planning/`, `docs/`
+
