@@ -1,6 +1,14 @@
 # Planning Change Log (active items only)
 
-Last updated: 09 Jun 2026
+Last updated: 18 Jun 2026
+
+## 2026-06-18 - Standardize SSI Module Execution Status and Mock Fallbacks
+
+Fixed a bug in SSI's module execution status reporting where fail-fast errors and mock fallbacks (like for the Sec-Gemini module) were misleadingly reported as blanket success.
+
+- **Status reporting:** Added a `MOCKED` state to `ModuleStatus` and updated the orchestrator to inspect the raw agent response of the `sec_gemini` enrichment module, classifying outcomes as `FAILED` or `MOCKED` instead of `SUCCESS` when errors or developer mock fallback values are returned.
+- **Tests:** Updated existing enum assertions and added a new unit test suite `TestSecGeminiStatusResolution` covering status classification under success, fail-fast timeout, and mock fallback execution.
+- **Repos affected:** `ssi/`, `planning/`.
 
 ## 2026-06-09 - Antigravity 2.0 Model Routing & Token Economy Enhancements
 
