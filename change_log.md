@@ -1,6 +1,18 @@
 # Planning Change Log (active items only)
 
-Last updated: 18 Jun 2026
+Last updated: 24 Jun 2026
+
+## 2026-06-24 - Python 3.13 Upgrade Spike - Session 1: Core Repo
+
+Upgraded the core repository and global operational rules to Python 3.13.
+
+- **Python Version Constraint:** Updated `pyproject.toml` compatibility constraint to `">=3.13"` and Ruff `target-version` to `"py313"`.
+- **Dependency Re-locking:** Recreated the `i4g-upgrade` conda environment with Python 3.13 and fully regenerated and cleaned `requirements.txt`.
+- **Docker Container Base Images:** Upgraded all 8 core Dockerfiles (6 Cloud Run, `local-aio`, and `local-aio-gpu`) to target Python 3.13 base images and system packages.
+- **CI/CD Workflows:** Updated setup-python actions across all 4 core GitHub Actions workflows to use Python 3.13.
+- **Documentation Updates:** Updated all Python and software version references to Python 3.13+ in core documentation, development guides, AGENTS.md context files, and main README.md. Added missing quality/style badges (pre-commit, black, ruff) to the main README.md.
+- **Lessons Learned:** Added a workflow lesson to operational standards reminding developers and agents to prefer Makefile targets over manual command executions.
+- **Repos affected:** `core/`, `antigravity/`, `planning/`.
 
 ## 2026-06-18 - Standardize SSI Module Execution Status and Mock Fallbacks
 
