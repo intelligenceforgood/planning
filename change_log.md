@@ -2,6 +2,18 @@
 
 Last updated: 24 Jun 2026
 
+## 2026-06-24 — Sprint Ship (SSI Python 3.13 Upgrade)
+
+Upgraded the Scam Site Investigator (SSI) repository to Python 3.13, updated all configuration files, docker base image, and aligned pre-commit hooks with the core repository.
+
+- **Python Version Constraint:** Updated `pyproject.toml` compatibility constraint to `">=3.13"`, Ruff `target-version` to `"py313"`, and mypy `python_version` to `"3.13"`.
+- **Pre-commit Pins:** Aligned black, isort, ruff-pre-commit, and pre-commit-hooks pins with the exact commit hashes from the `core` repository.
+- **Docker Container Base Image:** Upgraded the `ssi-svc` Dockerfile to target `python:3.13-slim`.
+- **Conda Environment:** Recreated the `i4g-ssi` conda environment with Python 3.13, including the `sec-gemini` extra.
+- **Linter and Formatters:** Fixed code style formatting using Black and resolved 6 Ruff linting issues under the new `py313` target rules.
+- **Documentation Updates:** Updated Python version references in developer guide, tdd.md, Makefile, AGENTS.md, copilot-instructions.md, and added MIT/Python/Ruff/Black/pre-commit badges to README.md.
+- **Repos affected:** `ssi/`, `planning/`.
+
 ## 2026-06-24 - Python 3.13 Upgrade Spike - Session 1: Core Repo
 
 Upgraded the core repository and global operational rules to Python 3.13.
