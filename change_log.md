@@ -2,6 +2,19 @@
 
 Last updated: 24 Jun 2026
 
+## 2026-06-24 — Sprint Ship (UI Repo Software Version Upgrade)
+
+Upgraded the UI repository software versions (Node 24, pnpm 11, React 19, Next.js 16, Tailwind CSS v4, Storybook 10, eslint 9 flat config, vitest 4) and resolved associated type compatibilities, Docker images, and README badges.
+
+- **Node and pnpm:** Set Node.js 24 as runtime default in `.node-version`, updated `packageManager` to `pnpm@11.9.0` in root `package.json`, and moved React 19 dependency overrides to `pnpm-workspace.yaml`.
+- **Framework Upgrade:** Upgraded React/React-DOM to `19.2.7` in `apps/web/package.json`, Next.js to `16.2.9`, TypeScript to `^6.0.3` targeting `ES2024`, and migrated Next.js middleware to `proxy.ts`.
+- **Styling Upgrade:** Upgraded Tailwind CSS to `4.3.1`, set up PostCSS plugin `@tailwindcss/postcss`, migrated custom themes to `globals.css`, and configured ESM compatibility for Storybook's PostCSS config.
+- **Linting & Flat Config:** Migrated `apps/web` ESLint to flat configuration in `eslint.config.mjs` using `eslint@9.20.0` (avoiding v10 parser issues).
+- **Testing & Storybook:** Upgraded Vitest and Playwright to `^4.1.9` and `^1.61.1`, upgraded Storybook to `10.4.6` (esm-only), resolved Recharts tooltip formatter parameter type errors, and cleared a schema column bug in core's `src/i4g/api/intelligence.py`.
+- **Dockerization & CI:** Upgraded UI console Docker base image to `node:24-bookworm-slim`, fixed missing types COPY layer, deleted old duplicate `apps/web/Dockerfile`, and bumped all major versions of checkout, setup-node, auth, and build-push GitHub Actions.
+- **Documentation & Cleanup:** Added expanded shields.io badges and Node 24/pnpm 11 prerequisites to `README.md`, git-ignored the local `.gemini/` and `storybook-static/` workspace directories.
+- **Repos affected:** `ui/`, `core/`, `planning/`.
+
 ## 2026-06-24 — Sprint Ship (SSI Python 3.13 Upgrade)
 
 Upgraded the Scam Site Investigator (SSI) repository to Python 3.13, updated all configuration files, docker base image, and aligned pre-commit hooks with the core repository.
