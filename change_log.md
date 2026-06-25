@@ -671,3 +671,25 @@ Led a comprehensive software version upgrade for the `ml` repository. Python run
 - `containers/train-ner/requirements.txt` — updated container-level requirements files.
 - `containers/graph-features/requirements.txt` — updated container-level requirements files.
 - `docker/*.Dockerfile` — upgraded base images to `python:3.12-slim` and synchronized inline pip installations.
+
+## 2026-06-25 — Mobile Repository Software Upgrade (Sprint Ship)
+
+Led a comprehensive software version upgrade for the `mobile` repository, bringing all dependency versions, tools, environment targets, CI configurations, and badges up to date.
+
+**Repos affected:** `mobile/`, `planning/`
+
+**mobile/ — Modified files:**
+- `shared/design-tokens/package.json` — upgraded `style-dictionary` to `^5.4.4` and devDependencies including `@types/node` and `eslint`.
+- `shared/design-tokens/package-lock.json` — lockfile mapping updates for Style Dictionary v5.
+- `shared/design-tokens/scripts/build.js` — refactored compiler script to v5 asynchronous ESM API.
+- `shared/design-tokens/tokens/tokens.json` — declared missing `priority`, `on`, and `error` color design tokens.
+- `app/package.json` — upgraded Expo to `~56.0.0`, React to `19.2.3`, React Native to `0.85.3`, and aligned dependencies/devDependencies.
+- `app/pnpm-lock.yaml` — lockfile updates for Expo SDK 56.
+- `app/pnpm-workspace.yaml` — configured allowed postinstall builds for `@sentry/cli` and `unrs-resolver`.
+- `app/app.json` — added required Expo plugins for SDK 56 compatibility.
+- `app/android/gradle.properties` — removed deprecated `expo.edgeToEdgeEnabled` key and enabled the new standard `edgeToEdgeEnabled` property.
+- `app/app/case/[id]/evidence/[eid].tsx` — resolved React 19 linter violation by migrating from accessing `useRef().current` during render to `useState()` lazy initialization.
+- `.github/workflows/design-tokens-ci.yml` — upgraded Node runner environment to version 22.
+- `.github/workflows/mobile-ci.yml` — upgraded Node runner environment to version 22.
+- `README.md` — updated with high-fidelity badges, environment prerequisites, and corrected directory structure paths.
+
