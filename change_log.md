@@ -644,3 +644,12 @@ Completely deprecated and removed the native Google OSINT scraper module (Phase 
 
 **Repos affected:** `planning/`, `docs/`
 
+## 2026-06-25 — Sprint Ship
+
+Added high-quality, professional Shields.io metadata badges to the root README files of the Antigravity, Planning, and Docs repositories to elevate codebase quality indicators.
+
+- **antigravity**: Updated `README.md` to add platform (I4G), framework (Antigravity), active standards, and SDLC skill badges.
+- **planning**: Updated `README.md` to add platform, planning hub docs, PRDs & roadmap, Agile sprint process, and active status badges.
+- **docs**: Updated `README.md` to add platform, MIT license, GitBook live site link, Markdownlint check, and Git Sync deployment badges.
+
+**Repos affected:** `antigravity/`, `planning/`, `docs/`
