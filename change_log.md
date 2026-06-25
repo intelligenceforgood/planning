@@ -653,3 +653,21 @@ Added high-quality, professional Shields.io metadata badges to the root README f
 - **docs**: Updated `README.md` to add platform, MIT license, GitBook live site link, Markdownlint check, and Git Sync deployment badges.
 
 **Repos affected:** `antigravity/`, `planning/`, `docs/`
+
+## 2026-06-25 — ML Repository Software Upgrade
+
+Led a comprehensive software version upgrade for the `ml` repository. Python runtime is pinned at version `3.12`. Bumped all dependency version ceilings and floors, modernized all Dockerfiles to use Python 3.12 base images, updated container-level requirements files, and upgraded pre-commit hook versions for Black and Ruff.
+
+**Repos affected:** `ml/`, `planning/`
+
+**ml/ — Modified files:**
+- `pyproject.toml` — updated Python constraints to `>=3.12`, bumped all dependency floors, and raised the `protobuf` ceiling to `<7` to resolve solver conflicts.
+- `AGENTS.md` — updated target Python environment context to Python 3.12+.
+- `README.md` — updated environment setup commands to python=3.12 and added Shield badges.
+- `.pre-commit-config.yaml` — updated Black to `26.5.1` and Ruff to `v0.15.19`.
+- `containers/serve/requirements.txt` — updated container-level requirements files.
+- `containers/train-pytorch/requirements.txt` — updated container-level requirements files.
+- `containers/train-xgboost/requirements.txt` — updated container-level requirements files.
+- `containers/train-ner/requirements.txt` — updated container-level requirements files.
+- `containers/graph-features/requirements.txt` — updated container-level requirements files.
+- `docker/*.Dockerfile` — upgraded base images to `python:3.12-slim` and synchronized inline pip installations.
