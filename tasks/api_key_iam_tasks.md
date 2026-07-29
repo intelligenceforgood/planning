@@ -15,7 +15,7 @@
 
 > Foundation — must be completed before any other phase.
 
-- [ ] 🔴 **1.1 — Alembic migration: rename `partner_api_keys` → `api_keys` and add columns**
+- [x] 🔴 **1.1 — Alembic migration: rename `partner_api_keys` → `api_keys` and add columns**
   - **File:** `core/src/i4g/migrations/versions/<next_rev>_unify_api_keys.py` `[NEW]`
   - **Changes:**
     - `op.rename_table("partner_api_keys", "api_keys")`
@@ -31,7 +31,7 @@
     - `conda run -n i4g alembic downgrade -1` cleanly reverses
     - Existing partner key rows retain all data with `key_type='partner'`
 
-- [ ] 🟡 **1.2 — Update `sql.py` table definition: `partner_api_keys` → `api_keys`**
+- [x] 🟡 **1.2 — Update `sql.py` table definition: `partner_api_keys` → `api_keys`**
   - **File:** [sql.py](file:///Users/jerry/Work/project/i4g/core/src/i4g/store/sql.py#L973-L989) `[MODIFY]`
   - **Changes:**
     - Rename Python variable `partner_api_keys` → `api_keys`
@@ -43,7 +43,7 @@
     - `from i4g.store.sql import partner_api_keys` still works (alias)
     - All existing table columns preserved
 
-- [ ] 🟡 **1.3 — Create `ApiKeyStore`**
+- [x] 🟡 **1.3 — Create `ApiKeyStore`**
   - **File:** `core/src/i4g/store/api_key_store.py` `[NEW]`
   - **Changes:**
     - Class `ApiKeyStore` using synchronous `session_factory()` pattern
@@ -57,7 +57,7 @@
     - Raw key is never persisted to DB (verified by inspecting stored `key_hash`)
     - Expired and revoked keys return `None` from `validate_key()`
 
-- [ ] 🟢 **1.4 — Add `build_api_key_store()` factory**
+- [x] 🟢 **1.4 — Add `build_api_key_store()` factory**
   - **File:** [factories.py](file:///Users/jerry/Work/project/i4g/core/src/i4g/services/factories.py) `[MODIFY]`
   - **Changes:**
     - Add `build_api_key_store() → ApiKeyStore` following existing `build_analytics_store()` pattern
@@ -65,7 +65,7 @@
     - `from i4g.services.factories import build_api_key_store` works
     - Returns valid `ApiKeyStore` instance
 
-- [ ] 🔴 **1.5 — Integrate DB-backed API key validation into `auth.py`**
+- [x] 🔴 **1.5 — Integrate DB-backed API key validation into `auth.py`**
   - **File:** [auth.py](file:///Users/jerry/Work/project/i4g/core/src/i4g/api/auth.py) `[MODIFY]`
   - **Changes:**
     - Add new resolution step **after** static API key, **before** IAP JWT:
@@ -85,7 +85,7 @@
     - Expired/revoked DB key → 401 (falls through to IAP/Bearer, then 401)
     - `conda run -n i4g pytest tests/unit/api/test_auth.py -v` passes
 
-- [ ] 🟡 **1.6 — Migrate `partner_feed.py` to use `ApiKeyStore`**
+- [x] 🟡 **1.6 — Migrate `partner_feed.py` to use `ApiKeyStore`**
   - **File:** [partner_feed.py](file:///Users/jerry/Work/project/i4g/core/src/i4g/api/partner_feed.py) `[MODIFY]`
   - **Changes:**
     - Replace `_authenticate_partner()` internal SQL with `ApiKeyStore.validate_key()`
@@ -99,7 +99,7 @@
     - `conda run -n i4g pytest tests/unit/api/test_partner_feed.py -v` passes (if exists)
     - Non-partner keys without `partner:feed` scope are rejected at partner endpoints
 
-- [ ] 🟢 **1.7 — Update ancillary references**
+- [x] 🟢 **1.7 — Update ancillary references**
   - **Files:**
     - [cli/db/__init__.py](file:///Users/jerry/Work/project/i4g/core/src/i4g/cli/db/__init__.py#L330) `[MODIFY]` — update `_WIPE_TABLE_ORDER`: `partner_api_keys` → `api_keys`
     - [test_security.py](file:///Users/jerry/Work/project/i4g/core/tests/unit/test_security.py#L62-L66) `[MODIFY]` — update table existence assertion
@@ -108,7 +108,7 @@
   - **Acceptance criteria:**
     - `grep -r "partner_api_keys" core/src/ core/tests/ core/docs/` returns zero results (except alias in sql.py)
 
-- [ ] 🟡 **1.8 — Unit tests for `ApiKeyStore`**
+- [x] 🟡 **1.8 — Unit tests for `ApiKeyStore`**
   - **File:** `core/tests/unit/store/test_api_key_store.py` `[NEW]`
   - **Changes:**
     - Test `create_key()` — verify hash stored, raw key returned, prefix matches type code
