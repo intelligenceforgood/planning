@@ -1,6 +1,17 @@
 # Planning Change Log (active items only)
 
-Last updated: 24 Jun 2026
+Last updated: 30 Jul 2026
+
+## 2026-07-30 — Programmatic API Key Authentication & IAM Overhaul (Phases 1 - 5 Complete)
+
+Fully implemented database-backed programmatic API key authentication for partner access and self-service analyst management across `core`, `ui`, `infra`, and `docs`.
+
+- **Phase 1 (DB Schema & Core Engine):** Unified `partner_api_keys` into `api_keys` with SHA-256 key hashing (`ApiKeyStore`), Alembic migration, and FastAPI authentication integration (`auth.py`).
+- **Phase 2 (Management CRUD API):** Created `/api-keys` self-service endpoints, `/admin/api-keys` administration endpoints, and partner-key creation logic.
+- **Phase 3 (User Settings UI):** Built Next.js self-service API key management UI (`/settings/api-keys`), key creation modal with one-time display, admin user panel integration (`/admin/users`), and navigation links.
+- **Phase 4 (Partner Ingress & OpenAPI):** Added `partner-api` Cloud Run Terraform module (Option A, no IAP), partner-mode endpoint filtering (`I4G_PARTNER_MODE=true`), OpenAPI Swagger UI `APIKeyHeader` and `HTTPBearer` authorization, and scope enforcement middleware (`require_scope`).
+- **Phase 5 (Docs & Verification):** Updated `iam.md` canonical IAM strategy, created partner-facing `docs/book/api/authentication.md`, created admin runbook `docs/runbooks/api-key-management.md`, added full integration test suite (`tests/integration/test_auth_api_key_integration.py`), and verified unit test suite.
+- **Repos affected:** `core/`, `ui/`, `infra/`, `docs/`, `planning/`.
 
 ## 2026-06-24 — Sprint Ship (UI Repo Software Version Upgrade)
 

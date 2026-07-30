@@ -333,7 +333,7 @@
 
 > Final phase — depends on all prior phases.
 
-- [ ] 🟢 **5.1 — Update `iam.md` with API key auth documentation**
+- [x] 🟢 **5.1 — Update `iam.md` with API key auth documentation**
   - **File:** [iam.md](file:///Users/jerry/Work/project/i4g/core/docs/design/iam.md) `[MODIFY]`
   - **Changes:**
     - Update auth chain to include step 2.5 (DB-backed API keys)
@@ -345,7 +345,7 @@
     - Auth chain documentation matches actual code
     - All open items related to API keys marked as resolved
 
-- [ ] 🟢 **5.2 — Create partner-facing authentication guide**
+- [x] 🟢 **5.2 — Create partner-facing authentication guide**
   - **File:** `core/docs/book/api/authentication.md` `[NEW]`
   - **Changes:**
     - How to request an API key (contact admin or self-service)
@@ -358,7 +358,7 @@
   - **Acceptance criteria:**
     - Copy-pasteable code examples work against local dev server
 
-- [ ] 🟢 **5.3 — Create admin runbook for API key management**
+- [x] 🟢 **5.3 — Create admin runbook for API key management**
   - **File:** `core/docs/runbooks/api-key-management.md` `[NEW]`
   - **Changes:**
     - Creating partner keys via API and UI
@@ -369,7 +369,7 @@
   - **Acceptance criteria:**
     - Runbook is actionable by on-call engineers
 
-- [ ] 🔴 **5.4 — Integration tests: full auth chain with DB-backed keys**
+- [x] 🔴 **5.4 — Integration tests: full auth chain with DB-backed keys**
   - **File:** `core/tests/integration/test_auth_api_key_integration.py` `[NEW]`
   - **Changes:**
     - End-to-end lifecycle: create key → authenticate → access endpoint → revoke → verify 403
@@ -385,7 +385,7 @@
     - `conda run -n i4g pytest tests/integration/test_auth_api_key_integration.py -v` passes
     - Zero regressions in existing auth tests
 
-- [ ] 🟡 **5.5 — Full regression test suite**
+- [x] 🟡 **5.5 — Full regression test suite**
   - **Files:** No new files — run existing test suite
   - **Changes:** None — pure verification
   - **Acceptance criteria:**
