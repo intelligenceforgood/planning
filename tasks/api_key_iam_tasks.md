@@ -258,7 +258,7 @@
 
 > Depends on Phase 1-2. Can run in parallel with Phase 3.
 
-- [ ] 🔴 **4.1 — Terraform: partner ingress Cloud Run service (no IAP)**
+- [x] 🔴 **4.1 — Terraform: partner ingress Cloud Run service (no IAP)**
   - **Files:**
     - `infra/modules/partner_ingress/main.tf` `[NEW]`
     - `infra/modules/partner_ingress/variables.tf` `[NEW]`
@@ -276,7 +276,7 @@
     - `terraform fmt -check -recursive` passes
     - Partner API accessible at `api.i4g.app` without IAP redirect
 
-- [ ] 🟡 **4.2 — Partner mode route filtering in `app.py`**
+- [x] 🟡 **4.2 — Partner mode route filtering in `app.py`**
   - **File:** [app.py](file:///Users/jerry/Work/project/i4g/core/src/i4g/api/app.py) `[MODIFY]`
   - **Changes:**
     - Read `I4G_PARTNER_MODE` env var (or `settings.api.partner_mode`)
@@ -290,7 +290,7 @@
     - In normal mode: all endpoints accessible (unchanged)
     - Add `partner_mode` field to settings if needed
 
-- [ ] 🟡 **4.3 — OpenAPI security scheme configuration**
+- [x] 🟡 **4.3 — OpenAPI security scheme configuration**
   - **File:** [app.py](file:///Users/jerry/Work/project/i4g/core/src/i4g/api/app.py) `[MODIFY]`
   - **Changes:**
     - Import `from fastapi.security import APIKeyHeader, HTTPBearer`
@@ -306,7 +306,7 @@
     - API key and Bearer token can be set in Swagger UI
     - Authentication still works identically via dependencies
 
-- [ ] 🟡 **4.4 — Scope enforcement middleware**
+- [x] 🟡 **4.4 — Scope enforcement middleware**
   - **File:** `core/src/i4g/api/middleware/scope_middleware.py` `[NEW]`
   - **Changes:**
     - Dependency factory: `require_scope(*scopes: str)` — checks `user.get("scopes", [])` against required scopes
@@ -318,13 +318,14 @@
     - API key without required scope gets 403
     - Admin users bypass scope checks
 
-- [ ] 🟢 **4.5 — Add `partner_mode` to settings**
+- [x] 🟢 **4.5 — Add `partner_mode` to settings**
   - **File:** [basic.py](file:///Users/jerry/Work/project/i4g/core/src/i4g/settings/sections/basic.py) `[MODIFY]`
   - **Changes:**
     - Add `partner_mode: bool = Field(default=False, validation_alias=AliasChoices("PARTNER_MODE", "API__PARTNER_MODE"))` to `APISettings`
   - **Acceptance criteria:**
     - `I4G_API__PARTNER_MODE=true` activates partner mode
     - Default is `False` (no behavior change)
+
 
 ---
 
