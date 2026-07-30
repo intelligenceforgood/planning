@@ -128,7 +128,7 @@
 
 > Depends on Phase 1. Provides CRUD API for key lifecycle.
 
-- [ ] 🟡 **2.1 — Create API key route handler with Pydantic models**
+- [x] 🟡 **2.1 — Create API key route handler with Pydantic models**
   - **File:** `core/src/i4g/api/api_keys.py` `[NEW]`
   - **Changes:**
     - Router: `APIRouter(prefix="/api-keys", tags=["api-keys"])`
@@ -146,7 +146,7 @@
     - Only owner can list/revoke their own keys
     - Proper 401/403 for unauthenticated/unauthorized requests
 
-- [ ] 🟡 **2.2 — Admin API key management endpoints**
+- [x] 🟡 **2.2 — Admin API key management endpoints**
   - **File:** `core/src/i4g/api/api_keys.py` `[MODIFY]` (same file as 2.1)
   - **Changes:**
     - `GET /admin/api-keys` — list all keys across all users (uses `require_role("admin")`)
@@ -158,7 +158,7 @@
     - Admin can list/revoke keys belonging to any user
     - Partner key creation populates `key_type='partner'` and `partner_name`
 
-- [ ] 🟢 **2.3 — Register `api_keys` router in app.py**
+- [x] 🟢 **2.3 — Register `api_keys` router in app.py**
   - **File:** [app.py](file:///Users/jerry/Work/project/i4g/core/src/i4g/api/app.py) `[MODIFY]`
   - **Changes:**
     - `from i4g.api.api_keys import router as api_keys_router`
@@ -166,7 +166,7 @@
   - **Acceptance criteria:**
     - `/api-keys` and `/admin/api-keys` endpoints appear in `/docs`
 
-- [ ] 🟡 **2.4 — Unit tests for API key routes**
+- [x] 🟡 **2.4 — Unit tests for API key routes**
   - **File:** `core/tests/unit/api/test_api_keys.py` `[NEW]`
   - **Changes:**
     - Test full CRUD lifecycle: create → list → revoke → verify revoked
@@ -178,7 +178,7 @@
   - **Acceptance criteria:**
     - `conda run -n i4g pytest tests/unit/api/test_api_keys.py -v` passes
 
-- [ ] 🟢 **2.5 — Validate existing auth tests still pass**
+- [x] 🟢 **2.5 — Validate existing auth tests still pass**
   - **Files:** Existing test files (no modifications)
   - **Changes:** None — pure verification
   - **Acceptance criteria:**
