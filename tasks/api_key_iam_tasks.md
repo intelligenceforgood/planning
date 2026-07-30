@@ -191,7 +191,7 @@
 
 > Depends on Phase 2 API endpoints. Targets the `ui/` repo (Next.js).
 
-- [ ] 🟡 **3.1 — API client functions for key management**
+- [x] 🟡 **3.1 — API client functions for key management**
   - **File:** `ui/apps/web/src/lib/api/api-keys.ts` `[NEW]`
   - **Changes:**
     - `createApiKey(req: CreateApiKeyRequest): Promise<CreateApiKeyResponse>`
@@ -205,7 +205,7 @@
     - TypeScript types match backend Pydantic models (camelCase)
     - Error handling follows existing patterns
 
-- [ ] 🟡 **3.2 — API key settings page**
+- [x] 🟡 **3.2 — API key settings page**
   - **File:** `ui/apps/web/src/app/(console)/settings/api-keys/page.tsx` `[NEW]`
   - **Changes:**
     - Page title "API Keys" with breadcrumb navigation
@@ -218,7 +218,7 @@
     - Revoke action updates table without full reload
     - Responsive layout
 
-- [ ] 🔴 **3.3 — Key creation modal with one-time display**
+- [x] 🔴 **3.3 — Key creation modal with one-time display**
   - **File:** `ui/apps/web/src/app/(console)/settings/api-keys/create-key-modal.tsx` `[NEW]`
   - **Changes:**
     - Modal form fields: description (required), expiry dropdown (30 days / 90 days / 1 year / custom / never)
@@ -232,7 +232,7 @@
     - Copy-to-clipboard works
     - Closing browser tab during display doesn't persist key anywhere
 
-- [ ] 🟡 **3.4 — Admin user panel: API key management column**
+- [x] 🟡 **3.4 — Admin user panel: API key management column**
   - **File:** `ui/apps/web/src/app/(console)/admin/users/page.tsx` `[MODIFY]`
   - **Changes:**
     - Add "API Keys" expandable section or column per user row
@@ -243,7 +243,7 @@
     - Admin can see and manage keys for any user
     - Non-admin users don't see this section
 
-- [ ] 🟢 **3.5 — Add settings page to navigation**
+- [x] 🟢 **3.5 — Add settings page to navigation**
   - **File:** `ui/apps/web/src/app/(console)/navigation.tsx` `[MODIFY]`
   - **Changes:**
     - Add "API Keys" link to settings navigation sidebar
