@@ -346,7 +346,7 @@
     - All open items related to API keys marked as resolved
 
 - [x] 🟢 **5.2 — Create partner-facing authentication guide**
-  - **File:** `core/docs/book/api/authentication.md` `[NEW]`
+  - **File:** `docs/book/api/authentication.md` `[MODIFY]`
   - **Changes:**
     - How to request an API key (contact admin or self-service)
     - Authentication header format: `X-API-KEY: i4g_pk_...`
