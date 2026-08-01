@@ -69,7 +69,7 @@
 
 ## Phase 3: OpenAPI Schema Filtering
 
-- [ ] 🟡 **Task 3.1:** Implement OpenAPI schema filtering in `create_app`
+- [x] 🟢 **Task 3.1:** Implement OpenAPI schema filtering in `create_app`
   - **[MODIFY]** `core/src/i4g/api/app.py`
   - Import `INTERNAL_ONLY_TAGS` from `i4g.api.scopes`
   - After all routers are registered in `create_app()`, override `app.openapi()`:
@@ -80,7 +80,7 @@
   - Store the full unfiltered schema separately for the internal docs endpoint
   - **Test:** Manual — start dev server, visit `/docs`, confirm admin endpoints are hidden
 
-- [ ] 🟡 **Task 3.2:** Add `/docs/internal` and `/openapi-internal.json` routes
+- [x] 🟢 **Task 3.2:** Add `/docs/internal` and `/openapi-internal.json` routes
   - **[MODIFY]** `core/src/i4g/api/app.py`
   - Add `GET /openapi-internal.json` endpoint protected by `require_internal_session()` that returns the full unfiltered OpenAPI spec
   - Add `GET /docs/internal` endpoint that returns an HTML page rendering Swagger UI pointed at `/openapi-internal.json`
@@ -137,7 +137,7 @@
     - Add test: DB API key → 200 on `GET /api-keys` (self-service still works)
   - **Verify:** `conda run -n i4g pytest tests/unit/api/test_accounts_api.py tests/unit/api/test_api_keys.py -v`
 
-- [ ] 🟡 **Task 5.4:** Add OpenAPI filtering unit tests
+- [x] 🟢 **Task 5.4:** Add OpenAPI filtering unit tests
   - **[NEW]** `core/tests/unit/api/test_openapi_filtering.py`
   - Tests:
     - `GET /openapi.json` — response does NOT contain paths tagged with any `INTERNAL_ONLY_TAGS`
