@@ -2,12 +2,11 @@
 
 Last updated: 31 Jul 2026
 
-## 2026-07-31 — Scope-Based API Endpoint Restrictions (Phase 4 Complete)
+## 2026-07-31 — Scope-Based API Endpoint Restrictions (Phase 4 & Cleanup Complete)
 
-Implemented Phase 4 (`partner_mode` Deprecation) of the Scope-Based API Endpoint Restrictions plan.
+Implemented Phase 4 (`partner_mode` Complete Removal) and configuration cleanup of the Scope-Based API Endpoint Restrictions plan.
 
-- **Deprecation Warnings:** Updated `partner_mode` field in `APISettings` with a `DEPRECATED` warning description and added runtime `DeprecationWarning` in `create_app()` when `partner_mode` is enabled.
-- **Unit Tests:** Added `test_partner_mode_deprecation_warning` to `test_partner_mode.py` verifying warning emission.
+- **Complete Removal:** Fully removed `partner_mode` setting from `APISettings`, removed conditional router registration in `app.py`, deleted legacy test file `test_partner_mode.py`, and cleaned up obsolete config manifests and tests.
 - **Repos affected:** `core/`, `planning/`.
 
 ## 2026-07-31 — Scope-Based API Endpoint Restrictions (Phase 2 Complete)

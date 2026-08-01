@@ -1,6 +1,6 @@
 # Task: Role & Scope-Based API Endpoint & OpenAPI Restrictions
 
-**Objective:** Restrict API endpoint access and Swagger UI visibility so programmatic partner integrations are limited to fraud-related endpoints, while Web UI and Mobile sessions maintain full access. Deprecate `partner_mode`.
+**Objective:** Restrict API endpoint access and Swagger UI visibility so programmatic partner integrations are limited to fraud-related endpoints, while Web UI and Mobile sessions maintain full access. Completely remove `partner_mode`.
 
 **Plan:** [implementation_plan.md](file:///Users/jerry/.gemini/antigravity/brain/1069f046-c200-4699-a360-7b6f0c8ab892/implementation_plan.md)
 
@@ -155,7 +155,7 @@
     - Document `require_scope()` (existing) and when to use each
     - Document `PARTNER_ALLOWED_TAGS` / `INTERNAL_ONLY_TAGS` sets
     - Document OpenAPI filtering strategy (default filtered, `/docs/internal` for admins)
-    - Note `partner_mode` deprecation and migration path
+    - Document complete removal of `partner_mode` and dynamic replacement via `require_internal_session()`
 
 ---
 
@@ -166,7 +166,7 @@
 | 1 — Scope Registry & Auth-Source | 1.1, 1.2, 1.3 | 🟢🟡🟡 | Foundation — must be done first |
 | 2 — Endpoint Enforcement | 2.1, 2.2, 2.3 | 🟢🟢🟢 | Mechanical — add dependency to routers |
 | 3 — OpenAPI Filtering | 3.1, 3.2 | 🟡🟡 | Custom OpenAPI override logic |
-| 4 — Deprecation | 4.1, 4.2 | 🟢🟢 | Trivial — add warnings |
+| 4 — Complete Removal | 4.1, 4.2 | 🟢🟢 | Removed setting, conditional routing, and test file |
 | 5 — Tests & Docs | 5.1–5.5 | 🟢🟢🟢🟡🟡 | Follow existing test patterns |
 
 **Recommended execution order:** Phase 1 → Phase 2 → Phase 4 → Phase 5 (tasks 5.1–5.3) → Phase 3 → Phase 5 (tasks 5.4–5.5)
