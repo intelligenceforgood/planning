@@ -147,7 +147,7 @@
     - Tag definitions in filtered schema don't include internal-only tags
   - **Verify:** `conda run -n i4g pytest tests/unit/api/test_openapi_filtering.py -v`
 
-- [ ] 🟡 **Task 5.5:** Update architecture documentation
+- [x] 🟢 **Task 5.5:** Update architecture documentation
   - **[MODIFY]** `antigravity/knowledge/architecture/architecture.md`
   - Add "Scope Enforcement" subsection under Authentication:
     - Document `auth_source` field and its values
