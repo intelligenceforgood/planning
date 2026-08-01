@@ -2,6 +2,14 @@
 
 Last updated: 31 Jul 2026
 
+## 2026-07-31 — Scope-Based API Endpoint Restrictions (Phase 4 Complete)
+
+Implemented Phase 4 (`partner_mode` Deprecation) of the Scope-Based API Endpoint Restrictions plan.
+
+- **Deprecation Warnings:** Updated `partner_mode` field in `APISettings` with a `DEPRECATED` warning description and added runtime `DeprecationWarning` in `create_app()` when `partner_mode` is enabled.
+- **Unit Tests:** Added `test_partner_mode_deprecation_warning` to `test_partner_mode.py` verifying warning emission.
+- **Repos affected:** `core/`, `planning/`.
+
 ## 2026-07-31 — Scope-Based API Endpoint Restrictions (Phase 2 Complete)
 
 Implemented Phase 2 (Endpoint Access Enforcement) of the Scope-Based API Endpoint Restrictions plan.

@@ -91,12 +91,12 @@
 
 ## Phase 4: `partner_mode` Deprecation
 
-- [ ] 🟢 **Task 4.1:** Add deprecation warning to `partner_mode` setting
+- [x] 🟢 **Task 4.1:** Add deprecation warning to `partner_mode` setting
   - **[MODIFY]** `core/src/i4g/settings/sections/basic.py`
   - Update `partner_mode` field: change `description` to include `"DEPRECATED: Use scope-based endpoint restrictions instead. Will be removed in a future release."`
   - No behavioral change
 
-- [ ] 🟢 **Task 4.2:** Emit deprecation warning in `create_app` when `partner_mode` is True
+- [x] 🟢 **Task 4.2:** Emit deprecation warning in `create_app` when `partner_mode` is True
   - **[MODIFY]** `core/src/i4g/api/app.py`
   - At line ~234 (`if settings.api.partner_mode:`), add:
     ```python
