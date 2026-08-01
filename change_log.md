@@ -1,6 +1,14 @@
 # Planning Change Log (active items only)
 
-Last updated: 30 Jul 2026
+Last updated: 31 Jul 2026
+
+## 2026-07-31 — Scope-Based API Endpoint Restrictions (Phase 2 Complete)
+
+Implemented Phase 2 (Endpoint Access Enforcement) of the Scope-Based API Endpoint Restrictions plan.
+
+- **Endpoint Restrictions:** Enforced `require_internal_session` on `accounts` router, admin API key management endpoints (`GET /admin/api-keys`, `DELETE /admin/api-keys/{key_id}`, `POST /admin/api-keys/partner`), and task router (`/tasks`). Programmatic DB-backed API keys without the `admin:internal` scope are now blocked with 403 Forbidden, while IAP, Bearer, static key, and local sessions pass through.
+- **Regression Tests:** Added `TestAccountsInternalSession` to `test_accounts_api.py` and DB API key enforcement tests to `test_api_keys.py`. All unit tests pass cleanly.
+- **Repos affected:** `core/`, `planning/`.
 
 ## 2026-07-30 — Programmatic API Key Authentication & IAM Overhaul (Phases 1 - 5 Complete)
 

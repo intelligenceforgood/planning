@@ -42,14 +42,14 @@
 
 ## Phase 2: Endpoint Access Enforcement
 
-- [ ] 🟢 **Task 2.1:** Add `require_internal_session` to accounts router
+- [x] 🟢 **Task 2.1:** Add `require_internal_session` to accounts router
   - **[MODIFY]** `core/src/i4g/api/accounts.py`
   - Add `require_internal_session` import from `i4g.api.scopes`
   - Add `dependencies=[Depends(require_internal_session)]` to the `APIRouter()` constructor (alongside existing tags/prefix)
   - Existing per-endpoint `require_role("admin")` stays — this adds defense-in-depth
   - **Test:** `conda run -n i4g pytest tests/unit/api/test_accounts_api.py -v`
 
-- [ ] 🟢 **Task 2.2:** Add `require_internal_session` to admin API key endpoints
+- [x] 🟢 **Task 2.2:** Add `require_internal_session` to admin API key endpoints
   - **[MODIFY]** `core/src/i4g/api/api_keys.py`
   - Add `require_internal_session` import from `i4g.api.scopes`
   - Add `Depends(require_internal_session)` to the `dependencies` list of the 3 admin endpoints:
@@ -59,7 +59,7 @@
   - Self-service endpoints (`POST /api-keys`, `GET /api-keys`, `DELETE /api-keys/{key_id}`) remain unchanged
   - **Test:** `conda run -n i4g pytest tests/unit/api/test_api_keys.py -v`
 
-- [ ] 🟢 **Task 2.3:** Add `require_internal_session` to task router
+- [x] 🟢 **Task 2.3:** Add `require_internal_session` to task router
   - **[MODIFY]** `core/src/i4g/api/app.py`
   - Import `require_internal_session` from `i4g.api.scopes`
   - Change `task_router` line ~51: replace `Depends(require_token)` with `Depends(require_internal_session)` (it's a superset — calls `require_token` internally)
@@ -138,7 +138,7 @@
   - Create a small test FastAPI app with a `require_internal_session` endpoint (same pattern as `test_scope_middleware.py`)
   - **Verify:** `conda run -n i4g pytest tests/unit/api/test_internal_session.py -v`
 
-- [ ] 🟢 **Task 5.3:** Add endpoint enforcement regression tests
+- [x] 🟢 **Task 5.3:** Add endpoint enforcement regression tests
   - **[MODIFY]** `core/tests/unit/api/test_accounts_api.py`
     - Add test: DB API key user (admin role, `auth_source: "db_api_key"`) → 403 on `GET /accounts`
     - Add test: IAP user (admin role, `auth_source: "iap"`) → 200 on `GET /accounts`
