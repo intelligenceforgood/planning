@@ -89,27 +89,17 @@
 
 ---
 
-## Phase 4: `partner_mode` Deprecation
+## Phase 4: `partner_mode` Complete Removal
 
-- [x] 🟢 **Task 4.1:** Add deprecation warning to `partner_mode` setting
+- [x] 🟢 **Task 4.1:** Remove `partner_mode` setting from `APISettings`
   - **[MODIFY]** `core/src/i4g/settings/sections/basic.py`
-  - Update `partner_mode` field: change `description` to include `"DEPRECATED: Use scope-based endpoint restrictions instead. Will be removed in a future release."`
-  - No behavioral change
+  - Removed `partner_mode` field definition from `APISettings` class.
 
-- [x] 🟢 **Task 4.2:** Emit deprecation warning in `create_app` when `partner_mode` is True
+- [x] 🟢 **Task 4.2:** Remove conditional `partner_mode` routing and legacy test file
   - **[MODIFY]** `core/src/i4g/api/app.py`
-  - At line ~234 (`if settings.api.partner_mode:`), add:
-    ```python
-    import warnings
-    warnings.warn(
-        "partner_mode is deprecated. Use scope-based endpoint restrictions instead. "
-        "See docs/config/ for migration guidance.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    ```
-  - `partner_mode` continues to function — no breaking change
-  - **Test:** `conda run -n i4g pytest tests/unit/api/test_partner_mode.py -v`
+  - Removed `if settings.api.partner_mode:` conditional router inclusion in `create_app()`; all routers registered unconditionally.
+  - **[DELETE]** `core/tests/unit/api/test_partner_mode.py`
+  - Removed legacy test file `test_partner_mode.py`.
 
 ---
 
